@@ -142,7 +142,7 @@ describe('interpretarPlanilha', () => {
     expect(linha.erros).toEqual([
       'Data inválida.',
       'Valor inválido.',
-      'O tipo deve ser receita ou despesa.'
+      'O tipo deve ser receita, despesa ou reembolso.'
     ])
   })
 })

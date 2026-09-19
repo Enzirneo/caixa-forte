@@ -16,7 +16,8 @@ export function calcularResumo(lancamentos: Lancamento[]): Resumo {
   let despesasCentavos = 0
   for (const lancamento of lancamentos) {
     if (lancamento.tipo === 'receita') receitasCentavos += lancamento.valorCentavos
-    else despesasCentavos += lancamento.valorCentavos
+    else if (lancamento.tipo === 'despesa') despesasCentavos += lancamento.valorCentavos
+    else despesasCentavos -= lancamento.valorCentavos
   }
   return { receitasCentavos, despesasCentavos, saldoCentavos: receitasCentavos - despesasCentavos }
 }

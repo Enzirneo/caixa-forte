@@ -152,6 +152,10 @@ code {
   color: var(--despesa);
 }
 
+.reembolso {
+  color: var(--receita);
+}
+
 /* --- Estrutura do aplicativo ---------------------------------------------- */
 
 .aplicativo {

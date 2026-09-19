@@ -119,6 +119,27 @@ describe('inserirVariosLancamentos', () => {
 
     expect(listarLancamentos(banco)).toEqual([])
   })
+
+  it('guarda o reembolso como tipo próprio, sem virar receita, e permite editar o tipo', () => {
+    const reembolso = inserirLancamento(banco, {
+      ...mercado,
+      descricao: 'Devolução do almoço',
+      tipo: 'reembolso'
+    })
+
+    expect(listarLancamentos(banco)[0].tipo).toBe('reembolso')
+    expect(banco.prepare('SELECT tipo, reembolso FROM lancamentos').get()).toEqual({
+      tipo: 'receita',
+      reembolso: 1
+    })
+
+    atualizarLancamento(banco, { ...reembolso, tipo: 'despesa' })
+    expect(listarLancamentos(banco)[0].tipo).toBe('despesa')
+    expect(banco.prepare('SELECT tipo, reembolso FROM lancamentos').get()).toEqual({
+      tipo: 'despesa',
+      reembolso: 0
+    })
+  })
 })
 
 describe('categorias padronizadas', () => {

@@ -141,3 +141,18 @@ describe('agruparDespesasPorCategoria', () => {
     expect(agruparDespesasPorCategoria([], '2026-09')).toEqual([])
   })
 })
+
+describe('reembolso nas despesas por categoria', () => {
+  it('abate a categoria e some do gráfico quando devolvido por inteiro', () => {
+    const lancamentos = [
+      lancar({ id: 1, categoria: 'Almoço', valorCentavos: 8000 }),
+      lancar({ id: 2, categoria: 'Almoço', valorCentavos: 3000, tipo: 'reembolso' }),
+      lancar({ id: 3, categoria: 'Presente', valorCentavos: 5000 }),
+      lancar({ id: 4, categoria: 'Presente', valorCentavos: 5000, tipo: 'reembolso' })
+    ]
+
+    expect(agruparDespesasPorCategoria(lancamentos, '2026-09')).toEqual([
+      { categoria: 'Almoço', valorCentavos: 5000, permilagem: 1000 }
+    ])
+  })
+})

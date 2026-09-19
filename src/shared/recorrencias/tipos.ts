@@ -1,9 +1,9 @@
-import type { TipoLancamento } from '../lancamentos/tipos'
+import type { TipoDeRecorrencia } from '../lancamentos/tipos'
 
 export interface NovaRecorrencia {
   descricao: string
   valorCentavos: number
-  tipo: TipoLancamento
+  tipo: TipoDeRecorrencia
   categoria: string
   diaDoMes: number
   mesDeInicio: string

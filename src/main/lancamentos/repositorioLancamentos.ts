@@ -11,7 +11,7 @@ import { obterOuCriarCategoria } from '../categorias/repositorioCategorias'
 const AGORA_COM_MILISSEGUNDOS = "strftime('%Y-%m-%d %H:%M:%f', 'now')"
 
 const SELECIONAR_LANCAMENTOS = `
-  SELECT l.id, l.descricao, l.valor_centavos, l.data, l.tipo, l.alterado_em,
+  SELECT l.id, l.descricao, l.valor_centavos, l.data, l.tipo, l.reembolso, l.alterado_em,
          COALESCE(c.nome, ?) AS categoria
   FROM lancamentos l
   LEFT JOIN categorias c ON c.id = l.categoria_id
@@ -22,9 +22,20 @@ interface LinhaLancamento {
   descricao: string
   valor_centavos: number
   data: string
-  tipo: TipoLancamento
+  tipo: 'receita' | 'despesa'
+  reembolso: number
   categoria: string
   alterado_em: string
+}
+
+// No banco, reembolso é uma receita marcada: assim a tabela antiga não precisa ser refeita.
+function converterTipoParaBanco(tipo: TipoLancamento): {
+  tipoNoBanco: 'receita' | 'despesa'
+  reembolso: number
+} {
+  return tipo === 'reembolso'
+    ? { tipoNoBanco: 'receita', reembolso: 1 }
+    : { tipoNoBanco: tipo, reembolso: 0 }
 }
 
 function converterLinhaEmLancamento(linha: LinhaLancamento): Lancamento {
@@ -33,7 +44,7 @@ function converterLinhaEmLancamento(linha: LinhaLancamento): Lancamento {
     descricao: linha.descricao,
     valorCentavos: linha.valor_centavos,
     data: linha.data,
-    tipo: linha.tipo,
+    tipo: linha.reembolso === 1 ? 'reembolso' : linha.tipo,
     categoria: linha.categoria,
     alteradoEm: linha.alterado_em
   }
@@ -58,10 +69,12 @@ export function inserirLancamento(banco: Database, novoLancamento: NovoLancament
     const categoriaId = obterOuCriarCategoria(banco, novoLancamento.categoria)
     const { lastInsertRowid } = banco
       .prepare(
-        `INSERT INTO lancamentos (descricao, valor_centavos, data, tipo, categoria_id, alterado_em)
-         VALUES (@descricao, @valorCentavos, @data, @tipo, @categoriaId, ${AGORA_COM_MILISSEGUNDOS})`
+        `INSERT INTO lancamentos
+           (descricao, valor_centavos, data, tipo, reembolso, categoria_id, alterado_em)
+         VALUES (@descricao, @valorCentavos, @data, @tipoNoBanco, @reembolso, @categoriaId,
+                 ${AGORA_COM_MILISSEGUNDOS})`
       )
-      .run({ ...novoLancamento, categoriaId })
+      .run({ ...novoLancamento, ...converterTipoParaBanco(novoLancamento.tipo), categoriaId })
     return Number(lastInsertRowid)
   })
   return buscarLancamentoPorId(banco, inserirEmTransacao())
@@ -74,11 +87,11 @@ export function atualizarLancamento(banco: Database, lancamento: LancamentoEdita
       .prepare(
         `UPDATE lancamentos
          SET descricao = @descricao, valor_centavos = @valorCentavos,
-             data = @data, tipo = @tipo, categoria_id = @categoriaId,
+             data = @data, tipo = @tipoNoBanco, reembolso = @reembolso, categoria_id = @categoriaId,
              alterado_em = ${AGORA_COM_MILISSEGUNDOS}
          WHERE id = @id`
       )
-      .run({ ...lancamento, categoriaId }).changes
+      .run({ ...lancamento, ...converterTipoParaBanco(lancamento.tipo), categoriaId }).changes
   })
   if (atualizarEmTransacao() === 0) throw new Error(`Lançamento ${lancamento.id} não encontrado`)
 }

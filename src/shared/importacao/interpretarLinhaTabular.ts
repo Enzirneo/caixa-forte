@@ -47,6 +47,7 @@ function converterCelulaEmTipo(celula: CelulaDaPlanilha): TipoLancamento | null 
   const texto = normalizarTexto(celula)
   if (texto === '' || texto === 'despesa') return 'despesa'
   if (texto === 'receita') return 'receita'
+  if (texto === 'reembolso') return 'reembolso'
   return null
 }
 
@@ -72,7 +73,7 @@ export function interpretarLinhaTabular(
   if (valorCentavos === null) erros.push('Valor inválido.')
 
   const tipo = converterCelulaEmTipo(celulaTipo ?? null)
-  if (tipo === null) erros.push('O tipo deve ser receita ou despesa.')
+  if (tipo === null) erros.push('O tipo deve ser receita, despesa ou reembolso.')
 
   if (erros.length > 0 || data === null || valorCentavos === null || tipo === null) {
     return { numeroDaLinha, textoOriginal, lancamento: null, erros }

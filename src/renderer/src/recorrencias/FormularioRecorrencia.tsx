@@ -3,14 +3,14 @@ import { obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
 import { obterMesDaData } from '../../../shared/datas/mes'
 import { converterTextoEmCentavos } from '../../../shared/dinheiro/converterTextoEmCentavos'
 import { formatarCentavosParaCampo } from '../../../shared/dinheiro/formatarCentavosParaCampo'
-import { TIPOS_LANCAMENTO, type TipoLancamento } from '../../../shared/lancamentos/tipos'
+import { TIPOS_DE_RECORRENCIA, type TipoDeRecorrencia } from '../../../shared/lancamentos/tipos'
 import { validarNovaRecorrencia } from '../../../shared/recorrencias/regras'
 import type { NovaRecorrencia, Recorrencia } from '../../../shared/recorrencias/tipos'
 import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
 import { CampoDeMes } from '../componentes/CampoDeMes'
 import { Selecao } from '../componentes/Selecao'
 
-const ROTULO_DO_TIPO: Record<TipoLancamento, string> = { receita: 'Receita', despesa: 'Despesa' }
+const ROTULO_DO_TIPO: Record<TipoDeRecorrencia, string> = { receita: 'Receita', despesa: 'Despesa' }
 const DIA_PADRAO_DO_MES = '5'
 
 interface Props {
@@ -30,7 +30,7 @@ export function FormularioRecorrencia({
   const [valorTexto, setValorTexto] = useState(
     recorrenciaEmEdicao ? formatarCentavosParaCampo(recorrenciaEmEdicao.valorCentavos) : ''
   )
-  const [tipo, setTipo] = useState<TipoLancamento>(recorrenciaEmEdicao?.tipo ?? 'despesa')
+  const [tipo, setTipo] = useState<TipoDeRecorrencia>(recorrenciaEmEdicao?.tipo ?? 'despesa')
   const [categoria, setCategoria] = useState(recorrenciaEmEdicao?.categoria ?? '')
   const [diaTexto, setDiaTexto] = useState(
     recorrenciaEmEdicao ? String(recorrenciaEmEdicao.diaDoMes) : DIA_PADRAO_DO_MES
@@ -94,11 +94,11 @@ export function FormularioRecorrencia({
         <span className="rotulo-do-campo">Tipo</span>
         <Selecao
           valor={tipo}
-          opcoes={TIPOS_LANCAMENTO.map((opcao) => ({
+          opcoes={TIPOS_DE_RECORRENCIA.map((opcao) => ({
             valor: opcao,
             rotulo: ROTULO_DO_TIPO[opcao]
           }))}
-          aoMudar={(valor) => setTipo(valor as TipoLancamento)}
+          aoMudar={(valor) => setTipo(valor as TipoDeRecorrencia)}
           rotuloDeAcessibilidade="Tipo"
         />
       </div>

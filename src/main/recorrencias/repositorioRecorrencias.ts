@@ -1,5 +1,5 @@
 import type { Database } from 'better-sqlite3'
-import type { TipoLancamento } from '../../shared/lancamentos/tipos'
+import type { TipoDeRecorrencia } from '../../shared/lancamentos/tipos'
 import type {
   NovaRecorrencia,
   Recorrencia,
@@ -11,7 +11,7 @@ interface LinhaRecorrencia {
   id: number
   descricao: string
   valor_centavos: number
-  tipo: TipoLancamento
+  tipo: TipoDeRecorrencia
   categoria: string
   dia_do_mes: number
   mes_de_inicio: string

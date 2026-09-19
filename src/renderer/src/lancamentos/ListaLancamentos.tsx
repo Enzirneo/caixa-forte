@@ -105,6 +105,9 @@ export function ListaLancamentos({
               {foiAlteradoAposFechamento(lancamento, fechamentos) && (
                 <span className="ressalva"> · lançado após o fechamento</span>
               )}
+              {lancamento.tipo === 'reembolso' && (
+                <span className="rotulo-de-compra">Reembolso</span>
+              )}
               {rotulosDeCompra.has(lancamento.id) && (
                 <span className="rotulo-de-compra">{rotulosDeCompra.get(lancamento.id)}</span>
               )}

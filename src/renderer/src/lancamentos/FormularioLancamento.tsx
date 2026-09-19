@@ -22,7 +22,8 @@ const MAXIMO_DE_PARCELAS_NO_CAMPO = 60
 
 const ROTULO_DO_TIPO: Record<TipoLancamento, string> = {
   receita: 'Receita',
-  despesa: 'Despesa'
+  despesa: 'Despesa',
+  reembolso: 'Reembolso'
 }
 
 interface Props {

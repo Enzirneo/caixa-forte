@@ -1,5 +1,5 @@
 import { obterMesDaData, obterUltimoDiaDoMes, somarMeses } from '../datas/mes'
-import { TIPOS_LANCAMENTO } from '../lancamentos/tipos'
+import { TIPOS_DE_RECORRENCIA } from '../lancamentos/tipos'
 import type { NovaRecorrencia } from './tipos'
 
 const PADRAO_MES = /^\d{4}-(0[1-9]|1[0-2])$/
@@ -60,7 +60,7 @@ export function validarNovaRecorrencia(recorrencia: NovaRecorrencia): string[] {
   if (!Number.isInteger(recorrencia.valorCentavos) || recorrencia.valorCentavos <= 0) {
     erros.push('Informe um valor maior que zero.')
   }
-  if (!TIPOS_LANCAMENTO.includes(recorrencia.tipo)) erros.push('Escolha receita ou despesa.')
+  if (!TIPOS_DE_RECORRENCIA.includes(recorrencia.tipo)) erros.push('Escolha receita ou despesa.')
   if (!recorrencia.categoria.trim()) erros.push('Informe a categoria.')
   if (
     !Number.isInteger(recorrencia.diaDoMes) ||

@@ -178,3 +178,26 @@ describe('migration dos ajustes de fechamento dos cartões', () => {
     ).toEqual([{ nome: 'Nubank', dia_de_fechamento: 25, dias_antes_do_vencimento: null }])
   })
 })
+
+describe('migration do reembolso', () => {
+  it('mantém os lançamentos antigos como estavam, sem nenhum marcado como reembolso', () => {
+    const banco = new Database(':memory:')
+    executarMigracoes(
+      banco,
+      listaDeMigracoes.filter((migracao) => migracao.versao <= 8)
+    )
+    banco.prepare("INSERT INTO categorias (nome, chave) VALUES ('Renda', 'renda')").run()
+    banco
+      .prepare(
+        `INSERT INTO lancamentos (descricao, valor_centavos, data, tipo, categoria_id, alterado_em)
+         VALUES ('Salário', 500000, '2026-09-05', 'receita', 1, '2026-09-05 00:00:00.000')`
+      )
+      .run()
+
+    executarMigracoes(banco, listaDeMigracoes)
+
+    expect(banco.prepare('SELECT tipo, reembolso FROM lancamentos').all()).toEqual([
+      { tipo: 'receita', reembolso: 0 }
+    ])
+  })
+})

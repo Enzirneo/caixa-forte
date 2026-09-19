@@ -75,15 +75,21 @@ export function calcularPercentualQueSobrou(
 function somarDespesasPorCategoria(lancamentos: Lancamento[]): Map<string, FatiaDeCategoria> {
   const porChave = new Map<string, FatiaDeCategoria>()
   for (const lancamento of lancamentos) {
-    if (lancamento.tipo !== 'despesa') continue
+    if (lancamento.tipo === 'receita') continue
 
     const chave = gerarChaveDaCategoria(lancamento.categoria)
     const atual = porChave.get(chave)
+    const variacao =
+      lancamento.tipo === 'despesa' ? lancamento.valorCentavos : -lancamento.valorCentavos
     porChave.set(chave, {
       categoria: atual?.categoria ?? lancamento.categoria,
-      valorCentavos: (atual?.valorCentavos ?? 0) + lancamento.valorCentavos,
+      valorCentavos: (atual?.valorCentavos ?? 0) + variacao,
       permilagem: 0
     })
+  }
+  // Categoria totalmente reembolsada não gastou nada: sai do gráfico.
+  for (const [chave, fatia] of porChave) {
+    if (fatia.valorCentavos <= 0) porChave.delete(chave)
   }
   return porChave
 }

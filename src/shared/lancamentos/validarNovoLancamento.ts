@@ -9,7 +9,8 @@ export function validarNovoLancamento(lancamento: NovoLancamento): string[] {
     erros.push('Informe um valor maior que zero.')
   }
   if (!ehDataIsoValida(lancamento.data)) erros.push('Informe uma data válida.')
-  if (!TIPOS_LANCAMENTO.includes(lancamento.tipo)) erros.push('Escolha receita ou despesa.')
+  if (!TIPOS_LANCAMENTO.includes(lancamento.tipo))
+    erros.push('Escolha receita, despesa ou reembolso.')
   if (!lancamento.categoria.trim()) erros.push('Informe a categoria.')
 
   return erros

@@ -64,6 +64,15 @@ describe('cálculos de investimentos', () => {
     expect(calcularSaldoDaContaCorrente(lancamentos, movimentacoes, HOJE)).toBe(280000)
   })
 
+  it('o reembolso devolve dinheiro à conta corrente', () => {
+    const lancamentos = [
+      lancar({ id: 1, tipo: 'despesa', valorCentavos: 10000 }),
+      lancar({ id: 2, tipo: 'reembolso', valorCentavos: 10000 })
+    ]
+
+    expect(calcularSaldoDaContaCorrente(lancamentos, [], HOJE)).toBe(0)
+  })
+
   it('o resgate devolve dinheiro para a conta corrente', () => {
     const lancamentos = [lancar({ tipo: 'receita', valorCentavos: 500000 })]
     const aplicouEResgatou = [

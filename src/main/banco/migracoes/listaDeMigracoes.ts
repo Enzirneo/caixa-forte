@@ -123,5 +123,13 @@ export const listaDeMigracoes: Migracao[] = [
         PRIMARY KEY (cartao_id, mes_do_vencimento)
       );
     `
+  },
+  {
+    versao: 9,
+    descricao: 'marca lançamentos que são reembolso de um gasto',
+    sql: `
+      ALTER TABLE lancamentos ADD COLUMN reembolso INTEGER NOT NULL DEFAULT 0
+        CHECK (reembolso IN (0, 1));
+    `
   }
 ]

@@ -54,3 +54,28 @@ describe('resumirPorMes', () => {
     ])
   })
 })
+
+describe('reembolso', () => {
+  const gastoEDevolucao: Lancamento[] = [
+    { ...lancamentos[0], id: 90, tipo: 'despesa', valorCentavos: 10000, data: '2026-09-10' },
+    { ...lancamentos[0], id: 91, tipo: 'reembolso', valorCentavos: 4000, data: '2026-09-12' }
+  ]
+
+  it('abate a despesa e não conta como receita', () => {
+    expect(calcularResumo(gastoEDevolucao)).toEqual({
+      receitasCentavos: 0,
+      despesasCentavos: 6000,
+      saldoCentavos: -6000
+    })
+  })
+
+  it('devolução total deixa o mês sem gasto e o saldo no mesmo lugar', () => {
+    const devolucaoTotal = [gastoEDevolucao[0], { ...gastoEDevolucao[1], valorCentavos: 10000 }]
+
+    expect(calcularResumo(devolucaoTotal)).toEqual({
+      receitasCentavos: 0,
+      despesasCentavos: 0,
+      saldoCentavos: 0
+    })
+  })
+})
