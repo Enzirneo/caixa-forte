@@ -68,3 +68,13 @@ export function atualizarLancamento(banco: Database, lancamento: LancamentoEdita
 export function excluirLancamento(banco: Database, id: number): void {
   banco.prepare('DELETE FROM lancamentos WHERE id = ?').run(id)
 }
+
+export function inserirVariosLancamentos(
+  banco: Database,
+  novosLancamentos: NovoLancamento[]
+): number {
+  banco.transaction(() => {
+    novosLancamentos.forEach((novoLancamento) => inserirLancamento(banco, novoLancamento))
+  })()
+  return novosLancamentos.length
+}

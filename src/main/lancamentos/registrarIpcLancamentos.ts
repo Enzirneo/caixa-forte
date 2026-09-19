@@ -7,21 +7,32 @@ import {
   atualizarLancamento,
   excluirLancamento,
   inserirLancamento,
+  inserirVariosLancamentos,
   listarLancamentos
 } from './repositorioLancamentos'
+
+function lancarErroSeInvalido(lancamento: NovoLancamento, prefixo = ''): void {
+  const erros = validarNovoLancamento(lancamento)
+  if (erros.length > 0) throw new Error(`${prefixo}${erros.join(' ')}`)
+}
 
 export function registrarIpcLancamentos(banco: Database): void {
   ipcMain.handle(CANAIS_LANCAMENTOS.listar, () => listarLancamentos(banco))
 
   ipcMain.handle(CANAIS_LANCAMENTOS.criar, (_evento, novoLancamento: NovoLancamento) => {
-    const erros = validarNovoLancamento(novoLancamento)
-    if (erros.length > 0) throw new Error(erros.join(' '))
+    lancarErroSeInvalido(novoLancamento)
     return inserirLancamento(banco, novoLancamento)
   })
 
+  ipcMain.handle(CANAIS_LANCAMENTOS.criarVarios, (_evento, novosLancamentos: NovoLancamento[]) => {
+    novosLancamentos.forEach((novoLancamento, indice) =>
+      lancarErroSeInvalido(novoLancamento, `Item ${indice + 1}: `)
+    )
+    return inserirVariosLancamentos(banco, novosLancamentos)
+  })
+
   ipcMain.handle(CANAIS_LANCAMENTOS.atualizar, (_evento, lancamento: LancamentoEditado) => {
-    const erros = validarNovoLancamento(lancamento)
-    if (erros.length > 0) throw new Error(erros.join(' '))
+    lancarErroSeInvalido(lancamento)
     atualizarLancamento(banco, lancamento)
   })
 

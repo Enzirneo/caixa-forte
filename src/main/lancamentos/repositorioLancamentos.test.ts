@@ -7,6 +7,7 @@ import {
   atualizarLancamento,
   excluirLancamento,
   inserirLancamento,
+  inserirVariosLancamentos,
   listarLancamentos
 } from './repositorioLancamentos'
 
@@ -90,5 +91,32 @@ describe('alteradoEm', () => {
     atualizarLancamento(banco, { ...inserido, descricao: 'Feira' })
 
     expect(listarLancamentos(banco)[0].alteradoEm > '2000-01-01').toBe(true)
+  })
+})
+
+describe('inserirVariosLancamentos', () => {
+  let banco: Database.Database
+
+  beforeEach(() => {
+    banco = new Database(':memory:')
+    executarMigracoes(banco, listaDeMigracoes)
+  })
+
+  it('insere todos e devolve a quantidade', () => {
+    const quantidade = inserirVariosLancamentos(banco, [
+      mercado,
+      { ...mercado, descricao: 'Farmácia' }
+    ])
+
+    expect(quantidade).toBe(2)
+    expect(listarLancamentos(banco)).toHaveLength(2)
+  })
+
+  it('não insere nenhum se um deles falhar no banco', () => {
+    expect(() =>
+      inserirVariosLancamentos(banco, [mercado, { ...mercado, valorCentavos: 0 }])
+    ).toThrow()
+
+    expect(listarLancamentos(banco)).toEqual([])
   })
 })

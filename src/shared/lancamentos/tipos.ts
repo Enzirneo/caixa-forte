@@ -21,6 +21,7 @@ export interface Lancamento extends LancamentoEditado {
 export interface ApiLancamentos {
   listar: () => Promise<Lancamento[]>
   criar: (novoLancamento: NovoLancamento) => Promise<Lancamento>
+  criarVarios: (novosLancamentos: NovoLancamento[]) => Promise<number>
   atualizar: (lancamento: LancamentoEditado) => Promise<void>
   excluir: (id: number) => Promise<void>
 }
