@@ -4,6 +4,7 @@ import type { ApiBackup } from '../shared/backup/tipos'
 import type { ApiFechamentos } from '../shared/fechamentos/tipos'
 import type { ApiInvestimentos } from '../shared/investimentos/tipos'
 import type { ApiLancamentos } from '../shared/lancamentos/tipos'
+import type { ApiRecorrencias } from '../shared/recorrencias/tipos'
 
 declare global {
   interface Window {
@@ -14,6 +15,7 @@ declare global {
       investimentos: ApiInvestimentos
       backup: ApiBackup
       arquivos: ApiArquivos
+      recorrencias: ApiRecorrencias
     }
   }
 }

@@ -7,6 +7,8 @@ import { CANAIS_FECHAMENTOS } from '../shared/fechamentos/canais'
 import type { ApiFechamentos } from '../shared/fechamentos/tipos'
 import { CANAIS_INVESTIMENTOS } from '../shared/investimentos/canais'
 import type { ApiInvestimentos } from '../shared/investimentos/tipos'
+import { CANAIS_RECORRENCIAS } from '../shared/recorrencias/canais'
+import type { ApiRecorrencias } from '../shared/recorrencias/tipos'
 import { CANAIS_LANCAMENTOS } from '../shared/lancamentos/canais'
 import type { ApiLancamentos } from '../shared/lancamentos/tipos'
 
@@ -46,7 +48,16 @@ const arquivos: ApiArquivos = {
     ipcRenderer.invoke(CANAIS_ARQUIVOS.salvarTexto, nomeSugerido, conteudo)
 }
 
-const api = { lancamentos, fechamentos, investimentos, backup, arquivos }
+const recorrencias: ApiRecorrencias = {
+  listar: () => ipcRenderer.invoke(CANAIS_RECORRENCIAS.listar),
+  criar: (nova) => ipcRenderer.invoke(CANAIS_RECORRENCIAS.criar, nova),
+  atualizar: (recorrencia) => ipcRenderer.invoke(CANAIS_RECORRENCIAS.atualizar, recorrencia),
+  definirAtiva: (id, ativa) => ipcRenderer.invoke(CANAIS_RECORRENCIAS.definirAtiva, id, ativa),
+  excluir: (id) => ipcRenderer.invoke(CANAIS_RECORRENCIAS.excluir, id),
+  gerarPendentes: () => ipcRenderer.invoke(CANAIS_RECORRENCIAS.gerarPendentes)
+}
+
+const api = { lancamentos, fechamentos, investimentos, backup, arquivos, recorrencias }
 
 if (process.contextIsolated) {
   try {

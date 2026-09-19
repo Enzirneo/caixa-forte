@@ -8,6 +8,8 @@ import { registrarIpcBackup } from './backup/registrarIpcBackup'
 import { registrarIpcFechamentos } from './fechamentos/registrarIpcFechamentos'
 import { registrarIpcInvestimentos } from './investimentos/registrarIpcInvestimentos'
 import { registrarIpcLancamentos } from './lancamentos/registrarIpcLancamentos'
+import { tentarGerarRecorrentesDeHoje } from './recorrencias/gerarLancamentosRecorrentes'
+import { registrarIpcRecorrencias } from './recorrencias/registrarIpcRecorrencias'
 
 function createWindow(): void {
   // Create the browser window.
@@ -48,9 +50,11 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   const banco = abrirBanco()
+  tentarGerarRecorrentesDeHoje(banco)
   registrarIpcLancamentos(banco)
   registrarIpcFechamentos(banco)
   registrarIpcInvestimentos(banco)
+  registrarIpcRecorrencias(banco)
   registrarIpcBackup(banco)
   registrarIpcArquivos()
 

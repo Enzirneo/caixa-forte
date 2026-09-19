@@ -57,5 +57,27 @@ export const listaDeMigracoes: Migracao[] = [
     versao: 4,
     descricao: 'passa as categorias dos lançamentos para uma tabela própria',
     executar: migrarCategoriasParaTabela
+  },
+  {
+    versao: 5,
+    descricao: 'cria lançamentos recorrentes e o registro do que já foi gerado',
+    sql: `
+      CREATE TABLE recorrencias (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        descricao TEXT NOT NULL,
+        valor_centavos INTEGER NOT NULL CHECK (valor_centavos > 0),
+        tipo TEXT NOT NULL CHECK (tipo IN ('receita', 'despesa')),
+        categoria_id INTEGER NOT NULL REFERENCES categorias (id),
+        dia_do_mes INTEGER NOT NULL CHECK (dia_do_mes BETWEEN 1 AND 31),
+        mes_de_inicio TEXT NOT NULL,
+        mes_de_fim TEXT,
+        ativa INTEGER NOT NULL DEFAULT 1 CHECK (ativa IN (0, 1))
+      );
+      CREATE TABLE recorrencias_geradas (
+        recorrencia_id INTEGER NOT NULL REFERENCES recorrencias (id) ON DELETE CASCADE,
+        competencia TEXT NOT NULL,
+        PRIMARY KEY (recorrencia_id, competencia)
+      );
+    `
   }
 ]
