@@ -1,12 +1,21 @@
 import type { Database } from 'better-sqlite3'
+import { CATEGORIA_PARA_NOME_VAZIO } from '../../shared/categorias/nomeDaCategoria'
 import type {
   Lancamento,
   LancamentoEditado,
   NovoLancamento,
   TipoLancamento
 } from '../../shared/lancamentos/tipos'
+import { obterOuCriarCategoria } from '../categorias/repositorioCategorias'
 
 const AGORA_COM_MILISSEGUNDOS = "strftime('%Y-%m-%d %H:%M:%f', 'now')"
+
+const SELECIONAR_LANCAMENTOS = `
+  SELECT l.id, l.descricao, l.valor_centavos, l.data, l.tipo, l.alterado_em,
+         COALESCE(c.nome, ?) AS categoria
+  FROM lancamentos l
+  LEFT JOIN categorias c ON c.id = l.categoria_id
+`
 
 interface LinhaLancamento {
   id: number
@@ -31,38 +40,47 @@ function converterLinhaEmLancamento(linha: LinhaLancamento): Lancamento {
 }
 
 function buscarLancamentoPorId(banco: Database, id: number): Lancamento {
-  const linha = banco.prepare('SELECT * FROM lancamentos WHERE id = ?').get(id) as LinhaLancamento
+  const linha = banco
+    .prepare(`${SELECIONAR_LANCAMENTOS} WHERE l.id = ?`)
+    .get(CATEGORIA_PARA_NOME_VAZIO, id) as LinhaLancamento
   return converterLinhaEmLancamento(linha)
 }
 
 export function listarLancamentos(banco: Database): Lancamento[] {
   const linhas = banco
-    .prepare('SELECT * FROM lancamentos ORDER BY data DESC, id DESC')
-    .all() as LinhaLancamento[]
+    .prepare(`${SELECIONAR_LANCAMENTOS} ORDER BY l.data DESC, l.id DESC`)
+    .all(CATEGORIA_PARA_NOME_VAZIO) as LinhaLancamento[]
   return linhas.map(converterLinhaEmLancamento)
 }
 
 export function inserirLancamento(banco: Database, novoLancamento: NovoLancamento): Lancamento {
-  const { lastInsertRowid } = banco
-    .prepare(
-      `INSERT INTO lancamentos (descricao, valor_centavos, data, tipo, categoria, alterado_em)
-       VALUES (@descricao, @valorCentavos, @data, @tipo, @categoria, ${AGORA_COM_MILISSEGUNDOS})`
-    )
-    .run(novoLancamento)
-  return buscarLancamentoPorId(banco, Number(lastInsertRowid))
+  const inserirEmTransacao = banco.transaction(() => {
+    const categoriaId = obterOuCriarCategoria(banco, novoLancamento.categoria)
+    const { lastInsertRowid } = banco
+      .prepare(
+        `INSERT INTO lancamentos (descricao, valor_centavos, data, tipo, categoria_id, alterado_em)
+         VALUES (@descricao, @valorCentavos, @data, @tipo, @categoriaId, ${AGORA_COM_MILISSEGUNDOS})`
+      )
+      .run({ ...novoLancamento, categoriaId })
+    return Number(lastInsertRowid)
+  })
+  return buscarLancamentoPorId(banco, inserirEmTransacao())
 }
 
 export function atualizarLancamento(banco: Database, lancamento: LancamentoEditado): void {
-  const { changes } = banco
-    .prepare(
-      `UPDATE lancamentos
-       SET descricao = @descricao, valor_centavos = @valorCentavos,
-           data = @data, tipo = @tipo, categoria = @categoria,
-           alterado_em = ${AGORA_COM_MILISSEGUNDOS}
-       WHERE id = @id`
-    )
-    .run(lancamento)
-  if (changes === 0) throw new Error(`Lançamento ${lancamento.id} não encontrado`)
+  const atualizarEmTransacao = banco.transaction(() => {
+    const categoriaId = obterOuCriarCategoria(banco, lancamento.categoria)
+    return banco
+      .prepare(
+        `UPDATE lancamentos
+         SET descricao = @descricao, valor_centavos = @valorCentavos,
+             data = @data, tipo = @tipo, categoria_id = @categoriaId,
+             alterado_em = ${AGORA_COM_MILISSEGUNDOS}
+         WHERE id = @id`
+      )
+      .run({ ...lancamento, categoriaId }).changes
+  })
+  if (atualizarEmTransacao() === 0) throw new Error(`Lançamento ${lancamento.id} não encontrado`)
 }
 
 export function excluirLancamento(banco: Database, id: number): void {

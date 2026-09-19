@@ -1,3 +1,4 @@
+import { migrarCategoriasParaTabela } from './categoriasEmTabela'
 import type { Migracao } from './executarMigracoes'
 
 const AGORA_COM_MILISSEGUNDOS = "strftime('%Y-%m-%d %H:%M:%f', 'now')"
@@ -51,5 +52,10 @@ export const listaDeMigracoes: Migracao[] = [
         data TEXT NOT NULL
       );
     `
+  },
+  {
+    versao: 4,
+    descricao: 'passa as categorias dos lançamentos para uma tabela própria',
+    executar: migrarCategoriasParaTabela
   }
 ]

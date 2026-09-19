@@ -1,10 +1,20 @@
 import type { Database } from 'better-sqlite3'
 
-export interface Migracao {
+interface MigracaoBase {
   versao: number
   descricao: string
+}
+
+interface MigracaoEmSql extends MigracaoBase {
   sql: string
 }
+
+// Para mudanças que o SQL puro não expressa, como comparar nomes sem acento.
+interface MigracaoEmCodigo extends MigracaoBase {
+  executar: (banco: Database) => void
+}
+
+export type Migracao = MigracaoEmSql | MigracaoEmCodigo
 
 export interface EstadoDasMigracoes {
   quantidadeAplicadas: number
@@ -39,7 +49,8 @@ function validarVersoesUnicas(migracoes: Migracao[]): void {
 
 function aplicarMigracao(banco: Database, migracao: Migracao): void {
   const aplicarEmTransacao = banco.transaction(() => {
-    banco.exec(migracao.sql)
+    if ('executar' in migracao) migracao.executar(banco)
+    else banco.exec(migracao.sql)
     banco
       .prepare(`INSERT INTO ${TABELA_CONTROLE} (versao, descricao) VALUES (?, ?)`)
       .run(migracao.versao, migracao.descricao)

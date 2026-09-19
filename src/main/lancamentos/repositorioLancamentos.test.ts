@@ -120,3 +120,49 @@ describe('inserirVariosLancamentos', () => {
     expect(listarLancamentos(banco)).toEqual([])
   })
 })
+
+describe('categorias padronizadas', () => {
+  let banco: Database.Database
+
+  beforeEach(() => {
+    banco = new Database(':memory:')
+    executarMigracoes(banco, listaDeMigracoes)
+  })
+
+  it('trata maiúscula, acento e espaço a mais como a mesma categoria', () => {
+    inserirLancamento(banco, { ...mercado, categoria: 'Saúde' })
+    const segundo = inserirLancamento(banco, { ...mercado, categoria: '  saude ' })
+
+    expect(segundo.categoria).toBe('Saúde')
+    expect(banco.prepare('SELECT COUNT(*) AS n FROM categorias').get()).toEqual({ n: 1 })
+  })
+
+  it('cria uma categoria nova quando o nome é diferente', () => {
+    inserirLancamento(banco, { ...mercado, categoria: 'Saúde' })
+    const outro = inserirLancamento(banco, { ...mercado, categoria: 'Lazer' })
+
+    expect(outro.categoria).toBe('Lazer')
+    expect(banco.prepare('SELECT COUNT(*) AS n FROM categorias').get()).toEqual({ n: 2 })
+  })
+
+  it('ao editar, também usa a grafia que já existe', () => {
+    inserirLancamento(banco, { ...mercado, categoria: 'Comida' })
+    const outro = inserirLancamento(banco, { ...mercado, categoria: 'Lazer' })
+
+    atualizarLancamento(banco, { ...outro, categoria: 'COMIDA' })
+
+    expect(listarLancamentos(banco).map((lancamento) => lancamento.categoria)).toEqual([
+      'Comida',
+      'Comida'
+    ])
+  })
+
+  it('a importação em lote também padroniza', () => {
+    inserirVariosLancamentos(banco, [
+      { ...mercado, categoria: 'Transporte' },
+      { ...mercado, categoria: 'transporte' }
+    ])
+
+    expect(banco.prepare('SELECT COUNT(*) AS n FROM categorias').get()).toEqual({ n: 1 })
+  })
+})
