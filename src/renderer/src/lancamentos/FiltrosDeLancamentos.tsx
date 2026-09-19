@@ -62,55 +62,73 @@ export function FiltrosDeLancamentos({
 
   return (
     <div className="filtros-de-lancamentos">
-      <div className="campo-com-icone-a-esquerda">
-        <Search size={TAMANHO_DO_ICONE_DE_BUSCA} />
-        <input
-          placeholder="Buscar por descrição ou categoria"
-          aria-label="Buscar lançamentos"
-          value={filtro.texto}
-          onChange={(e) => aoMudar({ ...filtro, texto: e.target.value })}
+      <div className="campo-de-filtro campo-de-busca">
+        <span className="rotulo-do-campo">Buscar</span>
+        <div className="campo-com-icone-a-esquerda">
+          <Search size={TAMANHO_DO_ICONE_DE_BUSCA} />
+          <input
+            placeholder="Descrição ou categoria"
+            aria-label="Buscar lançamentos"
+            value={filtro.texto}
+            onChange={(e) => aoMudar({ ...filtro, texto: e.target.value })}
+          />
+        </div>
+      </div>
+      <div className="campo-de-filtro">
+        <span className="rotulo-do-campo">Categoria</span>
+        <Selecao
+          valor={filtro.categoria ?? VALOR_DE_TODAS_AS_CATEGORIAS}
+          opcoes={opcoesDeCategoria}
+          aoMudar={(valor) =>
+            aoMudar({ ...filtro, categoria: valor === VALOR_DE_TODAS_AS_CATEGORIAS ? null : valor })
+          }
+          rotuloDeAcessibilidade="Filtrar por categoria"
         />
       </div>
-      <Selecao
-        valor={filtro.categoria ?? VALOR_DE_TODAS_AS_CATEGORIAS}
-        opcoes={opcoesDeCategoria}
-        aoMudar={(valor) =>
-          aoMudar({ ...filtro, categoria: valor === VALOR_DE_TODAS_AS_CATEGORIAS ? null : valor })
-        }
-        rotuloDeAcessibilidade="Filtrar por categoria"
-      />
-      <Selecao
-        valor={filtro.tipo}
-        opcoes={OPCOES_DE_TIPO}
-        aoMudar={(valor) => aoMudar({ ...filtro, tipo: valor as TipoLancamento | 'todos' })}
-        rotuloDeAcessibilidade="Filtrar por tipo"
-      />
-      <input
-        inputMode="decimal"
-        placeholder="Valor mín."
-        aria-label="Valor mínimo"
-        value={textoDoMinimo}
-        onChange={(e) => {
-          setTextoDoMinimo(e.target.value)
-          aoMudar({ ...filtro, valorMinimoCentavos: converterTextoEmLimite(e.target.value) })
-        }}
-      />
-      <input
-        inputMode="decimal"
-        placeholder="Valor máx."
-        aria-label="Valor máximo"
-        value={textoDoMaximo}
-        onChange={(e) => {
-          setTextoDoMaximo(e.target.value)
-          aoMudar({ ...filtro, valorMaximoCentavos: converterTextoEmLimite(e.target.value) })
-        }}
-      />
-      <Selecao
-        valor={filtro.ordenacao}
-        opcoes={OPCOES_DE_ORDENACAO}
-        aoMudar={(valor) => aoMudar({ ...filtro, ordenacao: valor as OrdenacaoDeLancamentos })}
-        rotuloDeAcessibilidade="Ordenar por"
-      />
+      <div className="campo-de-filtro">
+        <span className="rotulo-do-campo">Tipo</span>
+        <Selecao
+          valor={filtro.tipo}
+          opcoes={OPCOES_DE_TIPO}
+          aoMudar={(valor) => aoMudar({ ...filtro, tipo: valor as TipoLancamento | 'todos' })}
+          rotuloDeAcessibilidade="Filtrar por tipo"
+        />
+      </div>
+      <div className="campo-de-filtro campo-de-valor">
+        <span className="rotulo-do-campo">Valor mínimo</span>
+        <input
+          inputMode="decimal"
+          placeholder="0,00"
+          aria-label="Valor mínimo"
+          value={textoDoMinimo}
+          onChange={(e) => {
+            setTextoDoMinimo(e.target.value)
+            aoMudar({ ...filtro, valorMinimoCentavos: converterTextoEmLimite(e.target.value) })
+          }}
+        />
+      </div>
+      <div className="campo-de-filtro campo-de-valor">
+        <span className="rotulo-do-campo">Valor máximo</span>
+        <input
+          inputMode="decimal"
+          placeholder="0,00"
+          aria-label="Valor máximo"
+          value={textoDoMaximo}
+          onChange={(e) => {
+            setTextoDoMaximo(e.target.value)
+            aoMudar({ ...filtro, valorMaximoCentavos: converterTextoEmLimite(e.target.value) })
+          }}
+        />
+      </div>
+      <div className="campo-de-filtro">
+        <span className="rotulo-do-campo">Ordenar por</span>
+        <Selecao
+          valor={filtro.ordenacao}
+          opcoes={OPCOES_DE_ORDENACAO}
+          aoMudar={(valor) => aoMudar({ ...filtro, ordenacao: valor as OrdenacaoDeLancamentos })}
+          rotuloDeAcessibilidade="Ordenar por"
+        />
+      </div>
       <div className="contagem-de-lancamentos">
         <span>
           {ativo
