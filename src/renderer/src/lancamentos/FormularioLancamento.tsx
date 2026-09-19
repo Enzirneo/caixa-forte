@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
 import { converterTextoEmCentavos } from '../../../shared/dinheiro/converterTextoEmCentavos'
+import { formatarCentavosParaCampo } from '../../../shared/dinheiro/formatarCentavosParaCampo'
 import {
   TIPOS_LANCAMENTO,
+  type Lancamento,
   type NovoLancamento,
   type TipoLancamento
 } from '../../../shared/lancamentos/tipos'
@@ -14,15 +16,23 @@ const ROTULO_DO_TIPO: Record<TipoLancamento, string> = {
 }
 
 interface Props {
-  aoCriar: (novoLancamento: NovoLancamento) => Promise<void>
+  lancamentoEmEdicao: Lancamento | null
+  aoSalvar: (novoLancamento: NovoLancamento) => Promise<void>
+  aoCancelarEdicao: () => void
 }
 
-export function FormularioLancamento({ aoCriar }: Props): React.JSX.Element {
-  const [descricao, setDescricao] = useState('')
-  const [valorTexto, setValorTexto] = useState('')
-  const [data, setData] = useState(obterDataIsoDeHoje())
-  const [tipo, setTipo] = useState<TipoLancamento>('despesa')
-  const [categoria, setCategoria] = useState('')
+export function FormularioLancamento({
+  lancamentoEmEdicao,
+  aoSalvar,
+  aoCancelarEdicao
+}: Props): React.JSX.Element {
+  const [descricao, setDescricao] = useState(lancamentoEmEdicao?.descricao ?? '')
+  const [valorTexto, setValorTexto] = useState(
+    lancamentoEmEdicao ? formatarCentavosParaCampo(lancamentoEmEdicao.valorCentavos) : ''
+  )
+  const [data, setData] = useState(lancamentoEmEdicao?.data ?? obterDataIsoDeHoje())
+  const [tipo, setTipo] = useState<TipoLancamento>(lancamentoEmEdicao?.tipo ?? 'despesa')
+  const [categoria, setCategoria] = useState(lancamentoEmEdicao?.categoria ?? '')
   const [erros, setErros] = useState<string[]>([])
 
   const limparCamposDigitados = (): void => {
@@ -45,7 +55,7 @@ export function FormularioLancamento({ aoCriar }: Props): React.JSX.Element {
     setErros(errosEncontrados)
     if (errosEncontrados.length > 0) return
 
-    await aoCriar(novoLancamento)
+    await aoSalvar(novoLancamento)
     limparCamposDigitados()
   }
 
@@ -82,7 +92,14 @@ export function FormularioLancamento({ aoCriar }: Props): React.JSX.Element {
         Categoria
         <input value={categoria} onChange={(e) => setCategoria(e.target.value)} />
       </label>
-      <button type="submit">Adicionar</button>
+      <div className="acoes-formulario">
+        <button type="submit">{lancamentoEmEdicao ? 'Salvar' : 'Adicionar'}</button>
+        {lancamentoEmEdicao && (
+          <button type="button" className="secundario" onClick={aoCancelarEdicao}>
+            Cancelar
+          </button>
+        )}
+      </div>
       {erros.length > 0 && (
         <ul className="erros">
           {erros.map((erro) => (

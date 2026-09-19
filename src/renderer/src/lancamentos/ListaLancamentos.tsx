@@ -4,12 +4,13 @@ import type { Lancamento } from '../../../shared/lancamentos/tipos'
 
 interface Props {
   lancamentos: Lancamento[]
+  aoEditar: (lancamento: Lancamento) => void
   aoExcluir: (id: number) => Promise<void>
 }
 
-export function ListaLancamentos({ lancamentos, aoExcluir }: Props): React.JSX.Element {
+export function ListaLancamentos({ lancamentos, aoEditar, aoExcluir }: Props): React.JSX.Element {
   if (lancamentos.length === 0) {
-    return <p className="vazio">Nenhum lançamento ainda.</p>
+    return <p className="vazio">Nenhum lançamento neste mês.</p>
   }
 
   return (
@@ -32,8 +33,11 @@ export function ListaLancamentos({ lancamentos, aoExcluir }: Props): React.JSX.E
             <td className={`numero ${lancamento.tipo}`}>
               {formatarCentavosComoReal(lancamento.valorCentavos)}
             </td>
-            <td>
-              <button className="excluir" onClick={() => aoExcluir(lancamento.id)}>
+            <td className="acoes-linha">
+              <button className="secundario" onClick={() => aoEditar(lancamento)}>
+                Editar
+              </button>
+              <button className="secundario" onClick={() => aoExcluir(lancamento.id)}>
                 Excluir
               </button>
             </td>

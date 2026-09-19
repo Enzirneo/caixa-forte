@@ -4,6 +4,7 @@ import type { Lancamento, NovoLancamento } from '../../../shared/lancamentos/tip
 interface UsoDeLancamentos {
   lancamentos: Lancamento[]
   criar: (novoLancamento: NovoLancamento) => Promise<void>
+  atualizar: (lancamento: Lancamento) => Promise<void>
   excluir: (id: number) => Promise<void>
 }
 
@@ -29,10 +30,15 @@ export function useLancamentos(): UsoDeLancamentos {
     await recarregar()
   }
 
+  const atualizar = async (lancamento: Lancamento): Promise<void> => {
+    await window.api.lancamentos.atualizar(lancamento)
+    await recarregar()
+  }
+
   const excluir = async (id: number): Promise<void> => {
     await window.api.lancamentos.excluir(id)
     await recarregar()
   }
 
-  return { lancamentos, criar, excluir }
+  return { lancamentos, criar, atualizar, excluir }
 }

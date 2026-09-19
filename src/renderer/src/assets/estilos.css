@@ -145,15 +145,83 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
-.lista .excluir {
-  padding: 4px 10px;
+.vazio {
+  padding: 32px;
+  text-align: center;
+  color: var(--texto-suave);
+}
+
+.secundario {
   color: var(--texto-suave);
   background: transparent;
   border: 1px solid var(--borda);
 }
 
-.vazio {
-  padding: 32px;
-  text-align: center;
+.acoes-formulario,
+.acoes-linha {
+  display: flex;
+  gap: 8px;
+}
+
+.acoes-linha {
+  justify-content: flex-end;
+}
+
+.lista .acoes-linha button {
+  padding: 4px 10px;
+}
+
+.abas {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.aba {
   color: var(--texto-suave);
+  background: transparent;
+  border: 1px solid var(--borda);
+}
+
+.aba.ativa {
+  color: #fff;
+  background: var(--destaque);
+  border-color: var(--destaque);
+}
+
+.seletor-de-mes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.resumo-do-mes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.resumo-do-mes div {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  color: var(--texto-suave);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+}
+
+.resumo-do-mes strong {
+  font-size: 18px;
+}
+
+.seletor-de-mes strong {
+  display: inline-block;
+}
+
+.seletor-de-mes strong::first-letter {
+  text-transform: uppercase;
 }

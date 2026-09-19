@@ -6,6 +6,7 @@ import type { ApiLancamentos } from '../shared/lancamentos/tipos'
 const lancamentos: ApiLancamentos = {
   listar: () => ipcRenderer.invoke(CANAIS_LANCAMENTOS.listar),
   criar: (novoLancamento) => ipcRenderer.invoke(CANAIS_LANCAMENTOS.criar, novoLancamento),
+  atualizar: (lancamento) => ipcRenderer.invoke(CANAIS_LANCAMENTOS.atualizar, lancamento),
   excluir: (id) => ipcRenderer.invoke(CANAIS_LANCAMENTOS.excluir, id)
 }
 

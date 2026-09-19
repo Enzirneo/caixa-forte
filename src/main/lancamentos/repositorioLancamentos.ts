@@ -41,3 +41,15 @@ export function inserirLancamento(banco: Database, novoLancamento: NovoLancament
 export function excluirLancamento(banco: Database, id: number): void {
   banco.prepare('DELETE FROM lancamentos WHERE id = ?').run(id)
 }
+
+export function atualizarLancamento(banco: Database, lancamento: Lancamento): void {
+  const { changes } = banco
+    .prepare(
+      `UPDATE lancamentos
+       SET descricao = @descricao, valor_centavos = @valorCentavos,
+           data = @data, tipo = @tipo, categoria = @categoria
+       WHERE id = @id`
+    )
+    .run(lancamento)
+  if (changes === 0) throw new Error(`Lançamento ${lancamento.id} não encontrado`)
+}

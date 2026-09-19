@@ -3,7 +3,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { executarMigracoes } from '../banco/migracoes/executarMigracoes'
 import { listaDeMigracoes } from '../banco/migracoes/listaDeMigracoes'
 import type { NovoLancamento } from '../../shared/lancamentos/tipos'
-import { excluirLancamento, inserirLancamento, listarLancamentos } from './repositorioLancamentos'
+import {
+  atualizarLancamento,
+  excluirLancamento,
+  inserirLancamento,
+  listarLancamentos
+} from './repositorioLancamentos'
 
 const mercado: NovoLancamento = {
   descricao: 'Mercado',
@@ -47,5 +52,28 @@ describe('repositorioLancamentos', () => {
 
   it('o banco recusa valor que não seja positivo', () => {
     expect(() => inserirLancamento(banco, { ...mercado, valorCentavos: 0 })).toThrow()
+  })
+})
+
+describe('atualizarLancamento', () => {
+  let banco: Database.Database
+
+  beforeEach(() => {
+    banco = new Database(':memory:')
+    executarMigracoes(banco, listaDeMigracoes)
+  })
+
+  it('altera os campos e mantém o id', () => {
+    const original = inserirLancamento(banco, mercado)
+
+    atualizarLancamento(banco, { ...original, descricao: 'Feira', valorCentavos: 9990 })
+
+    expect(listarLancamentos(banco)).toEqual([
+      { ...original, descricao: 'Feira', valorCentavos: 9990 }
+    ])
+  })
+
+  it('falha se o lançamento não existe', () => {
+    expect(() => atualizarLancamento(banco, { id: 99, ...mercado })).toThrow('não encontrado')
   })
 })
