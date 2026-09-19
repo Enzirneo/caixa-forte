@@ -1,12 +1,16 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { CANAIS_LANCAMENTOS } from '../shared/lancamentos/canais'
+import type { ApiLancamentos } from '../shared/lancamentos/tipos'
 
-// Custom APIs for renderer
-const api = {}
+const lancamentos: ApiLancamentos = {
+  listar: () => ipcRenderer.invoke(CANAIS_LANCAMENTOS.listar),
+  criar: (novoLancamento) => ipcRenderer.invoke(CANAIS_LANCAMENTOS.criar, novoLancamento),
+  excluir: (id) => ipcRenderer.invoke(CANAIS_LANCAMENTOS.excluir, id)
+}
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
+const api = { lancamentos }
+
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)

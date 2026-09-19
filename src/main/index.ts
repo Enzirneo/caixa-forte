@@ -1,8 +1,9 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { abrirBanco } from './banco/abrirBanco'
+import { registrarIpcLancamentos } from './lancamentos/registrarIpcLancamentos'
 
 function createWindow(): void {
   // Create the browser window.
@@ -40,7 +41,8 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  abrirBanco()
+  const banco = abrirBanco()
+  registrarIpcLancamentos(banco)
 
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
@@ -51,9 +53,6 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
-
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
 
   createWindow()
 
