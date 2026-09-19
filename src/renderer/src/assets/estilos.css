@@ -508,13 +508,16 @@ label {
   align-items: end;
 }
 
+/* Tudo numa linha só: os campos encolhem junto com a janela e o botão mantém o tamanho. */
 .formulario-lancamento {
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns:
+    minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.3fr)
+    auto;
+  gap: 12px;
 }
 
-.formulario-lancamento .acoes-formulario {
-  grid-column: 1 / -1;
-  justify-content: flex-end;
+.formulario-lancamento.em-edicao {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .formulario-destino,
@@ -1003,10 +1006,6 @@ label {
 }
 
 @media (max-width: 1180px) {
-  .formulario-lancamento {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  }
-
   .painel-indicadores,
   .resumo-do-mes {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1466,42 +1465,6 @@ body {
 
 /* --- Filtros da lista --------------------------------------------------------------------- */
 
-.filtros-de-lancamentos {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
-  padding: 14px;
-  margin-bottom: 14px;
-  background: var(--superficie);
-  border: 1px solid var(--borda);
-  border-radius: var(--raio);
-  box-shadow: var(--sombra-suave);
-}
-
-.campo-de-filtro {
-  display: flex;
-  flex: 1 1 150px;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.campo-de-busca {
-  flex: 2 1 220px;
-}
-
-.campo-de-valor {
-  flex: 1 1 110px;
-}
-
-.filtros-de-lancamentos input {
-  height: 44px;
-}
-
 .campo-com-icone-a-esquerda {
   position: relative;
 }
@@ -1519,17 +1482,6 @@ body {
   padding-left: 40px;
 }
 
-.contagem-de-lancamentos {
-  display: flex;
-  flex: 1 1 100%;
-  gap: 8px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 4px;
-  color: var(--texto-suave);
-  font-size: 12px;
-  font-weight: 700;
-}
 
 
 
@@ -1538,4 +1490,24 @@ body {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
+}
+
+.busca-de-lancamentos {
+  margin-bottom: 12px;
+}
+
+.cabecalho-ordenavel {
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.cabecalho-ordenavel:hover {
+  color: var(--primaria);
 }

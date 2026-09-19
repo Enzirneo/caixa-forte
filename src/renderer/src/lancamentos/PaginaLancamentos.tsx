@@ -91,16 +91,12 @@ export function PaginaLancamentos({
           resumo={calcularResumo(lancamentosDoMes)}
           guardadoNoMesCentavos={calcularGuardadoNoMes(movimentacoes, mesSelecionado)}
         />
-        <FiltrosDeLancamentos
-          filtro={filtro}
-          aoMudar={setFiltro}
-          categorias={categoriasSugeridas}
-          quantidadeExibida={lancamentosExibidos.length}
-          quantidadeNoMes={lancamentosDoMes.length}
-        />
+        <FiltrosDeLancamentos filtro={filtro} aoMudar={setFiltro} />
         <ListaLancamentos
           lancamentos={lancamentosExibidos}
           filtrando={filtroEstaAtivo(filtro)}
+          ordenacao={filtro.ordenacao}
+          aoOrdenar={(ordenacao) => setFiltro({ ...filtro, ordenacao })}
           fechamentos={fechamentos}
           rotulosDeCompra={rotulosDeCompra}
           aoEditar={setLancamentoEmEdicao}

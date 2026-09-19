@@ -72,6 +72,11 @@ describe('ordenação', () => {
     expect(filtrar({ ordenacao: 'valor-asc' })).toEqual([4, 3, 1, 2])
   })
 
+  it('por categoria em ordem alfabética, desempatando pelo mais novo', () => {
+    expect(filtrar({ ordenacao: 'categoria-asc' })).toEqual([4, 1, 2, 3])
+    expect(filtrar({ ordenacao: 'categoria-desc' })).toEqual([3, 2, 4, 1])
+  })
+
   it('não altera a lista original', () => {
     const copia = [...lancamentos]
 

@@ -1,7 +1,8 @@
 import { gerarChaveDaCategoria } from '../categorias/nomeDaCategoria'
 import type { Lancamento, TipoLancamento } from './tipos'
 
-export type OrdenacaoDeLancamentos = 'data-desc' | 'data-asc' | 'valor-desc' | 'valor-asc'
+export type OrdenacaoDeLancamentos =
+  'data-desc' | 'data-asc' | 'valor-desc' | 'valor-asc' | 'categoria-asc' | 'categoria-desc'
 
 export interface FiltroDeLancamentos {
   texto: string
@@ -39,6 +40,10 @@ function comparar(ordenacao: OrdenacaoDeLancamentos): (a: Lancamento, b: Lancame
     a.data.localeCompare(b.data) || a.id - b.id
 
   if (ordenacao === 'data-asc') return dataAsc
+  if (ordenacao === 'categoria-asc')
+    return (a, b) => a.categoria.localeCompare(b.categoria, 'pt-BR') || dataDesc(a, b)
+  if (ordenacao === 'categoria-desc')
+    return (a, b) => b.categoria.localeCompare(a.categoria, 'pt-BR') || dataDesc(a, b)
   if (ordenacao === 'valor-desc')
     return (a, b) => b.valorCentavos - a.valorCentavos || dataDesc(a, b)
   if (ordenacao === 'valor-asc')

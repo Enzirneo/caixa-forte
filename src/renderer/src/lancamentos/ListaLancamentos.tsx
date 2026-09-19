@@ -2,21 +2,58 @@ import { formatarDataIsoComoBrasileira } from '../../../shared/datas/dataIso'
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
 import { foiAlteradoAposFechamento } from '../../../shared/fechamentos/regrasDeFechamento'
 import type { FechamentoMes } from '../../../shared/fechamentos/tipos'
+import type { OrdenacaoDeLancamentos } from '../../../shared/lancamentos/filtrarLancamentos'
 import type { Lancamento } from '../../../shared/lancamentos/tipos'
 import { BotaoExcluirComConfirmacao } from '../compartilhado/BotaoExcluirComConfirmacao'
 
 interface Props {
   lancamentos: Lancamento[]
   filtrando: boolean
+  ordenacao: OrdenacaoDeLancamentos
+  aoOrdenar: (ordenacao: OrdenacaoDeLancamentos) => void
   fechamentos: FechamentoMes[]
   rotulosDeCompra: Map<number, string>
   aoEditar: (lancamento: Lancamento) => void
   aoExcluir: (id: number) => Promise<void>
 }
 
+type CampoOrdenavel = 'data' | 'categoria' | 'valor'
+
+interface PropsDoCabecalho {
+  rotulo: string
+  campo: CampoOrdenavel
+  ordenacao: OrdenacaoDeLancamentos
+  aoOrdenar: (ordenacao: OrdenacaoDeLancamentos) => void
+  alinhadoADireita?: boolean
+}
+
+// Primeiro clique ordena de forma crescente (ou mais novo, para data); clicar de novo inverte.
+function CabecalhoOrdenavel({
+  rotulo,
+  campo,
+  ordenacao,
+  aoOrdenar,
+  alinhadoADireita
+}: PropsDoCabecalho): React.JSX.Element {
+  const ativo = ordenacao.startsWith(`${campo}-`)
+  const crescente = ordenacao.endsWith('-asc')
+  const proxima = `${campo}-${ativo && !crescente ? 'asc' : 'desc'}` as OrdenacaoDeLancamentos
+  const seta = ativo ? (crescente ? ' ▲' : ' ▼') : ''
+  return (
+    <th className={alinhadoADireita ? 'numero' : undefined}>
+      <button type="button" className="cabecalho-ordenavel" onClick={() => aoOrdenar(proxima)}>
+        {rotulo}
+        {seta}
+      </button>
+    </th>
+  )
+}
+
 export function ListaLancamentos({
   lancamentos,
   filtrando,
+  ordenacao,
+  aoOrdenar,
   fechamentos,
   rotulosDeCompra,
   aoEditar,
@@ -36,10 +73,26 @@ export function ListaLancamentos({
     <table className="lista">
       <thead>
         <tr>
-          <th>Data</th>
+          <CabecalhoOrdenavel
+            rotulo="Data"
+            campo="data"
+            ordenacao={ordenacao}
+            aoOrdenar={aoOrdenar}
+          />
           <th>Descrição</th>
-          <th>Categoria</th>
-          <th className="numero">Valor</th>
+          <CabecalhoOrdenavel
+            rotulo="Categoria"
+            campo="categoria"
+            ordenacao={ordenacao}
+            aoOrdenar={aoOrdenar}
+          />
+          <CabecalhoOrdenavel
+            rotulo="Valor"
+            campo="valor"
+            ordenacao={ordenacao}
+            aoOrdenar={aoOrdenar}
+            alinhadoADireita
+          />
           <th />
         </tr>
       </thead>
