@@ -17,7 +17,6 @@ import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
 import { CampoDeData } from '../componentes/CampoDeData'
 import { Selecao } from '../componentes/Selecao'
 
-const SEM_CARTAO = ''
 const PARCELAS_PADRAO = '1'
 const MAXIMO_DE_PARCELAS_NO_CAMPO = 60
 
@@ -52,14 +51,17 @@ export function FormularioLancamento({
   const [data, setData] = useState(lancamentoEmEdicao?.data ?? obterDataIsoDeHoje())
   const [tipo, setTipo] = useState<TipoLancamento>(lancamentoEmEdicao?.tipo ?? 'despesa')
   const [categoria, setCategoria] = useState(lancamentoEmEdicao?.categoria ?? '')
-  const [cartaoEscolhido, setCartaoEscolhido] = useState(SEM_CARTAO)
+  const [ehDeCartao, setEhDeCartao] = useState(false)
+  const [cartaoEscolhido, setCartaoEscolhido] = useState('')
   const [parcelasTexto, setParcelasTexto] = useState(PARCELAS_PADRAO)
   const [erros, setErros] = useState<string[]>([])
 
   const podeUsarCartao = !lancamentoEmEdicao && tipo === 'despesa' && cartoes.length > 0
-  const cartao = podeUsarCartao
-    ? cartoes.find((candidato) => String(candidato.id) === cartaoEscolhido)
-    : undefined
+  // Cartão de crédito só tem despesa: não existe devolução que entre como dinheiro na conta.
+  const cartao =
+    podeUsarCartao && ehDeCartao
+      ? (cartoes.find((candidato) => String(candidato.id) === cartaoEscolhido) ?? cartoes[0])
+      : undefined
 
   const montarCompra = (cartaoDaCompra: Cartao): NovaCompraNoCartao => ({
     cartaoId: cartaoDaCompra.id,
@@ -165,32 +167,6 @@ export function FormularioLancamento({
           sugestoes={categoriasSugeridas}
         />
       </div>
-      {podeUsarCartao && (
-        <div className="campo">
-          <span className="rotulo-do-campo">Cartão</span>
-          <Selecao
-            valor={cartaoEscolhido}
-            opcoes={[
-              { valor: SEM_CARTAO, rotulo: 'Nenhum' },
-              ...cartoes.map((opcao) => ({ valor: String(opcao.id), rotulo: opcao.nome }))
-            ]}
-            aoMudar={setCartaoEscolhido}
-            rotuloDeAcessibilidade="Cartão"
-          />
-        </div>
-      )}
-      {cartao && (
-        <label className="campo-de-parcelas">
-          Parcelas
-          <input
-            type="number"
-            min={1}
-            max={MAXIMO_DE_PARCELAS_NO_CAMPO}
-            value={parcelasTexto}
-            onChange={(e) => setParcelasTexto(e.target.value)}
-          />
-        </label>
-      )}
       <div className="acoes-formulario">
         <button type="submit">{lancamentoEmEdicao ? 'Salvar' : 'Adicionar'}</button>
         {lancamentoEmEdicao && (
@@ -199,6 +175,41 @@ export function FormularioLancamento({
           </button>
         )}
       </div>
+      {podeUsarCartao && (
+        <div className="opcao-de-cartao">
+          <label className="caixa-de-selecao">
+            <input
+              type="checkbox"
+              checked={ehDeCartao}
+              onChange={(e) => setEhDeCartao(e.target.checked)}
+            />
+            Esta despesa é de um cartão de crédito
+          </label>
+          {cartao && (
+            <>
+              <div className="campo">
+                <span className="rotulo-do-campo">Cartão</span>
+                <Selecao
+                  valor={String(cartao.id)}
+                  opcoes={cartoes.map((opcao) => ({ valor: String(opcao.id), rotulo: opcao.nome }))}
+                  aoMudar={setCartaoEscolhido}
+                  rotuloDeAcessibilidade="Cartão"
+                />
+              </div>
+              <label className="campo-de-parcelas">
+                Parcelas
+                <input
+                  type="number"
+                  min={1}
+                  max={MAXIMO_DE_PARCELAS_NO_CAMPO}
+                  value={parcelasTexto}
+                  onChange={(e) => setParcelasTexto(e.target.value)}
+                />
+              </label>
+            </>
+          )}
+        </div>
+      )}
       {parcelasDaCompra.length > 0 && (
         <p className="previa-da-compra">
           {parcelasDaCompra.length}× de{' '}

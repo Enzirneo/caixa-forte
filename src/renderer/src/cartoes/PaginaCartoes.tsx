@@ -1,16 +1,13 @@
 import { useState } from 'react'
-import { listarCategoriasEmUso } from '../../../shared/categorias/nomeDaCategoria'
 import type {
   AjusteDeFechamento,
   Cartao,
-  NovaCompraNoCartao,
   NovoCartao,
   VinculoDeCompra
 } from '../../../shared/cartoes/tipos'
 import type { Lancamento } from '../../../shared/lancamentos/tipos'
 import { extrairMensagemDeErro } from '../compartilhado/extrairMensagemDeErro'
 import { FormularioCartao } from './FormularioCartao'
-import { FormularioCompra } from './FormularioCompra'
 import { PainelDoCartao } from './PainelDoCartao'
 
 interface Props {
@@ -21,7 +18,6 @@ interface Props {
   aoCriarCartao: (novoCartao: NovoCartao) => Promise<void>
   aoAtualizarCartao: (cartao: Cartao) => Promise<void>
   aoExcluirCartao: (id: number) => Promise<void>
-  aoRegistrarCompra: (novaCompra: NovaCompraNoCartao) => Promise<void>
   aoExcluirCompra: (grupoId: number) => Promise<void>
   aoSalvarAjuste: (ajuste: AjusteDeFechamento) => Promise<void>
   aoRemoverAjuste: (cartaoId: number, mesDoVencimento: string) => Promise<void>
@@ -35,7 +31,6 @@ export function PaginaCartoes({
   aoCriarCartao,
   aoAtualizarCartao,
   aoExcluirCartao,
-  aoRegistrarCompra,
   aoExcluirCompra,
   aoSalvarAjuste,
   aoRemoverAjuste
@@ -61,8 +56,9 @@ export function PaginaCartoes({
   return (
     <>
       <p className="aviso-de-fechamento">
-        Cada parcela vira uma despesa na data em que a fatura vence, que é quando o dinheiro sai da
-        conta. Parcelas de meses futuros só entram no saldo quando o dia chega.
+        Para lançar uma compra no cartão, use a aba Lançamentos e marque que a despesa é de um
+        cartão. Cada parcela vira uma despesa na data em que a fatura vence, que é quando o dinheiro
+        sai da conta.
       </p>
 
       <FormularioCartao
@@ -70,12 +66,6 @@ export function PaginaCartoes({
         cartaoEmEdicao={cartaoEmEdicao}
         aoSalvar={salvarCartao}
         aoCancelarEdicao={() => setCartaoEmEdicao(null)}
-      />
-      <FormularioCompra
-        cartoes={cartoes}
-        ajustes={ajustes}
-        categoriasSugeridas={listarCategoriasEmUso(lancamentos)}
-        aoRegistrar={aoRegistrarCompra}
       />
 
       {erroDeExclusao && <p className="erro-de-exclusao">{erroDeExclusao}</p>}

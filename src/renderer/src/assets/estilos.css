@@ -532,9 +532,29 @@ label {
   min-width: 136px;
 }
 
-.formulario-lancamento .campo-de-parcelas {
-  flex-grow: 0.5;
-  min-width: 72px;
+.formulario-lancamento .opcao-de-cartao {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: flex-end;
+}
+
+.opcao-de-cartao .campo {
+  width: 220px;
+}
+
+.opcao-de-cartao .campo-de-parcelas {
+  width: 100px;
+}
+
+.caixa-de-selecao {
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .formulario-cartao .acoes-formulario,

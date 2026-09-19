@@ -159,7 +159,6 @@ function App(): React.JSX.Element {
               aoCriarCartao={cartoes.criarCartao}
               aoAtualizarCartao={cartoes.atualizarCartao}
               aoExcluirCartao={cartoes.excluirCartao}
-              aoRegistrarCompra={cartoes.registrarCompra}
               aoExcluirCompra={cartoes.excluirCompra}
               aoSalvarAjuste={cartoes.salvarAjuste}
               aoRemoverAjuste={cartoes.removerAjuste}
