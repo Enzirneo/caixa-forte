@@ -69,7 +69,10 @@ const cartoes: ApiCartoes = {
   excluirCartao: (id) => ipcRenderer.invoke(CANAIS_CARTOES.excluirCartao, id),
   listarVinculos: () => ipcRenderer.invoke(CANAIS_CARTOES.listarVinculos),
   registrarCompra: (compra) => ipcRenderer.invoke(CANAIS_CARTOES.registrarCompra, compra),
-  excluirCompra: (grupoId) => ipcRenderer.invoke(CANAIS_CARTOES.excluirCompra, grupoId)
+  excluirCompra: (grupoId) => ipcRenderer.invoke(CANAIS_CARTOES.excluirCompra, grupoId),
+  listarAjustes: () => ipcRenderer.invoke(CANAIS_CARTOES.listarAjustes),
+  salvarAjuste: (ajuste) => ipcRenderer.invoke(CANAIS_CARTOES.salvarAjuste, ajuste),
+  removerAjuste: (cartaoId, mes) => ipcRenderer.invoke(CANAIS_CARTOES.removerAjuste, cartaoId, mes)
 }
 
 const api = { lancamentos, fechamentos, investimentos, backup, arquivos, recorrencias, cartoes }

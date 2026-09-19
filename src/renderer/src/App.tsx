@@ -130,6 +130,9 @@ function App(): React.JSX.Element {
               movimentacoes={investimentos.movimentacoes}
               fechamentos={fechamentos}
               rotulosDeCompra={rotulosDeCompra}
+              cartoes={cartoes.cartoes}
+              ajustesDeFechamento={cartoes.ajustes}
+              aoRegistrarCompraNoCartao={cartoes.registrarCompra}
               mesSelecionado={mesSelecionado}
               aoMudarMes={setMesSelecionado}
               aoCriar={criar}
@@ -152,11 +155,14 @@ function App(): React.JSX.Element {
               lancamentos={lancamentos}
               cartoes={cartoes.cartoes}
               vinculos={cartoes.vinculos}
+              ajustes={cartoes.ajustes}
               aoCriarCartao={cartoes.criarCartao}
               aoAtualizarCartao={cartoes.atualizarCartao}
               aoExcluirCartao={cartoes.excluirCartao}
               aoRegistrarCompra={cartoes.registrarCompra}
               aoExcluirCompra={cartoes.excluirCompra}
+              aoSalvarAjuste={cartoes.salvarAjuste}
+              aoRemoverAjuste={cartoes.removerAjuste}
             />
           )}
           {aba === 'historico' && (

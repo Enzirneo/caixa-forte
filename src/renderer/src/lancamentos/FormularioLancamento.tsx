@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from 'react'
-import { obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
+import { indexarAjustesDoCartao } from '../../../shared/cartoes/cicloDaFatura'
+import { montarParcelasDaCompra, validarNovaCompra } from '../../../shared/cartoes/regras'
+import type { AjusteDeFechamento, Cartao, NovaCompraNoCartao } from '../../../shared/cartoes/tipos'
+import { formatarDataIsoComoBrasileira, obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
 import { converterTextoEmCentavos } from '../../../shared/dinheiro/converterTextoEmCentavos'
+import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
 import { formatarCentavosParaCampo } from '../../../shared/dinheiro/formatarCentavosParaCampo'
 import {
   TIPOS_LANCAMENTO,
@@ -13,6 +17,10 @@ import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
 import { CampoDeData } from '../componentes/CampoDeData'
 import { Selecao } from '../componentes/Selecao'
 
+const SEM_CARTAO = ''
+const PARCELAS_PADRAO = '1'
+const MAXIMO_DE_PARCELAS_NO_CAMPO = 60
+
 const ROTULO_DO_TIPO: Record<TipoLancamento, string> = {
   receita: 'Receita',
   despesa: 'Despesa'
@@ -21,14 +29,20 @@ const ROTULO_DO_TIPO: Record<TipoLancamento, string> = {
 interface Props {
   lancamentoEmEdicao: Lancamento | null
   categoriasSugeridas: string[]
+  cartoes: Cartao[]
+  ajustesDeFechamento: AjusteDeFechamento[]
   aoSalvar: (novoLancamento: NovoLancamento) => Promise<void>
+  aoRegistrarNoCartao: (compra: NovaCompraNoCartao) => Promise<void>
   aoCancelarEdicao: () => void
 }
 
 export function FormularioLancamento({
   lancamentoEmEdicao,
   categoriasSugeridas,
+  cartoes,
+  ajustesDeFechamento,
   aoSalvar,
+  aoRegistrarNoCartao,
   aoCancelarEdicao
 }: Props): React.JSX.Element {
   const [descricao, setDescricao] = useState(lancamentoEmEdicao?.descricao ?? '')
@@ -38,16 +52,57 @@ export function FormularioLancamento({
   const [data, setData] = useState(lancamentoEmEdicao?.data ?? obterDataIsoDeHoje())
   const [tipo, setTipo] = useState<TipoLancamento>(lancamentoEmEdicao?.tipo ?? 'despesa')
   const [categoria, setCategoria] = useState(lancamentoEmEdicao?.categoria ?? '')
+  const [cartaoEscolhido, setCartaoEscolhido] = useState(SEM_CARTAO)
+  const [parcelasTexto, setParcelasTexto] = useState(PARCELAS_PADRAO)
   const [erros, setErros] = useState<string[]>([])
+
+  const podeUsarCartao = !lancamentoEmEdicao && tipo === 'despesa' && cartoes.length > 0
+  const cartao = podeUsarCartao
+    ? cartoes.find((candidato) => String(candidato.id) === cartaoEscolhido)
+    : undefined
+
+  const montarCompra = (cartaoDaCompra: Cartao): NovaCompraNoCartao => ({
+    cartaoId: cartaoDaCompra.id,
+    descricao,
+    valorTotalCentavos: converterTextoEmCentavos(valorTexto) ?? 0,
+    parcelas: Number(parcelasTexto),
+    dataDaCompra: data,
+    categoria
+  })
+
+  const parcelasDaCompra =
+    cartao && validarNovaCompra(montarCompra(cartao)).length === 0
+      ? montarParcelasDaCompra(
+          montarCompra(cartao),
+          cartao,
+          indexarAjustesDoCartao(ajustesDeFechamento, cartao.id)
+        )
+      : []
 
   const limparCamposDigitados = (): void => {
     setDescricao('')
     setValorTexto('')
     setCategoria('')
+    setParcelasTexto(PARCELAS_PADRAO)
+  }
+
+  const registrarNoCartao = async (cartaoDaCompra: Cartao): Promise<void> => {
+    const compra = montarCompra(cartaoDaCompra)
+    const errosEncontrados = validarNovaCompra(compra)
+    setErros(errosEncontrados)
+    if (errosEncontrados.length > 0) return
+
+    await aoRegistrarNoCartao(compra)
+    limparCamposDigitados()
   }
 
   const enviar = async (evento: FormEvent): Promise<void> => {
     evento.preventDefault()
+    if (cartao) {
+      await registrarNoCartao(cartao)
+      return
+    }
+
     const novoLancamento: NovoLancamento = {
       descricao,
       valorCentavos: converterTextoEmCentavos(valorTexto) ?? 0,
@@ -86,7 +141,7 @@ export function FormularioLancamento({
           onChange={(e) => setValorTexto(e.target.value)}
         />
       </label>
-      <div className="campo">
+      <div className="campo campo-de-data">
         <span className="rotulo-do-campo">Data</span>
         <CampoDeData valor={data} aoMudar={setData} rotuloDeAcessibilidade="Data" />
       </div>
@@ -110,6 +165,32 @@ export function FormularioLancamento({
           sugestoes={categoriasSugeridas}
         />
       </div>
+      {podeUsarCartao && (
+        <div className="campo">
+          <span className="rotulo-do-campo">Cartão</span>
+          <Selecao
+            valor={cartaoEscolhido}
+            opcoes={[
+              { valor: SEM_CARTAO, rotulo: 'Nenhum' },
+              ...cartoes.map((opcao) => ({ valor: String(opcao.id), rotulo: opcao.nome }))
+            ]}
+            aoMudar={setCartaoEscolhido}
+            rotuloDeAcessibilidade="Cartão"
+          />
+        </div>
+      )}
+      {cartao && (
+        <label className="campo-de-parcelas">
+          Parcelas
+          <input
+            type="number"
+            min={1}
+            max={MAXIMO_DE_PARCELAS_NO_CAMPO}
+            value={parcelasTexto}
+            onChange={(e) => setParcelasTexto(e.target.value)}
+          />
+        </label>
+      )}
       <div className="acoes-formulario">
         <button type="submit">{lancamentoEmEdicao ? 'Salvar' : 'Adicionar'}</button>
         {lancamentoEmEdicao && (
@@ -118,6 +199,15 @@ export function FormularioLancamento({
           </button>
         )}
       </div>
+      {parcelasDaCompra.length > 0 && (
+        <p className="previa-da-compra">
+          {parcelasDaCompra.length}× de{' '}
+          {formatarCentavosComoReal(parcelasDaCompra[0].lancamento.valorCentavos)} · a primeira
+          parcela vence em {formatarDataIsoComoBrasileira(parcelasDaCompra[0].lancamento.data)}
+          {parcelasDaCompra.length > 1 &&
+            ` e a última em ${formatarDataIsoComoBrasileira(parcelasDaCompra[parcelasDaCompra.length - 1].lancamento.data)}`}
+        </p>
+      )}
       {erros.length > 0 && (
         <ul className="erros">
           {erros.map((erro) => (

@@ -1,8 +1,21 @@
-export interface NovoCartao {
-  nome: string
+// `diasAntesDoVencimento` preenchido: a fatura fecha sempre tantos dias antes do vencimento (o dia
+// do fechamento muda conforme o mês). Nulo: a fatura fecha sempre em `diaDeFechamento`.
+export interface RegraDoCiclo {
   diaDeFechamento: number
   diaDeVencimento: number
+  diasAntesDoVencimento: number | null
+}
+
+export interface NovoCartao extends RegraDoCiclo {
+  nome: string
   limiteCentavos: number | null
+}
+
+// Exceção do mês: quando o banco foge da regra, vale a melhor data de compra informada.
+export interface AjusteDeFechamento {
+  cartaoId: number
+  mesDoVencimento: string
+  melhorDataDeCompra: string
 }
 
 export interface Cartao extends NovoCartao {
@@ -36,4 +49,7 @@ export interface ApiCartoes {
   listarVinculos: () => Promise<VinculoDeCompra[]>
   registrarCompra: (novaCompra: NovaCompraNoCartao) => Promise<number>
   excluirCompra: (grupoId: number) => Promise<void>
+  listarAjustes: () => Promise<AjusteDeFechamento[]>
+  salvarAjuste: (ajuste: AjusteDeFechamento) => Promise<void>
+  removerAjuste: (cartaoId: number, mesDoVencimento: string) => Promise<void>
 }

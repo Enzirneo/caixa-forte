@@ -6,26 +6,38 @@ import {
   calcularComprometidoNoCartao,
   montarFaturas
 } from '../../../shared/cartoes/faturas'
-import type { Cartao, VinculoDeCompra } from '../../../shared/cartoes/tipos'
+import {
+  calcularFaturaAberta,
+  descreverRegraDoCiclo,
+  indexarAjustesDoCartao
+} from '../../../shared/cartoes/cicloDaFatura'
+import type { AjusteDeFechamento, Cartao, VinculoDeCompra } from '../../../shared/cartoes/tipos'
 import type { Lancamento } from '../../../shared/lancamentos/tipos'
 import { BotaoExcluirComConfirmacao } from '../compartilhado/BotaoExcluirComConfirmacao'
+import { AjustesDeFechamento } from './AjustesDeFechamento'
 
 interface Props {
   cartao: Cartao
   lancamentos: Lancamento[]
   vinculos: VinculoDeCompra[]
+  ajustes: AjusteDeFechamento[]
   aoEditar: (cartao: Cartao) => void
   aoExcluirCartao: (id: number) => Promise<void>
   aoExcluirCompra: (grupoId: number) => Promise<void>
+  aoSalvarAjuste: (ajuste: AjusteDeFechamento) => Promise<void>
+  aoRemoverAjuste: (cartaoId: number, mesDoVencimento: string) => Promise<void>
 }
 
 export function PainelDoCartao({
   cartao,
   lancamentos,
   vinculos,
+  ajustes,
   aoEditar,
   aoExcluirCartao,
-  aoExcluirCompra
+  aoExcluirCompra,
+  aoSalvarAjuste,
+  aoRemoverAjuste
 }: Props): React.JSX.Element {
   const hoje = obterDataIsoDeHoje()
   const mesAtual = obterMesDaData(hoje)
@@ -37,6 +49,11 @@ export function PainelDoCartao({
     vinculos.filter((vinculo) => vinculo.cartaoId === cartao.id)
   )
   const comprometido = calcularComprometidoNoCartao(lancamentos, vinculos, cartao.id, hoje)
+  const faturaAberta = calcularFaturaAberta(
+    hoje,
+    cartao,
+    indexarAjustesDoCartao(ajustes, cartao.id)
+  )
 
   return (
     <section className="cartao-de-grafico painel-do-cartao">
@@ -44,7 +61,9 @@ export function PainelDoCartao({
         <div>
           <h2>{cartao.nome}</h2>
           <span className="subtitulo-do-grafico">
-            Fecha dia {cartao.diaDeFechamento} · vence dia {cartao.diaDeVencimento}
+            {descreverRegraDoCiclo(cartao)} · fatura aberta vence em{' '}
+            {formatarDataIsoComoBrasileira(faturaAberta.vencimento)}, melhor data de compra{' '}
+            {formatarDataIsoComoBrasileira(faturaAberta.melhorDataDeCompra)}
           </span>
         </div>
         <div className="acoes-de-dados">
@@ -135,6 +154,13 @@ export function PainelDoCartao({
           </tbody>
         </table>
       )}
+
+      <AjustesDeFechamento
+        cartao={cartao}
+        ajustes={ajustes}
+        aoSalvar={aoSalvarAjuste}
+        aoRemover={aoRemoverAjuste}
+      />
     </section>
   )
 }

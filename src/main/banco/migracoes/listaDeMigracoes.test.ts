@@ -159,3 +159,22 @@ describe('migration que capitaliza as categorias', () => {
     ).toEqual([{ nome: 'Concurso' }])
   })
 })
+
+describe('migration dos ajustes de fechamento dos cartões', () => {
+  it('mantém os cartões antigos com fechamento em dia fixo', () => {
+    const banco = new Database(':memory:')
+    executarMigracoes(
+      banco,
+      listaDeMigracoes.filter((migracao) => migracao.versao <= 7)
+    )
+    banco
+      .prepare('INSERT INTO cartoes (nome, dia_de_fechamento, dia_de_vencimento) VALUES (?, ?, ?)')
+      .run('Nubank', 25, 5)
+
+    executarMigracoes(banco, listaDeMigracoes)
+
+    expect(
+      banco.prepare('SELECT nome, dia_de_fechamento, dias_antes_do_vencimento FROM cartoes').all()
+    ).toEqual([{ nome: 'Nubank', dia_de_fechamento: 25, dias_antes_do_vencimento: null }])
+  })
+})

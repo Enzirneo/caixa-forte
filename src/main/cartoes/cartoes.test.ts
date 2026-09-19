@@ -9,15 +9,19 @@ import {
   excluirCartao,
   excluirCompraNoCartao,
   inserirCartao,
+  listarAjustes,
   listarCartoes,
   listarVinculos,
-  registrarCompraNoCartao
+  registrarCompraNoCartao,
+  removerAjuste,
+  salvarAjuste
 } from './repositorioCartoes'
 
 const nubank: NovoCartao = {
   nome: 'Nubank',
   diaDeFechamento: 25,
   diaDeVencimento: 5,
+  diasAntesDoVencimento: null,
   limiteCentavos: 500000
 }
 
@@ -55,6 +59,7 @@ describe('cartões e compras parceladas', () => {
         nome: 'Nubank Ultravioleta',
         diaDeFechamento: 25,
         diaDeVencimento: 5,
+        diasAntesDoVencimento: null,
         limiteCentavos: null
       }
     ])
@@ -148,5 +153,75 @@ describe('cartões e compras parceladas', () => {
 
     expect(() => registrarCompraNoCartao(banco, comprar(cartao.id))).toThrow()
     expect(listarLancamentos(banco)).toEqual([])
+  })
+
+  describe('fechamento por dias antes do vencimento e ajustes por mês', () => {
+    const itau: NovoCartao = {
+      nome: 'Itaú',
+      diaDeFechamento: 24,
+      diaDeVencimento: 1,
+      diasAntesDoVencimento: 6,
+      limiteCentavos: null
+    }
+
+    it('guarda os dias antes do vencimento', () => {
+      const cartao = inserirCartao(banco, itau)
+
+      expect(listarCartoes(banco)[0]).toEqual({ id: cartao.id, ...itau })
+    })
+
+    it('a compra na melhor data já vence na fatura seguinte', () => {
+      const cartao = inserirCartao(banco, itau)
+      registrarCompraNoCartao(
+        banco,
+        comprar(cartao.id, { parcelas: 1, dataDaCompra: '2026-09-25' })
+      )
+
+      expect(listarLancamentos(banco).map((l) => l.data)).toEqual(['2026-11-01'])
+    })
+
+    it('o ajuste do mês muda a fatura em que a compra cai', () => {
+      const cartao = inserirCartao(banco, itau)
+      salvarAjuste(banco, {
+        cartaoId: cartao.id,
+        mesDoVencimento: '2026-10',
+        melhorDataDeCompra: '2026-09-27'
+      })
+      registrarCompraNoCartao(
+        banco,
+        comprar(cartao.id, { parcelas: 1, dataDaCompra: '2026-09-25' })
+      )
+
+      expect(listarLancamentos(banco).map((l) => l.data)).toEqual(['2026-10-01'])
+    })
+
+    it('salvar de novo o mesmo mês troca a data, e remover apaga', () => {
+      const cartao = inserirCartao(banco, itau)
+      const ajuste = {
+        cartaoId: cartao.id,
+        mesDoVencimento: '2026-06',
+        melhorDataDeCompra: '2026-05-23'
+      }
+      salvarAjuste(banco, ajuste)
+      salvarAjuste(banco, { ...ajuste, melhorDataDeCompra: '2026-05-24' })
+
+      expect(listarAjustes(banco)).toEqual([{ ...ajuste, melhorDataDeCompra: '2026-05-24' }])
+
+      removerAjuste(banco, cartao.id, '2026-06')
+      expect(listarAjustes(banco)).toEqual([])
+    })
+
+    it('excluir o cartão leva junto os ajustes dele', () => {
+      const cartao = inserirCartao(banco, itau)
+      salvarAjuste(banco, {
+        cartaoId: cartao.id,
+        mesDoVencimento: '2026-06',
+        melhorDataDeCompra: '2026-05-23'
+      })
+
+      excluirCartao(banco, cartao.id)
+
+      expect(listarAjustes(banco)).toEqual([])
+    })
   })
 })

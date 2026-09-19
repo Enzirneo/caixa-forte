@@ -108,5 +108,20 @@ export const listaDeMigracoes: Migracao[] = [
     versao: 7,
     descricao: 'deixa a primeira letra das categorias sempre maiúscula',
     executar: capitalizarNomesDasCategorias
+  },
+  {
+    versao: 8,
+    descricao:
+      'cartões com fechamento por dias antes do vencimento e ajustes de fechamento por mês',
+    sql: `
+      ALTER TABLE cartoes ADD COLUMN dias_antes_do_vencimento INTEGER
+        CHECK (dias_antes_do_vencimento IS NULL OR dias_antes_do_vencimento BETWEEN 1 AND 31);
+      CREATE TABLE ajustes_de_fechamento (
+        cartao_id INTEGER NOT NULL REFERENCES cartoes (id) ON DELETE CASCADE,
+        mes_do_vencimento TEXT NOT NULL,
+        melhor_data_de_compra TEXT NOT NULL,
+        PRIMARY KEY (cartao_id, mes_do_vencimento)
+      );
+    `
   }
 ]

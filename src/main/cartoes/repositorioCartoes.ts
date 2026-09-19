@@ -1,6 +1,8 @@
 import type { Database } from 'better-sqlite3'
+import { indexarAjustesDoCartao } from '../../shared/cartoes/cicloDaFatura'
 import { montarParcelasDaCompra } from '../../shared/cartoes/regras'
 import type {
+  AjusteDeFechamento,
   Cartao,
   NovaCompraNoCartao,
   NovoCartao,
@@ -13,7 +15,14 @@ interface LinhaCartao {
   nome: string
   dia_de_fechamento: number
   dia_de_vencimento: number
+  dias_antes_do_vencimento: number | null
   limite_centavos: number | null
+}
+
+interface LinhaAjuste {
+  cartao_id: number
+  mes_do_vencimento: string
+  melhor_data_de_compra: string
 }
 
 interface LinhaVinculo {
@@ -31,6 +40,7 @@ function converterLinhaEmCartao(linha: LinhaCartao): Cartao {
     nome: linha.nome,
     diaDeFechamento: linha.dia_de_fechamento,
     diaDeVencimento: linha.dia_de_vencimento,
+    diasAntesDoVencimento: linha.dias_antes_do_vencimento,
     limiteCentavos: linha.limite_centavos
   }
 }
@@ -51,8 +61,9 @@ export function buscarCartaoPorId(banco: Database, id: number): Cartao | undefin
 export function inserirCartao(banco: Database, novo: NovoCartao): Cartao {
   const { lastInsertRowid } = banco
     .prepare(
-      `INSERT INTO cartoes (nome, dia_de_fechamento, dia_de_vencimento, limite_centavos)
-       VALUES (@nome, @diaDeFechamento, @diaDeVencimento, @limiteCentavos)`
+      `INSERT INTO cartoes
+         (nome, dia_de_fechamento, dia_de_vencimento, dias_antes_do_vencimento, limite_centavos)
+       VALUES (@nome, @diaDeFechamento, @diaDeVencimento, @diasAntesDoVencimento, @limiteCentavos)`
     )
     .run(novo)
   return { id: Number(lastInsertRowid), ...novo }
@@ -63,7 +74,8 @@ export function atualizarCartao(banco: Database, cartao: Cartao): void {
     .prepare(
       `UPDATE cartoes
        SET nome = @nome, dia_de_fechamento = @diaDeFechamento,
-           dia_de_vencimento = @diaDeVencimento, limite_centavos = @limiteCentavos
+           dia_de_vencimento = @diaDeVencimento,
+           dias_antes_do_vencimento = @diasAntesDoVencimento, limite_centavos = @limiteCentavos
        WHERE id = @id`
     )
     .run(cartao)
@@ -96,6 +108,32 @@ export function listarVinculos(banco: Database): VinculoDeCompra[] {
   }))
 }
 
+export function listarAjustes(banco: Database): AjusteDeFechamento[] {
+  const linhas = banco.prepare('SELECT * FROM ajustes_de_fechamento').all() as LinhaAjuste[]
+  return linhas.map((linha) => ({
+    cartaoId: linha.cartao_id,
+    mesDoVencimento: linha.mes_do_vencimento,
+    melhorDataDeCompra: linha.melhor_data_de_compra
+  }))
+}
+
+export function salvarAjuste(banco: Database, ajuste: AjusteDeFechamento): void {
+  banco
+    .prepare(
+      `INSERT INTO ajustes_de_fechamento (cartao_id, mes_do_vencimento, melhor_data_de_compra)
+       VALUES (@cartaoId, @mesDoVencimento, @melhorDataDeCompra)
+       ON CONFLICT (cartao_id, mes_do_vencimento)
+       DO UPDATE SET melhor_data_de_compra = excluded.melhor_data_de_compra`
+    )
+    .run(ajuste)
+}
+
+export function removerAjuste(banco: Database, cartaoId: number, mesDoVencimento: string): void {
+  banco
+    .prepare('DELETE FROM ajustes_de_fechamento WHERE cartao_id = ? AND mes_do_vencimento = ?')
+    .run(cartaoId, mesDoVencimento)
+}
+
 // Cria uma despesa por parcela e liga todas à mesma compra; ou entra tudo, ou nada.
 export function registrarCompraNoCartao(banco: Database, compra: NovaCompraNoCartao): number {
   const cartao = buscarCartaoPorId(banco, compra.cartaoId)
@@ -109,7 +147,8 @@ export function registrarCompraNoCartao(banco: Database, compra: NovaCompraNoCar
     )
 
     let grupoId = 0
-    for (const parcela of montarParcelasDaCompra(compra, cartao)) {
+    const ajustes = indexarAjustesDoCartao(listarAjustes(banco), cartao.id)
+    for (const parcela of montarParcelasDaCompra(compra, cartao, ajustes)) {
       const lancamento = inserirLancamento(banco, parcela.lancamento)
       if (grupoId === 0) grupoId = lancamento.id
       inserirVinculo.run({

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { listarCategoriasEmUso } from '../../../shared/categorias/nomeDaCategoria'
+import type { AjusteDeFechamento, Cartao, NovaCompraNoCartao } from '../../../shared/cartoes/tipos'
 import {
   converterTimestampDoBancoEmDataIsoLocal,
   formatarDataIsoComoBrasileira
@@ -31,11 +32,14 @@ interface Props {
   movimentacoes: Movimentacao[]
   fechamentos: FechamentoMes[]
   rotulosDeCompra: Map<number, string>
+  cartoes: Cartao[]
+  ajustesDeFechamento: AjusteDeFechamento[]
   mesSelecionado: string
   aoMudarMes: (mes: string) => void
   aoCriar: (novoLancamento: NovoLancamento) => Promise<void>
   aoAtualizar: (lancamento: LancamentoEditado) => Promise<void>
   aoExcluir: (id: number) => Promise<void>
+  aoRegistrarCompraNoCartao: (compra: NovaCompraNoCartao) => Promise<void>
 }
 
 export function PaginaLancamentos({
@@ -43,11 +47,14 @@ export function PaginaLancamentos({
   movimentacoes,
   fechamentos,
   rotulosDeCompra,
+  cartoes,
+  ajustesDeFechamento,
   mesSelecionado,
   aoMudarMes,
   aoCriar,
   aoAtualizar,
-  aoExcluir
+  aoExcluir,
+  aoRegistrarCompraNoCartao
 }: Props): React.JSX.Element {
   const [lancamentoEmEdicao, setLancamentoEmEdicao] = useState<Lancamento | null>(null)
   const [filtro, setFiltro] = useState<FiltroDeLancamentos>(FILTRO_PADRAO_DE_LANCAMENTOS)
@@ -71,7 +78,10 @@ export function PaginaLancamentos({
           key={lancamentoEmEdicao?.id ?? 'novo'}
           lancamentoEmEdicao={lancamentoEmEdicao}
           categoriasSugeridas={categoriasSugeridas}
+          cartoes={cartoes}
+          ajustesDeFechamento={ajustesDeFechamento}
           aoSalvar={salvar}
+          aoRegistrarNoCartao={aoRegistrarCompraNoCartao}
           aoCancelarEdicao={() => setLancamentoEmEdicao(null)}
         />
         <SeletorDeMes mes={mesSelecionado} aoMudar={aoMudarMes} />

@@ -2,19 +2,34 @@ import type { Database } from 'better-sqlite3'
 import { ipcMain } from 'electron'
 import { CANAIS_CARTOES } from '../../shared/cartoes/canais'
 import { validarNovaCompra, validarNovoCartao } from '../../shared/cartoes/regras'
-import type { Cartao, NovaCompraNoCartao, NovoCartao } from '../../shared/cartoes/tipos'
+import { ehDataIsoValida } from '../../shared/datas/dataIso'
+import type {
+  AjusteDeFechamento,
+  Cartao,
+  NovaCompraNoCartao,
+  NovoCartao
+} from '../../shared/cartoes/tipos'
 import {
   atualizarCartao,
   excluirCartao,
   excluirCompraNoCartao,
   inserirCartao,
+  listarAjustes,
   listarCartoes,
   listarVinculos,
-  registrarCompraNoCartao
+  registrarCompraNoCartao,
+  removerAjuste,
+  salvarAjuste
 } from './repositorioCartoes'
 
 function lancarSeHouverErros(erros: string[]): void {
   if (erros.length > 0) throw new Error(erros.join(' '))
+}
+
+function validarAjuste(ajuste: AjusteDeFechamento): string[] {
+  return ehDataIsoValida(ajuste.melhorDataDeCompra)
+    ? []
+    : ['Informe uma melhor data de compra válida.']
 }
 
 export function registrarIpcCartoes(banco: Database): void {
@@ -38,6 +53,19 @@ export function registrarIpcCartoes(banco: Database): void {
     lancarSeHouverErros(validarNovaCompra(compra))
     return registrarCompraNoCartao(banco, compra)
   })
+
+  ipcMain.handle(CANAIS_CARTOES.listarAjustes, () => listarAjustes(banco))
+
+  ipcMain.handle(CANAIS_CARTOES.salvarAjuste, (_evento, ajuste: AjusteDeFechamento) => {
+    lancarSeHouverErros(validarAjuste(ajuste))
+    salvarAjuste(banco, ajuste)
+  })
+
+  ipcMain.handle(
+    CANAIS_CARTOES.removerAjuste,
+    (_evento, cartaoId: number, mesDoVencimento: string) =>
+      removerAjuste(banco, cartaoId, mesDoVencimento)
+  )
 
   ipcMain.handle(CANAIS_CARTOES.excluirCompra, (_evento, grupoId: number) =>
     excluirCompraNoCartao(banco, grupoId)

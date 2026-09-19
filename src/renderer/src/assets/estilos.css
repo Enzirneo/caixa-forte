@@ -508,16 +508,59 @@ label {
   align-items: end;
 }
 
-/* Tudo numa linha só: os campos encolhem junto com a janela e o botão mantém o tamanho. */
+/* Tudo numa linha só: os campos encolhem junto com a janela e o botão mantém o tamanho.
+   Os avisos e a prévia da compra ocupam a linha de baixo. */
 .formulario-lancamento {
-  grid-template-columns:
-    minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.3fr)
-    auto;
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
+  align-items: flex-end;
 }
 
-.formulario-lancamento.em-edicao {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+.formulario-lancamento > label,
+.formulario-lancamento > .campo {
+  flex: 1 1 0;
+  min-width: 96px;
+}
+
+.formulario-lancamento > :first-child {
+  flex-grow: 2;
+}
+
+.formulario-lancamento > .campo-de-data {
+  flex-grow: 1.3;
+  min-width: 136px;
+}
+
+.formulario-lancamento .campo-de-parcelas {
+  flex-grow: 0.5;
+  min-width: 72px;
+}
+
+.formulario-cartao .acoes-formulario,
+.formulario-compra > button,
+.ajuste-de-fechamento > button {
+  grid-column: 1 / -1;
+  justify-self: end;
+}
+
+.formulario-lancamento .acoes-formulario {
+  flex: none;
+}
+
+.formulario-lancamento .previa-da-compra,
+.formulario-lancamento .erros {
+  flex: 1 1 100%;
+}
+
+.formulario-lancamento.em-edicao > label,
+.formulario-lancamento.em-edicao > .campo {
+  flex-basis: 140px;
+}
+
+.formulario-lancamento.em-edicao .acoes-formulario {
+  flex: 1 1 100%;
+  justify-content: flex-end;
 }
 
 .formulario-destino,

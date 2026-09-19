@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type {
+  AjusteDeFechamento,
   Cartao,
   NovaCompraNoCartao,
   NovoCartao,
@@ -9,27 +10,34 @@ import type {
 interface UsoDeCartoes {
   cartoes: Cartao[]
   vinculos: VinculoDeCompra[]
+  ajustes: AjusteDeFechamento[]
   criarCartao: (novoCartao: NovoCartao) => Promise<void>
   atualizarCartao: (cartao: Cartao) => Promise<void>
   excluirCartao: (id: number) => Promise<void>
   registrarCompra: (novaCompra: NovaCompraNoCartao) => Promise<void>
   excluirCompra: (grupoId: number) => Promise<void>
+  salvarAjuste: (ajuste: AjusteDeFechamento) => Promise<void>
+  removerAjuste: (cartaoId: number, mesDoVencimento: string) => Promise<void>
 }
 
 // Compras e parcelas são lançamentos de verdade, então a lista de lançamentos precisa ser relida.
 export function useCartoes(aoAlterarLancamentos: () => Promise<void>): UsoDeCartoes {
   const [cartoes, setCartoes] = useState<Cartao[]>([])
   const [vinculos, setVinculos] = useState<VinculoDeCompra[]>([])
+  const [ajustes, setAjustes] = useState<AjusteDeFechamento[]>([])
 
   useEffect(() => {
     let componenteMontado = true
-    Promise.all([window.api.cartoes.listarCartoes(), window.api.cartoes.listarVinculos()]).then(
-      ([listaDeCartoes, listaDeVinculos]) => {
-        if (!componenteMontado) return
-        setCartoes(listaDeCartoes)
-        setVinculos(listaDeVinculos)
-      }
-    )
+    Promise.all([
+      window.api.cartoes.listarCartoes(),
+      window.api.cartoes.listarVinculos(),
+      window.api.cartoes.listarAjustes()
+    ]).then(([listaDeCartoes, listaDeVinculos, listaDeAjustes]) => {
+      if (!componenteMontado) return
+      setCartoes(listaDeCartoes)
+      setVinculos(listaDeVinculos)
+      setAjustes(listaDeAjustes)
+    })
     return () => {
       componenteMontado = false
     }
@@ -69,13 +77,26 @@ export function useCartoes(aoAlterarLancamentos: () => Promise<void>): UsoDeCart
     await recarregarComprasELancamentos()
   }
 
+  const salvarAjuste = async (ajuste: AjusteDeFechamento): Promise<void> => {
+    await window.api.cartoes.salvarAjuste(ajuste)
+    setAjustes(await window.api.cartoes.listarAjustes())
+  }
+
+  const removerAjuste = async (cartaoId: number, mesDoVencimento: string): Promise<void> => {
+    await window.api.cartoes.removerAjuste(cartaoId, mesDoVencimento)
+    setAjustes(await window.api.cartoes.listarAjustes())
+  }
+
   return {
     cartoes,
     vinculos,
+    ajustes,
     criarCartao,
     atualizarCartao,
     excluirCartao,
     registrarCompra,
-    excluirCompra
+    excluirCompra,
+    salvarAjuste,
+    removerAjuste
   }
 }

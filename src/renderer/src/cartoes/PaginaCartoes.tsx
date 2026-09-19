@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { listarCategoriasEmUso } from '../../../shared/categorias/nomeDaCategoria'
 import type {
+  AjusteDeFechamento,
   Cartao,
   NovaCompraNoCartao,
   NovoCartao,
@@ -16,22 +17,28 @@ interface Props {
   lancamentos: Lancamento[]
   cartoes: Cartao[]
   vinculos: VinculoDeCompra[]
+  ajustes: AjusteDeFechamento[]
   aoCriarCartao: (novoCartao: NovoCartao) => Promise<void>
   aoAtualizarCartao: (cartao: Cartao) => Promise<void>
   aoExcluirCartao: (id: number) => Promise<void>
   aoRegistrarCompra: (novaCompra: NovaCompraNoCartao) => Promise<void>
   aoExcluirCompra: (grupoId: number) => Promise<void>
+  aoSalvarAjuste: (ajuste: AjusteDeFechamento) => Promise<void>
+  aoRemoverAjuste: (cartaoId: number, mesDoVencimento: string) => Promise<void>
 }
 
 export function PaginaCartoes({
   lancamentos,
   cartoes,
   vinculos,
+  ajustes,
   aoCriarCartao,
   aoAtualizarCartao,
   aoExcluirCartao,
   aoRegistrarCompra,
-  aoExcluirCompra
+  aoExcluirCompra,
+  aoSalvarAjuste,
+  aoRemoverAjuste
 }: Props): React.JSX.Element {
   const [cartaoEmEdicao, setCartaoEmEdicao] = useState<Cartao | null>(null)
   const [erroDeExclusao, setErroDeExclusao] = useState<string | null>(null)
@@ -66,6 +73,7 @@ export function PaginaCartoes({
       />
       <FormularioCompra
         cartoes={cartoes}
+        ajustes={ajustes}
         categoriasSugeridas={listarCategoriasEmUso(lancamentos)}
         aoRegistrar={aoRegistrarCompra}
       />
@@ -77,9 +85,12 @@ export function PaginaCartoes({
           cartao={cartao}
           lancamentos={lancamentos}
           vinculos={vinculos}
+          ajustes={ajustes.filter((ajuste) => ajuste.cartaoId === cartao.id)}
           aoEditar={setCartaoEmEdicao}
           aoExcluirCartao={excluirCartao}
           aoExcluirCompra={aoExcluirCompra}
+          aoSalvarAjuste={aoSalvarAjuste}
+          aoRemoverAjuste={aoRemoverAjuste}
         />
       ))}
     </>

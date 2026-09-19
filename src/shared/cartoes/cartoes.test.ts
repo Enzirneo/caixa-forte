@@ -17,9 +17,13 @@ import {
 import type { Cartao, NovaCompraNoCartao, VinculoDeCompra } from './tipos'
 
 // Fecha dia 25 e vence dia 5 do mês seguinte, como muitos cartões.
-const fechaDia25VenceDia5 = { diaDeFechamento: 25, diaDeVencimento: 5 }
+const fechaDia25VenceDia5 = { diaDeFechamento: 25, diaDeVencimento: 5, diasAntesDoVencimento: null }
 // Fecha dia 10 e vence dia 20 do mesmo mês.
-const fechaDia10VenceDia20 = { diaDeFechamento: 10, diaDeVencimento: 20 }
+const fechaDia10VenceDia20 = {
+  diaDeFechamento: 10,
+  diaDeVencimento: 20,
+  diasAntesDoVencimento: null
+}
 
 const cartao: Cartao = { id: 1, nome: 'Nubank', ...fechaDia25VenceDia5, limiteCentavos: null }
 
@@ -80,7 +84,7 @@ describe('calcularMesDoVencimentoDaPrimeiraParcela', () => {
   })
 
   it('num mês curto, o fechamento do dia 31 vale até o último dia', () => {
-    const fechaDia31 = { diaDeFechamento: 31, diaDeVencimento: 10 }
+    const fechaDia31 = { diaDeFechamento: 31, diaDeVencimento: 10, diasAntesDoVencimento: null }
 
     expect(calcularMesDoVencimentoDaPrimeiraParcela('2026-02-28', fechaDia31)).toBe('2026-03')
   })
@@ -96,7 +100,7 @@ describe('calcularVencimentosDasParcelas', () => {
   })
 
   it('vencimento no dia 31 cai no último dia dos meses curtos', () => {
-    const vence31 = { diaDeFechamento: 20, diaDeVencimento: 31 }
+    const vence31 = { diaDeFechamento: 20, diaDeVencimento: 31, diasAntesDoVencimento: null }
 
     expect(calcularVencimentosDasParcelas('2026-01-05', vence31, 3)).toEqual([
       '2026-01-31',
@@ -159,7 +163,13 @@ describe('validações', () => {
       validarNovoCartao({ nome: 'Nubank', ...fechaDia25VenceDia5, limiteCentavos: null })
     ).toEqual([])
     expect(
-      validarNovoCartao({ nome: ' ', diaDeFechamento: 0, diaDeVencimento: 32, limiteCentavos: -1 })
+      validarNovoCartao({
+        nome: ' ',
+        diaDeFechamento: 0,
+        diaDeVencimento: 32,
+        diasAntesDoVencimento: null,
+        limiteCentavos: -1
+      })
     ).toHaveLength(4)
   })
 

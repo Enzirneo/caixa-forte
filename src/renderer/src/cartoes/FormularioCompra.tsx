@@ -3,7 +3,8 @@ import { formatarDataIsoComoBrasileira, obterDataIsoDeHoje } from '../../../shar
 import { converterTextoEmCentavos } from '../../../shared/dinheiro/converterTextoEmCentavos'
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
 import { montarParcelasDaCompra, validarNovaCompra } from '../../../shared/cartoes/regras'
-import type { Cartao, NovaCompraNoCartao } from '../../../shared/cartoes/tipos'
+import { indexarAjustesDoCartao } from '../../../shared/cartoes/cicloDaFatura'
+import type { AjusteDeFechamento, Cartao, NovaCompraNoCartao } from '../../../shared/cartoes/tipos'
 import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
 import { CampoDeData } from '../componentes/CampoDeData'
 import { Selecao } from '../componentes/Selecao'
@@ -12,12 +13,14 @@ const PARCELAS_PADRAO = '1'
 
 interface Props {
   cartoes: Cartao[]
+  ajustes: AjusteDeFechamento[]
   categoriasSugeridas: string[]
   aoRegistrar: (novaCompra: NovaCompraNoCartao) => Promise<void>
 }
 
 export function FormularioCompra({
   cartoes,
+  ajustes,
   categoriasSugeridas,
   aoRegistrar
 }: Props): React.JSX.Element {
@@ -44,7 +47,9 @@ export function FormularioCompra({
   }
 
   const parcelas =
-    validarNovaCompra(compra).length === 0 ? montarParcelasDaCompra(compra, cartao) : []
+    validarNovaCompra(compra).length === 0
+      ? montarParcelasDaCompra(compra, cartao, indexarAjustesDoCartao(ajustes, cartao.id))
+      : []
   const primeira = parcelas[0]
   const ultima = parcelas[parcelas.length - 1]
 

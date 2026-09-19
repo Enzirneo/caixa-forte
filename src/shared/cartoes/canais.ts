@@ -5,5 +5,8 @@ export const CANAIS_CARTOES = {
   excluirCartao: 'cartoes:excluir',
   listarVinculos: 'cartoes:listar-vinculos',
   registrarCompra: 'cartoes:registrar-compra',
-  excluirCompra: 'cartoes:excluir-compra'
+  excluirCompra: 'cartoes:excluir-compra',
+  listarAjustes: 'cartoes:listar-ajustes',
+  salvarAjuste: 'cartoes:salvar-ajuste',
+  removerAjuste: 'cartoes:remover-ajuste'
 } as const

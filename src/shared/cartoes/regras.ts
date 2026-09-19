@@ -1,15 +1,18 @@
 import { ehDataIsoValida } from '../datas/dataIso'
-import { obterMesDaData, obterUltimoDiaDoMes, somarMeses } from '../datas/mes'
+import { somarMeses } from '../datas/mes'
 import type { NovoLancamento } from '../lancamentos/tipos'
 import { calcularDataDaOcorrencia } from '../recorrencias/regras'
-import type { Cartao, NovaCompraNoCartao, NovoCartao } from './tipos'
+import {
+  SEM_AJUSTES,
+  calcularMesDoVencimentoDaFatura,
+  type MelhoresDatasPorMes
+} from './cicloDaFatura'
+import type { Cartao, NovaCompraNoCartao, NovoCartao, RegraDoCiclo } from './tipos'
 
 const PRIMEIRO_DIA = 1
 const ULTIMO_DIA_POSSIVEL = 31
 export const MAXIMO_DE_PARCELAS = 60
-const POSICAO_DO_DIA_NA_DATA = 8
-
-type DiasDoCartao = Pick<NovoCartao, 'diaDeFechamento' | 'diaDeVencimento'>
+const MINIMO_DE_DIAS_ANTES = 1
 
 export interface ParcelaDaCompra {
   lancamento: NovoLancamento
@@ -24,41 +27,38 @@ export function dividirEmParcelas(totalCentavos: number, quantidade: number): nu
   return Array.from({ length: quantidade }, (_, indice) => base + (indice < sobra ? 1 : 0))
 }
 
-function extrairDia(dataIso: string): number {
-  return Number(dataIso.slice(POSICAO_DO_DIA_NA_DATA))
-}
-
-// A fatura fecha no dia de fechamento; o que é comprado depois vai para a fatura seguinte.
-// Se o vencimento vem antes do fechamento no calendário, ele cai no mês depois do fechamento.
 export function calcularMesDoVencimentoDaPrimeiraParcela(
   dataDaCompra: string,
-  { diaDeFechamento, diaDeVencimento }: DiasDoCartao
+  regra: RegraDoCiclo,
+  ajustes: MelhoresDatasPorMes = SEM_AJUSTES
 ): string {
-  const mesDaCompra = obterMesDaData(dataDaCompra)
-  const fechamentoDoMes = Math.min(diaDeFechamento, extrairDia(obterUltimoDiaDoMes(mesDaCompra)))
-  const mesDoFechamento =
-    extrairDia(dataDaCompra) > fechamentoDoMes ? somarMeses(mesDaCompra, 1) : mesDaCompra
-
-  return diaDeVencimento > diaDeFechamento ? mesDoFechamento : somarMeses(mesDoFechamento, 1)
+  return calcularMesDoVencimentoDaFatura(dataDaCompra, regra, ajustes)
 }
 
 export function calcularVencimentosDasParcelas(
   dataDaCompra: string,
-  dias: DiasDoCartao,
-  quantidadeDeParcelas: number
+  regra: RegraDoCiclo,
+  quantidadeDeParcelas: number,
+  ajustes: MelhoresDatasPorMes = SEM_AJUSTES
 ): string[] {
-  const primeiroMes = calcularMesDoVencimentoDaPrimeiraParcela(dataDaCompra, dias)
+  const primeiroMes = calcularMesDoVencimentoDaPrimeiraParcela(dataDaCompra, regra, ajustes)
   return Array.from({ length: quantidadeDeParcelas }, (_, indice) =>
-    calcularDataDaOcorrencia(somarMeses(primeiroMes, indice), dias.diaDeVencimento)
+    calcularDataDaOcorrencia(somarMeses(primeiroMes, indice), regra.diaDeVencimento)
   )
 }
 
 export function montarParcelasDaCompra(
   compra: NovaCompraNoCartao,
-  cartao: Cartao
+  cartao: Cartao,
+  ajustes: MelhoresDatasPorMes = SEM_AJUSTES
 ): ParcelaDaCompra[] {
   const valores = dividirEmParcelas(compra.valorTotalCentavos, compra.parcelas)
-  const vencimentos = calcularVencimentosDasParcelas(compra.dataDaCompra, cartao, compra.parcelas)
+  const vencimentos = calcularVencimentosDasParcelas(
+    compra.dataDaCompra,
+    cartao,
+    compra.parcelas,
+    ajustes
+  )
 
   return valores.map((valorCentavos, indice) => ({
     parcelaNumero: indice + 1,
@@ -86,6 +86,14 @@ export function validarNovoCartao(cartao: NovoCartao): string[] {
   if (!cartao.nome.trim()) erros.push('Informe o nome do cartão.')
   if (!diaEhValido(cartao.diaDeFechamento)) erros.push('O dia de fechamento deve ser de 1 a 31.')
   if (!diaEhValido(cartao.diaDeVencimento)) erros.push('O dia de vencimento deve ser de 1 a 31.')
+  if (
+    cartao.diasAntesDoVencimento !== null &&
+    (!Number.isInteger(cartao.diasAntesDoVencimento) ||
+      cartao.diasAntesDoVencimento < MINIMO_DE_DIAS_ANTES ||
+      cartao.diasAntesDoVencimento > ULTIMO_DIA_POSSIVEL)
+  ) {
+    erros.push('Os dias entre o fechamento e o vencimento devem ser de 1 a 31.')
+  }
   if (
     cartao.limiteCentavos !== null &&
     (!Number.isInteger(cartao.limiteCentavos) || cartao.limiteCentavos <= 0)

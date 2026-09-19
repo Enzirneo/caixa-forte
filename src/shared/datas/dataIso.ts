@@ -35,3 +35,21 @@ export function obterDataIsoEmUtc(data: Date): string {
   const dia = String(data.getUTCDate()).padStart(2, '0')
   return `${ano}-${mes}-${dia}`
 }
+
+const MILISSEGUNDOS_POR_DIA = 24 * 60 * 60 * 1000
+
+export function somarDias(dataIso: string, quantidade: number): string {
+  const [ano, mes, dia] = dataIso.split('-').map(Number)
+  return obterDataIsoEmUtc(
+    new Date(Date.UTC(ano, mes - 1, dia) + quantidade * MILISSEGUNDOS_POR_DIA)
+  )
+}
+
+// Positivo quando `fim` vem depois de `inicio`.
+export function calcularDiferencaEmDias(inicio: string, fim: string): number {
+  const [anoInicial, mesInicial, diaInicial] = inicio.split('-').map(Number)
+  const [anoFinal, mesFinal, diaFinal] = fim.split('-').map(Number)
+  const diferenca =
+    Date.UTC(anoFinal, mesFinal - 1, diaFinal) - Date.UTC(anoInicial, mesInicial - 1, diaInicial)
+  return Math.round(diferenca / MILISSEGUNDOS_POR_DIA)
+}

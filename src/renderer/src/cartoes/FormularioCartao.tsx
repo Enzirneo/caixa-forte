@@ -1,8 +1,22 @@
 import { useState, type FormEvent } from 'react'
 import { converterTextoEmCentavos } from '../../../shared/dinheiro/converterTextoEmCentavos'
 import { formatarCentavosParaCampo } from '../../../shared/dinheiro/formatarCentavosParaCampo'
+import { obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
+import {
+  calcularFaturaAberta,
+  derivarRegraDoCiclo,
+  validarDatasDoCiclo,
+  type ModoDeFechamento
+} from '../../../shared/cartoes/cicloDaFatura'
 import { validarNovoCartao } from '../../../shared/cartoes/regras'
 import type { Cartao, NovoCartao } from '../../../shared/cartoes/tipos'
+import { CampoDeData } from '../componentes/CampoDeData'
+import { Selecao } from '../componentes/Selecao'
+
+const OPCOES_DE_MODO = [
+  { valor: 'dias-antes-do-vencimento', rotulo: 'Fecha X dias antes do vencimento' },
+  { valor: 'dia-fixo', rotulo: 'Fecha sempre no mesmo dia' }
+]
 
 interface Props {
   cartaoEmEdicao: Cartao | null
@@ -15,17 +29,29 @@ export function FormularioCartao({
   aoSalvar,
   aoCancelarEdicao
 }: Props): React.JSX.Element {
+  const faturaAberta = cartaoEmEdicao
+    ? calcularFaturaAberta(obterDataIsoDeHoje(), cartaoEmEdicao)
+    : null
+
   const [nome, setNome] = useState(cartaoEmEdicao?.nome ?? '')
-  const [fechamentoTexto, setFechamentoTexto] = useState(
-    cartaoEmEdicao ? String(cartaoEmEdicao.diaDeFechamento) : ''
+  const [vencimento, setVencimento] = useState(faturaAberta?.vencimento ?? '')
+  const [melhorDataDeCompra, setMelhorDataDeCompra] = useState(
+    faturaAberta?.melhorDataDeCompra ?? ''
   )
-  const [vencimentoTexto, setVencimentoTexto] = useState(
-    cartaoEmEdicao ? String(cartaoEmEdicao.diaDeVencimento) : ''
+  const [modo, setModo] = useState<ModoDeFechamento>(
+    cartaoEmEdicao?.diasAntesDoVencimento === null ? 'dia-fixo' : 'dias-antes-do-vencimento'
   )
   const [limiteTexto, setLimiteTexto] = useState(
     cartaoEmEdicao?.limiteCentavos ? formatarCentavosParaCampo(cartaoEmEdicao.limiteCentavos) : ''
   )
   const [erros, setErros] = useState<string[]>([])
+
+  const limparCampos = (): void => {
+    setNome('')
+    setVencimento('')
+    setMelhorDataDeCompra('')
+    setLimiteTexto('')
+  }
 
   const enviar = async (evento: FormEvent): Promise<void> => {
     evento.preventDefault()
@@ -36,21 +62,20 @@ export function FormularioCartao({
       return
     }
 
-    const novoCartao: NovoCartao = {
-      nome,
-      diaDeFechamento: Number(fechamentoTexto),
-      diaDeVencimento: Number(vencimentoTexto),
-      limiteCentavos
+    const datas = { vencimento, melhorDataDeCompra, modo }
+    const errosDasDatas = validarDatasDoCiclo(datas)
+    if (errosDasDatas.length > 0) {
+      setErros(errosDasDatas)
+      return
     }
+
+    const novoCartao: NovoCartao = { nome, ...derivarRegraDoCiclo(datas), limiteCentavos }
     const errosEncontrados = validarNovoCartao(novoCartao)
     setErros(errosEncontrados)
     if (errosEncontrados.length > 0) return
 
     await aoSalvar(novoCartao)
-    setNome('')
-    setFechamentoTexto('')
-    setVencimentoTexto('')
-    setLimiteTexto('')
+    limparCampos()
   }
 
   return (
@@ -68,26 +93,31 @@ export function FormularioCartao({
           onChange={(e) => setNome(e.target.value)}
         />
       </label>
-      <label>
-        Fecha no dia
-        <input
-          type="number"
-          min={1}
-          max={31}
-          value={fechamentoTexto}
-          onChange={(e) => setFechamentoTexto(e.target.value)}
+      <div className="campo">
+        <span className="rotulo-do-campo">Vencimento da fatura aberta</span>
+        <CampoDeData
+          valor={vencimento}
+          aoMudar={setVencimento}
+          rotuloDeAcessibilidade="Vencimento da fatura aberta"
         />
-      </label>
-      <label>
-        Vence no dia
-        <input
-          type="number"
-          min={1}
-          max={31}
-          value={vencimentoTexto}
-          onChange={(e) => setVencimentoTexto(e.target.value)}
+      </div>
+      <div className="campo">
+        <span className="rotulo-do-campo">Melhor data de compra</span>
+        <CampoDeData
+          valor={melhorDataDeCompra}
+          aoMudar={setMelhorDataDeCompra}
+          rotuloDeAcessibilidade="Melhor data de compra"
         />
-      </label>
+      </div>
+      <div className="campo">
+        <span className="rotulo-do-campo">Como o cartão fecha</span>
+        <Selecao
+          valor={modo}
+          opcoes={OPCOES_DE_MODO}
+          aoMudar={(valor) => setModo(valor as ModoDeFechamento)}
+          rotuloDeAcessibilidade="Como o cartão fecha"
+        />
+      </div>
       <label>
         Limite (R$)
         <input
@@ -97,6 +127,10 @@ export function FormularioCartao({
           onChange={(e) => setLimiteTexto(e.target.value)}
         />
       </label>
+      <p className="dica-de-importacao">
+        Copie da fatura aberta no app do banco: o vencimento e a melhor data de compra. O app
+        calcula sozinho as faturas dos outros meses.
+      </p>
       <div className="acoes-formulario">
         <button type="submit">{cartaoEmEdicao ? 'Salvar' : 'Cadastrar cartão'}</button>
         {cartaoEmEdicao && (
