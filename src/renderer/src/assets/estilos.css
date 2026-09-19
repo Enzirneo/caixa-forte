@@ -324,3 +324,39 @@ button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.cartao-de-dados {
+  padding: 16px;
+  margin-bottom: 16px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+}
+
+.cartao-de-dados h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.cartao-de-dados p {
+  margin: 0 0 8px;
+}
+
+.cartao-de-dados .aviso-de-dados {
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.acoes-de-dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.confirmacao-de-restauracao {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--despesa);
+  border-radius: 8px;
+}

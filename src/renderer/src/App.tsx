@@ -4,6 +4,7 @@ import { obterMesDaData } from '../../shared/datas/mes'
 import { formatarCentavosComoReal } from '../../shared/dinheiro/formatarCentavos'
 import { calcularSaldoDaContaCorrente } from '../../shared/investimentos/calculos'
 import { resumirPorMes } from '../../shared/lancamentos/resumo'
+import { PaginaDados } from './dados/PaginaDados'
 import { PaginaImportacao } from './importacao/PaginaImportacao'
 import { PaginaInvestimentos } from './investimentos/PaginaInvestimentos'
 import { useInvestimentos } from './investimentos/useInvestimentos'
@@ -12,13 +13,14 @@ import { PaginaLancamentos } from './lancamentos/PaginaLancamentos'
 import { useFechamentos } from './lancamentos/useFechamentos'
 import { useLancamentos } from './lancamentos/useLancamentos'
 
-type Aba = 'lancamentos' | 'historico' | 'investimentos' | 'importar'
+type Aba = 'lancamentos' | 'historico' | 'investimentos' | 'importar' | 'dados'
 
 const ABAS: { id: Aba; rotulo: string }[] = [
   { id: 'lancamentos', rotulo: 'Lançamentos' },
   { id: 'historico', rotulo: 'Histórico' },
   { id: 'investimentos', rotulo: 'Investimentos' },
-  { id: 'importar', rotulo: 'Importar' }
+  { id: 'importar', rotulo: 'Importar' },
+  { id: 'dados', rotulo: 'Dados' }
 ]
 
 function App(): React.JSX.Element {
@@ -84,6 +86,7 @@ function App(): React.JSX.Element {
           aoRefazerFechamento={refazerFechamento}
         />
       )}
+      {aba === 'dados' && <PaginaDados lancamentos={lancamentos} />}
       {aba === 'importar' && (
         <PaginaImportacao lancamentosExistentes={lancamentos} aoImportar={criarVarios} />
       )}

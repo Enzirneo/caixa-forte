@@ -14,7 +14,6 @@ import {
 } from '../../../shared/importacao/modeloDaPlanilha'
 import type { CelulaDaPlanilha, ItemDaPrevia } from '../../../shared/importacao/tipos'
 import type { Lancamento, NovoLancamento } from '../../../shared/lancamentos/tipos'
-import { baixarArquivoDeTexto } from '../compartilhado/baixarArquivoDeTexto'
 import { extrairMensagemDeErro } from '../compartilhado/extrairMensagemDeErro'
 import { lerArquivoDeTexto } from '../compartilhado/lerArquivoDeTexto'
 import { lerPlanilhaXlsx } from '../compartilhado/lerPlanilhaXlsx'
@@ -144,7 +143,9 @@ export function PaginaImportacao({ lancamentosExistentes, aoImportar }: Props): 
         <button
           type="button"
           className="secundario"
-          onClick={() => baixarArquivoDeTexto(NOME_DO_ARQUIVO_MODELO, montarCsvDoModelo())}
+          onClick={() =>
+            window.api.arquivos.salvarTexto(NOME_DO_ARQUIVO_MODELO, montarCsvDoModelo())
+          }
         >
           Baixar modelo (CSV)
         </button>
