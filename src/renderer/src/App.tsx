@@ -1,4 +1,5 @@
 import {
+  CreditCard,
   DatabaseBackup,
   FileUp,
   History,
@@ -17,6 +18,9 @@ import {
   lerDoArmazenamentoLocal,
   salvarNoArmazenamentoLocal
 } from './compartilhado/armazenamentoLocal'
+import { montarRotulosDeCompra } from '../../shared/cartoes/faturas'
+import { PaginaCartoes } from './cartoes/PaginaCartoes'
+import { useCartoes } from './cartoes/useCartoes'
 import { PaginaDados } from './dados/PaginaDados'
 import { PaginaImportacao } from './importacao/PaginaImportacao'
 import { PaginaInvestimentos } from './investimentos/PaginaInvestimentos'
@@ -32,7 +36,14 @@ import { useRecorrencias } from './recorrencias/useRecorrencias'
 import { useTema } from './tema/useTema'
 
 type Aba =
-  'painel' | 'lancamentos' | 'recorrentes' | 'historico' | 'investimentos' | 'importar' | 'dados'
+  | 'painel'
+  | 'lancamentos'
+  | 'recorrentes'
+  | 'cartoes'
+  | 'historico'
+  | 'investimentos'
+  | 'importar'
+  | 'dados'
 
 const CHAVE_DA_BARRA_RECOLHIDA = 'caixa-forte:barra-recolhida'
 const VALOR_DA_BARRA_RECOLHIDA = 'sim'
@@ -41,6 +52,7 @@ const OPCOES_DE_NAVEGACAO: OpcaoDeNavegacao<Aba>[] = [
   { id: 'painel', rotulo: 'Painel', icone: LayoutDashboard },
   { id: 'lancamentos', rotulo: 'Lançamentos', icone: ReceiptText },
   { id: 'recorrentes', rotulo: 'Recorrentes', icone: Repeat },
+  { id: 'cartoes', rotulo: 'Cartões', icone: CreditCard },
   { id: 'historico', rotulo: 'Histórico', icone: History },
   { id: 'investimentos', rotulo: 'Investimentos', icone: PiggyBank },
   { id: 'importar', rotulo: 'Importar', icone: FileUp },
@@ -50,6 +62,7 @@ const OPCOES_DE_NAVEGACAO: OpcaoDeNavegacao<Aba>[] = [
 function App(): React.JSX.Element {
   const { lancamentos, recarregar, criar, criarVarios, atualizar, excluir } = useLancamentos()
   const recorrencias = useRecorrencias(recarregar)
+  const cartoes = useCartoes(recarregar)
   const { fechamentos, refazerFechamento } = useFechamentos()
   const investimentos = useInvestimentos()
   const tema = useTema()
@@ -64,6 +77,7 @@ function App(): React.JSX.Element {
     investimentos.movimentacoes,
     obterDataIsoDeHoje()
   )
+  const rotulosDeCompra = montarRotulosDeCompra(cartoes.vinculos, cartoes.cartoes)
   const tituloDaPagina = OPCOES_DE_NAVEGACAO.find((opcao) => opcao.id === aba)?.rotulo
 
   const alternarBarra = (): void => {
@@ -115,6 +129,7 @@ function App(): React.JSX.Element {
               lancamentos={lancamentos}
               movimentacoes={investimentos.movimentacoes}
               fechamentos={fechamentos}
+              rotulosDeCompra={rotulosDeCompra}
               mesSelecionado={mesSelecionado}
               aoMudarMes={setMesSelecionado}
               aoCriar={criar}
@@ -130,6 +145,18 @@ function App(): React.JSX.Element {
               aoAtualizar={recorrencias.atualizar}
               aoDefinirAtiva={recorrencias.definirAtiva}
               aoExcluir={recorrencias.excluir}
+            />
+          )}
+          {aba === 'cartoes' && (
+            <PaginaCartoes
+              lancamentos={lancamentos}
+              cartoes={cartoes.cartoes}
+              vinculos={cartoes.vinculos}
+              aoCriarCartao={cartoes.criarCartao}
+              aoAtualizarCartao={cartoes.atualizarCartao}
+              aoExcluirCartao={cartoes.excluirCartao}
+              aoRegistrarCompra={cartoes.registrarCompra}
+              aoExcluirCompra={cartoes.excluirCompra}
             />
           )}
           {aba === 'historico' && (

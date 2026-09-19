@@ -1064,3 +1064,56 @@ label {
 .linha-pausada td.acoes-linha {
   opacity: 1;
 }
+
+/* --- Cartões ---------------------------------------------------------------------- */
+
+.formulario-cartao,
+.formulario-compra {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.previa-da-compra {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px 16px;
+  color: var(--primaria);
+  background: var(--primaria-suave);
+  border-radius: var(--raio-medio);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.painel-do-cartao {
+  margin-bottom: 22px;
+}
+
+.painel-do-cartao .lista {
+  box-shadow: none;
+}
+
+.resumo-do-cartao {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin-bottom: 18px;
+}
+
+.resumo-do-cartao > div {
+  box-shadow: none;
+}
+
+.titulo-da-secao {
+  margin: 4px 0 10px;
+  font-size: 18px;
+}
+
+.vazio-pequeno {
+  margin: 0 0 18px;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.rotulo-de-compra {
+  display: block;
+  color: var(--texto-suave);
+  font-size: 11.5px;
+  font-weight: 600;
+}

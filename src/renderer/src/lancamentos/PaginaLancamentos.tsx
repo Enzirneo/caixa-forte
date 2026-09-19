@@ -23,6 +23,7 @@ interface Props {
   lancamentos: Lancamento[]
   movimentacoes: Movimentacao[]
   fechamentos: FechamentoMes[]
+  rotulosDeCompra: Map<number, string>
   mesSelecionado: string
   aoMudarMes: (mes: string) => void
   aoCriar: (novoLancamento: NovoLancamento) => Promise<void>
@@ -34,6 +35,7 @@ export function PaginaLancamentos({
   lancamentos,
   movimentacoes,
   fechamentos,
+  rotulosDeCompra,
   mesSelecionado,
   aoMudarMes,
   aoCriar,
@@ -78,6 +80,7 @@ export function PaginaLancamentos({
       <ListaLancamentos
         lancamentos={lancamentosDoMes}
         fechamentos={fechamentos}
+        rotulosDeCompra={rotulosDeCompra}
         aoEditar={setLancamentoEmEdicao}
         aoExcluir={aoExcluir}
       />

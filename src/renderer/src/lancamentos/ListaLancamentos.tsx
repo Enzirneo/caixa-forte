@@ -8,6 +8,7 @@ import { BotaoExcluirComConfirmacao } from '../compartilhado/BotaoExcluirComConf
 interface Props {
   lancamentos: Lancamento[]
   fechamentos: FechamentoMes[]
+  rotulosDeCompra: Map<number, string>
   aoEditar: (lancamento: Lancamento) => void
   aoExcluir: (id: number) => Promise<void>
 }
@@ -15,6 +16,7 @@ interface Props {
 export function ListaLancamentos({
   lancamentos,
   fechamentos,
+  rotulosDeCompra,
   aoEditar,
   aoExcluir
 }: Props): React.JSX.Element {
@@ -41,6 +43,9 @@ export function ListaLancamentos({
               {lancamento.descricao}
               {foiAlteradoAposFechamento(lancamento, fechamentos) && (
                 <span className="ressalva"> · lançado após o fechamento</span>
+              )}
+              {rotulosDeCompra.has(lancamento.id) && (
+                <span className="rotulo-de-compra">{rotulosDeCompra.get(lancamento.id)}</span>
               )}
             </td>
             <td>{lancamento.categoria}</td>
