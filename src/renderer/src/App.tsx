@@ -4,7 +4,8 @@ import {
   History,
   LayoutDashboard,
   PiggyBank,
-  ReceiptText
+  ReceiptText,
+  Repeat
 } from 'lucide-react'
 import { useState } from 'react'
 import { obterDataIsoDeHoje } from '../../shared/datas/dataIso'
@@ -26,9 +27,12 @@ import { useFechamentos } from './lancamentos/useFechamentos'
 import { useLancamentos } from './lancamentos/useLancamentos'
 import { BarraLateral, type OpcaoDeNavegacao } from './navegacao/BarraLateral'
 import { PaginaPainel } from './painel/PaginaPainel'
+import { PaginaRecorrencias } from './recorrencias/PaginaRecorrencias'
+import { useRecorrencias } from './recorrencias/useRecorrencias'
 import { useTema } from './tema/useTema'
 
-type Aba = 'painel' | 'lancamentos' | 'historico' | 'investimentos' | 'importar' | 'dados'
+type Aba =
+  'painel' | 'lancamentos' | 'recorrentes' | 'historico' | 'investimentos' | 'importar' | 'dados'
 
 const CHAVE_DA_BARRA_RECOLHIDA = 'caixa-forte:barra-recolhida'
 const VALOR_DA_BARRA_RECOLHIDA = 'sim'
@@ -36,6 +40,7 @@ const VALOR_DA_BARRA_RECOLHIDA = 'sim'
 const OPCOES_DE_NAVEGACAO: OpcaoDeNavegacao<Aba>[] = [
   { id: 'painel', rotulo: 'Painel', icone: LayoutDashboard },
   { id: 'lancamentos', rotulo: 'Lançamentos', icone: ReceiptText },
+  { id: 'recorrentes', rotulo: 'Recorrentes', icone: Repeat },
   { id: 'historico', rotulo: 'Histórico', icone: History },
   { id: 'investimentos', rotulo: 'Investimentos', icone: PiggyBank },
   { id: 'importar', rotulo: 'Importar', icone: FileUp },
@@ -43,7 +48,8 @@ const OPCOES_DE_NAVEGACAO: OpcaoDeNavegacao<Aba>[] = [
 ]
 
 function App(): React.JSX.Element {
-  const { lancamentos, criar, criarVarios, atualizar, excluir } = useLancamentos()
+  const { lancamentos, recarregar, criar, criarVarios, atualizar, excluir } = useLancamentos()
+  const recorrencias = useRecorrencias(recarregar)
   const { fechamentos, refazerFechamento } = useFechamentos()
   const investimentos = useInvestimentos()
   const tema = useTema()
@@ -113,6 +119,16 @@ function App(): React.JSX.Element {
               aoCriar={criar}
               aoAtualizar={atualizar}
               aoExcluir={excluir}
+            />
+          )}
+          {aba === 'recorrentes' && (
+            <PaginaRecorrencias
+              lancamentos={lancamentos}
+              recorrencias={recorrencias.recorrencias}
+              aoCriar={recorrencias.criar}
+              aoAtualizar={recorrencias.atualizar}
+              aoDefinirAtiva={recorrencias.definirAtiva}
+              aoExcluir={recorrencias.excluir}
             />
           )}
           {aba === 'historico' && (

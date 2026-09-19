@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type {
   Lancamento,
   LancamentoEditado,
@@ -7,6 +7,7 @@ import type {
 
 interface UsoDeLancamentos {
   lancamentos: Lancamento[]
+  recarregar: () => Promise<void>
   criar: (novoLancamento: NovoLancamento) => Promise<void>
   criarVarios: (novosLancamentos: NovoLancamento[]) => Promise<number>
   atualizar: (lancamento: LancamentoEditado) => Promise<void>
@@ -26,9 +27,9 @@ export function useLancamentos(): UsoDeLancamentos {
     }
   }, [])
 
-  const recarregar = async (): Promise<void> => {
+  const recarregar = useCallback(async (): Promise<void> => {
     setLancamentos(await window.api.lancamentos.listar())
-  }
+  }, [])
 
   const criar = async (novoLancamento: NovoLancamento): Promise<void> => {
     await window.api.lancamentos.criar(novoLancamento)
@@ -51,5 +52,5 @@ export function useLancamentos(): UsoDeLancamentos {
     await recarregar()
   }
 
-  return { lancamentos, criar, criarVarios, atualizar, excluir }
+  return { lancamentos, recarregar, criar, criarVarios, atualizar, excluir }
 }

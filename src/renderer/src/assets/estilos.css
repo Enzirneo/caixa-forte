@@ -1052,3 +1052,15 @@ label {
 .situacao-texto {
   white-space: nowrap;
 }
+
+.formulario-recorrencia {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.linha-pausada td {
+  opacity: 0.55;
+}
+
+.linha-pausada td.acoes-linha {
+  opacity: 1;
+}
