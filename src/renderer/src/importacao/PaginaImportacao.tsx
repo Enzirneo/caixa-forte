@@ -1,0 +1,164 @@
+import { useState } from 'react'
+import { obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
+import {
+  interpretarPlanilha,
+  interpretarTextoColado
+} from '../../../shared/importacao/interpretarEntrada'
+import { lerCsv } from '../../../shared/importacao/lerCsv'
+import { marcarDuplicadas } from '../../../shared/importacao/marcarDuplicadas'
+import {
+  montarCsvDoModelo,
+  NOME_DO_ARQUIVO_MODELO
+} from '../../../shared/importacao/modeloDaPlanilha'
+import type { CelulaDaPlanilha, ItemDaPrevia } from '../../../shared/importacao/tipos'
+import type { Lancamento, NovoLancamento } from '../../../shared/lancamentos/tipos'
+import { baixarArquivoDeTexto } from '../compartilhado/baixarArquivoDeTexto'
+import { extrairMensagemDeErro } from '../compartilhado/extrairMensagemDeErro'
+import { lerArquivoDeTexto } from '../compartilhado/lerArquivoDeTexto'
+import { PreviaDaImportacao } from './PreviaDaImportacao'
+
+interface Props {
+  lancamentosExistentes: Lancamento[]
+  aoImportar: (novosLancamentos: NovoLancamento[]) => Promise<number>
+}
+
+interface ArquivoLido {
+  nome: string
+  linhas: CelulaDaPlanilha[][]
+}
+
+interface Mensagem {
+  tipo: 'sucesso' | 'erro'
+  texto: string
+}
+
+const EXEMPLO_DE_TEXTO = `Mercado 150,00
+Uber 23,90
+10/09 Farmácia #Saúde 45,90
++ Salário 5000,00`
+
+export function PaginaImportacao({ lancamentosExistentes, aoImportar }: Props): React.JSX.Element {
+  const [textoColado, setTextoColado] = useState('')
+  const [arquivo, setArquivo] = useState<ArquivoLido | null>(null)
+  const [dataDoLote, setDataDoLote] = useState(obterDataIsoDeHoje())
+  const [escolhas, setEscolhas] = useState<Record<number, boolean>>({})
+  const [mensagem, setMensagem] = useState<Mensagem | null>(null)
+
+  const linhasInterpretadas = arquivo
+    ? interpretarPlanilha(arquivo.linhas, dataDoLote)
+    : interpretarTextoColado(textoColado, dataDoLote)
+  const itens = marcarDuplicadas(linhasInterpretadas, lancamentosExistentes)
+
+  const estaIncluido = (item: ItemDaPrevia): boolean =>
+    item.lancamento !== null && (escolhas[item.numeroDaLinha] ?? !item.duplicada)
+
+  const itensParaImportar = itens.filter(estaIncluido)
+  const quantidadeDuplicadas = itens.filter((item) => item.duplicada).length
+  const quantidadeComErro = itens.filter((item) => item.lancamento === null).length
+
+  const limparEntrada = (): void => {
+    setTextoColado('')
+    setArquivo(null)
+    setEscolhas({})
+  }
+
+  const alterarTexto = (texto: string): void => {
+    setTextoColado(texto)
+    setArquivo(null)
+    setEscolhas({})
+    setMensagem(null)
+  }
+
+  const escolherArquivo = async (arquivoEscolhido: File | undefined): Promise<void> => {
+    if (!arquivoEscolhido) return
+    const texto = await lerArquivoDeTexto(arquivoEscolhido)
+    setArquivo({ nome: arquivoEscolhido.name, linhas: lerCsv(texto) })
+    setTextoColado('')
+    setEscolhas({})
+    setMensagem(null)
+  }
+
+  const alternarInclusao = (numeroDaLinha: number): void => {
+    const item = itens.find((candidato) => candidato.numeroDaLinha === numeroDaLinha)
+    if (!item) return
+    setEscolhas({ ...escolhas, [numeroDaLinha]: !estaIncluido(item) })
+  }
+
+  const importar = async (): Promise<void> => {
+    const novosLancamentos = itensParaImportar.flatMap((item) =>
+      item.lancamento ? [item.lancamento] : []
+    )
+    try {
+      const quantidade = await aoImportar(novosLancamentos)
+      limparEntrada()
+      setMensagem({ tipo: 'sucesso', texto: `${quantidade} lançamento(s) importado(s).` })
+    } catch (erro) {
+      setMensagem({ tipo: 'erro', texto: extrairMensagemDeErro(erro) })
+    }
+  }
+
+  return (
+    <>
+      <section className="formulario importacao-entrada">
+        <label className="campo-largo">
+          Cole aqui as linhas (uma por gasto) ou uma tabela copiada do Excel
+          <textarea
+            rows={6}
+            placeholder={EXEMPLO_DE_TEXTO}
+            value={textoColado}
+            onChange={(e) => alterarTexto(e.target.value)}
+          />
+        </label>
+        <label>
+          Data das linhas sem data
+          <input type="date" value={dataDoLote} onChange={(e) => setDataDoLote(e.target.value)} />
+        </label>
+        <label>
+          Ou escolha um arquivo CSV
+          <input
+            type="file"
+            accept=".csv,.txt"
+            onChange={(e) => escolherArquivo(e.target.files?.[0])}
+          />
+        </label>
+        <button
+          type="button"
+          className="secundario"
+          onClick={() => baixarArquivoDeTexto(NOME_DO_ARQUIVO_MODELO, montarCsvDoModelo())}
+        >
+          Baixar modelo (CSV)
+        </button>
+        <p className="dica-de-importacao">
+          Uma despesa por linha: <code>Mercado 150,00</code>. Use <code>+</code> no começo para
+          receita, uma data no começo (<code>10/09</code>) e <code>#categoria</code> se quiser.
+        </p>
+      </section>
+
+      {mensagem && (
+        <p className={mensagem.tipo === 'sucesso' ? 'mensagem-de-sucesso' : 'erro-de-exclusao'}>
+          {mensagem.texto}
+        </p>
+      )}
+
+      {itens.length > 0 && (
+        <>
+          {arquivo && <p className="aviso-de-fechamento">Arquivo: {arquivo.nome}</p>}
+          <PreviaDaImportacao
+            itens={itens}
+            estaIncluido={estaIncluido}
+            aoAlternar={alternarInclusao}
+          />
+          <div className="rodape-da-importacao">
+            <span>
+              {itensParaImportar.length} para importar · {quantidadeDuplicadas} já existem ·{' '}
+              {quantidadeComErro} com erro
+            </span>
+            <button disabled={itensParaImportar.length === 0} onClick={importar}>
+              Importar {itensParaImportar.length} lançamento(s)
+            </button>
+          </div>
+        </>
+      )}
+    </>
+  )
+}

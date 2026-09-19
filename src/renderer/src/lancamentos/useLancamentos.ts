@@ -8,6 +8,7 @@ import type {
 interface UsoDeLancamentos {
   lancamentos: Lancamento[]
   criar: (novoLancamento: NovoLancamento) => Promise<void>
+  criarVarios: (novosLancamentos: NovoLancamento[]) => Promise<number>
   atualizar: (lancamento: LancamentoEditado) => Promise<void>
   excluir: (id: number) => Promise<void>
 }
@@ -34,6 +35,12 @@ export function useLancamentos(): UsoDeLancamentos {
     await recarregar()
   }
 
+  const criarVarios = async (novosLancamentos: NovoLancamento[]): Promise<number> => {
+    const quantidade = await window.api.lancamentos.criarVarios(novosLancamentos)
+    await recarregar()
+    return quantidade
+  }
+
   const atualizar = async (lancamento: LancamentoEditado): Promise<void> => {
     await window.api.lancamentos.atualizar(lancamento)
     await recarregar()
@@ -44,5 +51,5 @@ export function useLancamentos(): UsoDeLancamentos {
     await recarregar()
   }
 
-  return { lancamentos, criar, atualizar, excluir }
+  return { lancamentos, criar, criarVarios, atualizar, excluir }
 }

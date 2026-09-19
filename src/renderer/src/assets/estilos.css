@@ -279,3 +279,48 @@ button {
   color: var(--despesa);
   font-size: 13px;
 }
+
+.importacao-entrada {
+  grid-template-columns: 2fr 1fr;
+}
+
+.importacao-entrada .campo-largo {
+  grid-column: 1 / -1;
+}
+
+.importacao-entrada textarea {
+  padding: 8px;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  font: inherit;
+  resize: vertical;
+}
+
+.dica-de-importacao {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.rodape-da-importacao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.mensagem-de-sucesso {
+  margin: 0 0 12px;
+  color: var(--receita);
+  font-size: 13px;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

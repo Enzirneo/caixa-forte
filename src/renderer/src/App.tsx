@@ -4,6 +4,7 @@ import { obterMesDaData } from '../../shared/datas/mes'
 import { formatarCentavosComoReal } from '../../shared/dinheiro/formatarCentavos'
 import { calcularSaldoDaContaCorrente } from '../../shared/investimentos/calculos'
 import { resumirPorMes } from '../../shared/lancamentos/resumo'
+import { PaginaImportacao } from './importacao/PaginaImportacao'
 import { PaginaInvestimentos } from './investimentos/PaginaInvestimentos'
 import { useInvestimentos } from './investimentos/useInvestimentos'
 import { HistoricoMensal } from './lancamentos/HistoricoMensal'
@@ -11,16 +12,17 @@ import { PaginaLancamentos } from './lancamentos/PaginaLancamentos'
 import { useFechamentos } from './lancamentos/useFechamentos'
 import { useLancamentos } from './lancamentos/useLancamentos'
 
-type Aba = 'lancamentos' | 'historico' | 'investimentos'
+type Aba = 'lancamentos' | 'historico' | 'investimentos' | 'importar'
 
 const ABAS: { id: Aba; rotulo: string }[] = [
   { id: 'lancamentos', rotulo: 'Lançamentos' },
   { id: 'historico', rotulo: 'Histórico' },
-  { id: 'investimentos', rotulo: 'Investimentos' }
+  { id: 'investimentos', rotulo: 'Investimentos' },
+  { id: 'importar', rotulo: 'Importar' }
 ]
 
 function App(): React.JSX.Element {
-  const { lancamentos, criar, atualizar, excluir } = useLancamentos()
+  const { lancamentos, criar, criarVarios, atualizar, excluir } = useLancamentos()
   const { fechamentos, refazerFechamento } = useFechamentos()
   const investimentos = useInvestimentos()
   const [aba, setAba] = useState<Aba>('lancamentos')
@@ -81,6 +83,9 @@ function App(): React.JSX.Element {
           aoSelecionarMes={abrirMesNosLancamentos}
           aoRefazerFechamento={refazerFechamento}
         />
+      )}
+      {aba === 'importar' && (
+        <PaginaImportacao lancamentosExistentes={lancamentos} aoImportar={criarVarios} />
       )}
       {aba === 'investimentos' && (
         <PaginaInvestimentos
