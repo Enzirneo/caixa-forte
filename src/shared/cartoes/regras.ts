@@ -109,7 +109,7 @@ export function validarNovaCompra(compra: NovaCompraNoCartao): string[] {
     compra.parcelas > MAXIMO_DE_PARCELAS
   ) {
     erros.push(`O número de parcelas deve ser de 1 a ${MAXIMO_DE_PARCELAS}.`)
-  } else if (compra.valorTotalCentavos < compra.parcelas) {
+  } else if (compra.valorTotalCentavos > 0 && compra.valorTotalCentavos < compra.parcelas) {
     erros.push('O valor é pequeno demais para tantas parcelas.')
   }
   if (!ehDataIsoValida(compra.dataDaCompra)) erros.push('Informe uma data válida.')

@@ -179,6 +179,7 @@ describe('validações', () => {
     expect(validarNovaCompra({ ...compra, valorTotalCentavos: 1, parcelas: 2 })).toHaveLength(1)
     expect(validarNovaCompra({ ...compra, dataDaCompra: '2026-02-30' })).toHaveLength(1)
     expect(validarNovaCompra({ ...compra, descricao: ' ', categoria: '' })).toHaveLength(2)
+    expect(validarNovaCompra({ ...compra, valorTotalCentavos: 0 })).toHaveLength(1)
   })
 })
 
