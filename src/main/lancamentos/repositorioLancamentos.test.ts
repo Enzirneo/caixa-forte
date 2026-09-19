@@ -166,3 +166,14 @@ describe('categorias padronizadas', () => {
     expect(banco.prepare('SELECT COUNT(*) AS n FROM categorias').get()).toEqual({ n: 1 })
   })
 })
+
+describe('primeira letra da categoria', () => {
+  it('uma categoria nova digitada em minúscula é gravada com maiúscula', () => {
+    const banco = new Database(':memory:')
+    executarMigracoes(banco, listaDeMigracoes)
+
+    const inserido = inserirLancamento(banco, { ...mercado, categoria: 'concurso' })
+
+    expect(inserido.categoria).toBe('Concurso')
+  })
+})

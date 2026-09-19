@@ -1,13 +1,16 @@
 import type { Database } from 'better-sqlite3'
-import { gerarChaveDaCategoria, normalizarEspacos } from '../../shared/categorias/nomeDaCategoria'
+import {
+  formatarNomeDaCategoria,
+  gerarChaveDaCategoria
+} from '../../shared/categorias/nomeDaCategoria'
 
 interface LinhaCategoria {
   id: number
 }
 
 export function obterOuCriarCategoria(banco: Database, nome: string): number {
-  const nomeLimpo = normalizarEspacos(nome)
-  const chave = gerarChaveDaCategoria(nomeLimpo)
+  const nomeFormatado = formatarNomeDaCategoria(nome)
+  const chave = gerarChaveDaCategoria(nomeFormatado)
 
   const existente = banco.prepare('SELECT id FROM categorias WHERE chave = ?').get(chave) as
     LinhaCategoria | undefined
@@ -15,6 +18,6 @@ export function obterOuCriarCategoria(banco: Database, nome: string): number {
 
   const { lastInsertRowid } = banco
     .prepare('INSERT INTO categorias (nome, chave) VALUES (?, ?)')
-    .run(nomeLimpo, chave)
+    .run(nomeFormatado, chave)
   return Number(lastInsertRowid)
 }

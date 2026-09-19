@@ -119,3 +119,43 @@ describe('migration das categorias em tabela', () => {
     expect(colunas).toContain('categoria_id')
   })
 })
+
+describe('migration que capitaliza as categorias', () => {
+  const VERSAO_ANTERIOR = 6
+
+  function criarBancoNaVersao6(): Database.Database {
+    const banco = new Database(':memory:')
+    executarMigracoes(
+      banco,
+      listaDeMigracoes.filter((migracao) => migracao.versao <= VERSAO_ANTERIOR)
+    )
+    return banco
+  }
+
+  it('corrige as que estavam em minúscula e mantém as outras, sem soltar nenhum lançamento', () => {
+    const banco = criarBancoNaVersao6()
+    const inserirCategoria = banco.prepare('INSERT INTO categorias (nome, chave) VALUES (?, ?)')
+    inserirCategoria.run('concurso', 'concurso')
+    inserirCategoria.run('saúde', 'saude')
+    inserirCategoria.run('Renda', 'renda')
+    banco
+      .prepare(
+        `INSERT INTO lancamentos (descricao, valor_centavos, data, tipo, categoria_id, alterado_em)
+         VALUES ('Inscrição', 11700, '2026-09-18', 'despesa', 1, '2026-09-18 00:00:00.000')`
+      )
+      .run()
+
+    executarMigracoes(banco, listaDeMigracoes)
+
+    expect(banco.prepare('SELECT nome, chave FROM categorias ORDER BY id').all()).toEqual([
+      { nome: 'Concurso', chave: 'concurso' },
+      { nome: 'Saúde', chave: 'saude' },
+      { nome: 'Renda', chave: 'renda' }
+    ])
+    expect(
+      banco
+        .prepare('SELECT c.nome FROM lancamentos l JOIN categorias c ON c.id = l.categoria_id')
+        .all()
+    ).toEqual([{ nome: 'Concurso' }])
+  })
+})

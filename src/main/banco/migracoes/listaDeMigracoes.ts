@@ -1,3 +1,4 @@
+import { capitalizarNomesDasCategorias } from './capitalizarCategorias'
 import { migrarCategoriasParaTabela } from './categoriasEmTabela'
 import type { Migracao } from './executarMigracoes'
 
@@ -102,5 +103,10 @@ export const listaDeMigracoes: Migracao[] = [
       CREATE INDEX indice_compras_no_cartao_grupo ON compras_no_cartao (grupo_id);
       CREATE INDEX indice_compras_no_cartao_cartao ON compras_no_cartao (cartao_id);
     `
+  },
+  {
+    versao: 7,
+    descricao: 'deixa a primeira letra das categorias sempre maiúscula',
+    executar: capitalizarNomesDasCategorias
   }
 ]
