@@ -64,7 +64,7 @@ export function FormularioLancamento({
   }
 
   return (
-    <form className="formulario" onSubmit={enviar}>
+    <form className="formulario formulario-lancamento" onSubmit={enviar}>
       <label>
         Descrição
         <input value={descricao} onChange={(e) => setDescricao(e.target.value)} />

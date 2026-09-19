@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { formatarMesPorExtenso, somarMeses } from '../../../shared/datas/mes'
 
 interface Props {
@@ -13,7 +14,7 @@ export function SeletorDeMes({ mes, aoMudar }: Props): React.JSX.Element {
         aria-label="Mês anterior"
         onClick={() => aoMudar(somarMeses(mes, -1))}
       >
-        ‹
+        <ChevronLeft size={16} />
       </button>
       <strong>{formatarMesPorExtenso(mes)}</strong>
       <button
@@ -21,7 +22,7 @@ export function SeletorDeMes({ mes, aoMudar }: Props): React.JSX.Element {
         aria-label="Próximo mês"
         onClick={() => aoMudar(somarMeses(mes, 1))}
       >
-        ›
+        <ChevronRight size={16} />
       </button>
     </div>
   )
