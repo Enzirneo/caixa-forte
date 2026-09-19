@@ -52,7 +52,7 @@ export function HistoricoMensal({
     const posteriores = contarPosteriores(mes)
     return (
       <span className="situacao">
-        Fechado em {dataDoFechamento}
+        <span className="situacao-texto">Fechado em {dataDoFechamento}</span>
         {posteriores > 0 && (
           <>
             <span className="ressalva"> · {posteriores} lançado(s) após o fechamento</span>
