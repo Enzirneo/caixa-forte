@@ -13,12 +13,6 @@ function calcularGuardadoLiquido(movimentacoes: Movimentacao[]): number {
   )
 }
 
-export function calcularSaldoDoDestino(movimentacoes: Movimentacao[], destinoId: number): number {
-  return calcularGuardadoLiquido(
-    movimentacoes.filter((movimentacao) => movimentacao.destinoId === destinoId)
-  )
-}
-
 export function calcularTotalGuardado(movimentacoes: Movimentacao[]): number {
   return calcularGuardadoLiquido(movimentacoes)
 }

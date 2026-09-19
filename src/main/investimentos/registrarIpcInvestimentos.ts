@@ -1,6 +1,5 @@
 import type { Database } from 'better-sqlite3'
 import { ipcMain } from 'electron'
-import { calcularSaldoDoDestino } from '../../shared/investimentos/calculos'
 import { CANAIS_INVESTIMENTOS } from '../../shared/investimentos/canais'
 import type { NovaMovimentacao, NovoDestino } from '../../shared/investimentos/tipos'
 import {
@@ -21,13 +20,11 @@ function lancarErroSeInvalido(erros: string[]): void {
 }
 
 function validarMovimentacaoContraOBanco(banco: Database, movimentacao: NovaMovimentacao): void {
-  const destinoExiste = listarDestinos(banco).some(
-    (destino) => destino.id === movimentacao.destinoId
-  )
-  if (!destinoExiste) throw new Error('Destino não encontrado.')
+  const destino = listarDestinos(banco).find((candidato) => candidato.id === movimentacao.destinoId)
+  if (!destino) throw new Error('Destino não encontrado.')
 
-  const saldoAtual = calcularSaldoDoDestino(listarMovimentacoes(banco), movimentacao.destinoId)
-  lancarErroSeInvalido(validarNovaMovimentacao(movimentacao, saldoAtual))
+  const movimentacoesExistentes = listarMovimentacoes(banco)
+  lancarErroSeInvalido(validarNovaMovimentacao(movimentacao, destino, movimentacoesExistentes))
 }
 
 export function registrarIpcInvestimentos(banco: Database): void {
@@ -49,7 +46,9 @@ export function registrarIpcInvestimentos(banco: Database): void {
   )
 
   ipcMain.handle(CANAIS_INVESTIMENTOS.excluirMovimentacao, (_evento, id: number) => {
-    lancarErroSeInvalido(validarExclusaoDeMovimentacao(listarMovimentacoes(banco), id))
+    lancarErroSeInvalido(
+      validarExclusaoDeMovimentacao(listarDestinos(banco), listarMovimentacoes(banco), id)
+    )
     excluirMovimentacao(banco, id)
   })
 }

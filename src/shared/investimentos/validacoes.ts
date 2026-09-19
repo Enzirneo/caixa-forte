@@ -1,13 +1,16 @@
 import { ehDataIsoValida } from '../datas/dataIso'
-import { calcularSaldoDoDestino } from './calculos'
+import { existeResgateSemSaldo } from './rendimento'
 import {
   PERIODICIDADES_DA_TAXA,
   TIPOS_DESTINO,
   TIPOS_MOVIMENTACAO,
+  type Destino,
   type Movimentacao,
   type NovaMovimentacao,
   type NovoDestino
 } from './tipos'
+
+const ID_DA_MOVIMENTACAO_EM_VALIDACAO = -1
 
 export function validarNovoDestino(destino: NovoDestino): string[] {
   const erros: string[] = []
@@ -38,7 +41,8 @@ export function validarNovoDestino(destino: NovoDestino): string[] {
 
 export function validarNovaMovimentacao(
   movimentacao: NovaMovimentacao,
-  saldoAtualDoDestinoCentavos: number
+  destino: Destino,
+  movimentacoesExistentes: Movimentacao[]
 ): string[] {
   const erros: string[] = []
 
@@ -47,21 +51,36 @@ export function validarNovaMovimentacao(
     erros.push('Informe um valor maior que zero.')
   }
   if (!ehDataIsoValida(movimentacao.data)) erros.push('Informe uma data válida.')
-  if (movimentacao.tipo === 'resgate' && movimentacao.valorCentavos > saldoAtualDoDestinoCentavos) {
-    erros.push('O resgate é maior que o valor guardado neste destino.')
-  }
+  if (erros.length > 0) return erros
 
+  const comAMovimentacaoNova = [
+    ...movimentacoesExistentes,
+    { ...movimentacao, id: ID_DA_MOVIMENTACAO_EM_VALIDACAO }
+  ]
+  if (existeResgateSemSaldo(destino, comAMovimentacaoNova)) {
+    erros.push(
+      'O destino não teria saldo suficiente para este resgate (ou para um resgate já registrado depois dele).'
+    )
+  }
   return erros
 }
 
-export function validarExclusaoDeMovimentacao(movimentacoes: Movimentacao[], id: number): string[] {
+export function validarExclusaoDeMovimentacao(
+  destinos: Destino[],
+  movimentacoes: Movimentacao[],
+  id: number
+): string[] {
   const movimentacaoExcluida = movimentacoes.find((movimentacao) => movimentacao.id === id)
   if (!movimentacaoExcluida) return ['Movimentação não encontrada.']
 
+  const destino = destinos.find((candidato) => candidato.id === movimentacaoExcluida.destinoId)
+  if (!destino) return ['Destino não encontrado.']
+
   const restantes = movimentacoes.filter((movimentacao) => movimentacao.id !== id)
-  const saldoRestante = calcularSaldoDoDestino(restantes, movimentacaoExcluida.destinoId)
-  if (saldoRestante < 0) {
-    return ['Não dá para excluir: o destino ficaria com saldo negativo. Exclua antes os resgates.']
+  if (existeResgateSemSaldo(destino, restantes)) {
+    return [
+      'Não dá para excluir: um resgate ficaria sem saldo suficiente. Exclua antes os resgates.'
+    ]
   }
   return []
 }

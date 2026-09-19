@@ -4,10 +4,9 @@ import {
   calcularGuardadoNoMes,
   calcularSaldoDaContaCorrente,
   calcularSaldoDaContaNoMes,
-  calcularSaldoDoDestino,
   calcularTotalGuardado
 } from './calculos'
-import type { Movimentacao, NovaMovimentacao, NovoDestino } from './tipos'
+import type { Destino, Movimentacao, NovaMovimentacao, NovoDestino } from './tipos'
 import {
   validarExclusaoDeMovimentacao,
   validarNovaMovimentacao,
@@ -45,11 +44,6 @@ const movimentacoes: Movimentacao[] = [
 ]
 
 describe('cálculos de investimentos', () => {
-  it('calcula o saldo de cada destino', () => {
-    expect(calcularSaldoDoDestino(movimentacoes, 1)).toBe(70000)
-    expect(calcularSaldoDoDestino(movimentacoes, 2)).toBe(50000)
-  })
-
   it('soma o total guardado em todos os destinos', () => {
     expect(calcularTotalGuardado(movimentacoes)).toBe(120000)
   })
@@ -123,41 +117,87 @@ describe('validarNovoDestino', () => {
 })
 
 describe('validarNovaMovimentacao', () => {
+  const cdb: Destino = {
+    id: 1,
+    nome: 'CDB',
+    tipo: 'investimento',
+    taxaRendimentoCentesimos: 100,
+    periodicidadeDaTaxa: 'mensal'
+  }
   const aporte: NovaMovimentacao = {
     destinoId: 1,
     tipo: 'aporte',
-    valorCentavos: 10000,
-    data: '2026-09-18'
+    valorCentavos: 100000,
+    data: '2026-01-01'
   }
 
   it('aceita aporte válido, mesmo com destino zerado', () => {
-    expect(validarNovaMovimentacao(aporte, 0)).toEqual([])
+    expect(validarNovaMovimentacao(aporte, cdb, [])).toEqual([])
   })
 
   it('rejeita valor zero, fracionado ou data inválida', () => {
-    expect(validarNovaMovimentacao({ ...aporte, valorCentavos: 0 }, 0)).toHaveLength(1)
-    expect(validarNovaMovimentacao({ ...aporte, valorCentavos: 10.5 }, 0)).toHaveLength(1)
-    expect(validarNovaMovimentacao({ ...aporte, data: '2026-02-30' }, 0)).toHaveLength(1)
+    expect(validarNovaMovimentacao({ ...aporte, valorCentavos: 0 }, cdb, [])).toHaveLength(1)
+    expect(validarNovaMovimentacao({ ...aporte, valorCentavos: 10.5 }, cdb, [])).toHaveLength(1)
+    expect(validarNovaMovimentacao({ ...aporte, data: '2026-02-30' }, cdb, [])).toHaveLength(1)
   })
 
-  it('não deixa resgatar mais do que há guardado no destino', () => {
-    const resgate = { ...aporte, tipo: 'resgate' as const, valorCentavos: 50001 }
+  it('deixa resgatar o que rendeu, mas não mais do que o saldo estimado', () => {
+    const existentes = [movimentar({ destinoId: 1, valorCentavos: 100000, data: '2026-01-01' })]
+    const resgate = { ...aporte, tipo: 'resgate' as const, data: '2026-01-31' }
 
-    expect(validarNovaMovimentacao(resgate, 50000)).toHaveLength(1)
-    expect(validarNovaMovimentacao({ ...resgate, valorCentavos: 50000 }, 50000)).toEqual([])
+    expect(validarNovaMovimentacao({ ...resgate, valorCentavos: 101000 }, cdb, existentes)).toEqual(
+      []
+    )
+    expect(
+      validarNovaMovimentacao({ ...resgate, valorCentavos: 101001 }, cdb, existentes)
+    ).toHaveLength(1)
+  })
+
+  it('não deixa um resgate anterior tirar o saldo de um resgate que já existe', () => {
+    const existentes = [
+      movimentar({ id: 1, destinoId: 1, valorCentavos: 100000, data: '2026-01-01' }),
+      movimentar({
+        id: 2,
+        destinoId: 1,
+        tipo: 'resgate',
+        valorCentavos: 100000,
+        data: '2026-03-01'
+      })
+    ]
+    const resgateAntes = {
+      ...aporte,
+      tipo: 'resgate' as const,
+      valorCentavos: 50000,
+      data: '2026-02-01'
+    }
+
+    expect(validarNovaMovimentacao(resgateAntes, cdb, existentes)).toHaveLength(1)
   })
 })
 
 describe('validarExclusaoDeMovimentacao', () => {
-  it('permite excluir quando o destino continua sem saldo negativo', () => {
-    expect(validarExclusaoDeMovimentacao(movimentacoes, 2)).toEqual([])
+  const cdb: Destino = {
+    id: 1,
+    nome: 'CDB',
+    tipo: 'investimento',
+    taxaRendimentoCentesimos: 100,
+    periodicidadeDaTaxa: 'mensal'
+  }
+  const aporteEResgate = [
+    movimentar({ id: 1, destinoId: 1, valorCentavos: 100000, data: '2026-01-01' }),
+    movimentar({ id: 2, destinoId: 1, tipo: 'resgate', valorCentavos: 30000, data: '2026-02-01' })
+  ]
+
+  it('permite excluir o resgate', () => {
+    expect(validarExclusaoDeMovimentacao([cdb], aporteEResgate, 2)).toEqual([])
   })
 
   it('não deixa excluir um aporte que cobre um resgate', () => {
-    expect(validarExclusaoDeMovimentacao(movimentacoes, 1)).toHaveLength(1)
+    expect(validarExclusaoDeMovimentacao([cdb], aporteEResgate, 1)).toHaveLength(1)
   })
 
-  it('recusa movimentação que não existe', () => {
-    expect(validarExclusaoDeMovimentacao(movimentacoes, 99)).toHaveLength(1)
+  it('recusa movimentação ou destino que não existem', () => {
+    expect(validarExclusaoDeMovimentacao([cdb], aporteEResgate, 99)).toHaveLength(1)
+    expect(validarExclusaoDeMovimentacao([], aporteEResgate, 1)).toHaveLength(1)
   })
 })
