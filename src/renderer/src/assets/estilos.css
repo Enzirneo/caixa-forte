@@ -249,3 +249,11 @@ button {
   color: var(--texto-suave);
   font-size: 13px;
 }
+
+.perigo {
+  background: var(--despesa);
+}
+
+.lista .acoes-linha .perigo {
+  padding: 4px 10px;
+}
