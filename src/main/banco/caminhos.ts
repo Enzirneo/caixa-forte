@@ -11,3 +11,9 @@ export function obterCaminhoDoBanco(): string {
 export function obterPastaDeBackups(): string {
   return join(app.getPath('userData'), NOME_PASTA_DE_BACKUPS)
 }
+
+const NOME_ARQUIVO_DE_CONFIGURACAO = 'configuracao.json'
+
+export function obterCaminhoDaConfiguracao(): string {
+  return join(app.getPath('userData'), NOME_ARQUIVO_DE_CONFIGURACAO)
+}

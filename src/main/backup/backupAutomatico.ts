@@ -24,6 +24,23 @@ export function precisaDeBackupAutomatico(nomesDosBackups: string[], agora: Date
   return agora.getTime() - maisRecente >= DIAS_ENTRE_BACKUPS_AUTOMATICOS * MILISSEGUNDOS_POR_DIA
 }
 
+export function criarBackupAutomaticoAgora(
+  banco: Database,
+  pastaDeBackups: string,
+  agora: Date = new Date()
+): string {
+  garantirPasta(pastaDeBackups)
+  const nome = `${PREFIXO_DO_BACKUP_AUTOMATICO}${montarInstanteParaNomeDeArquivo(agora)}${EXTENSAO_DO_BACKUP}`
+  const caminho = join(pastaDeBackups, nome)
+  banco.prepare('VACUUM INTO ?').run(caminho)
+  apagarBackupsAntigos(
+    pastaDeBackups,
+    PREFIXO_DO_BACKUP_AUTOMATICO,
+    QUANTIDADE_DE_BACKUPS_AUTOMATICOS_MANTIDOS
+  )
+  return caminho
+}
+
 export function criarBackupAutomaticoSeNecessario(
   banco: Database,
   pastaDeBackups: string,
@@ -35,14 +52,5 @@ export function criarBackupAutomaticoSeNecessario(
   )
   if (!precisaDeBackupAutomatico(existentes, agora)) return null
 
-  garantirPasta(pastaDeBackups)
-  const nome = `${PREFIXO_DO_BACKUP_AUTOMATICO}${montarInstanteParaNomeDeArquivo(agora)}${EXTENSAO_DO_BACKUP}`
-  const caminho = join(pastaDeBackups, nome)
-  banco.prepare('VACUUM INTO ?').run(caminho)
-  apagarBackupsAntigos(
-    pastaDeBackups,
-    PREFIXO_DO_BACKUP_AUTOMATICO,
-    QUANTIDADE_DE_BACKUPS_AUTOMATICOS_MANTIDOS
-  )
-  return caminho
+  return criarBackupAutomaticoAgora(banco, pastaDeBackups, agora)
 }
