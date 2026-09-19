@@ -1,19 +1,25 @@
 import Database from 'better-sqlite3'
-import { app } from 'electron'
-import { join } from 'path'
-import { protegerBancoAntesDeMigrar } from './backupAntesDeMigrar'
+import { criarBackupAutomaticoSeNecessario } from '../backup/backupAutomatico'
+import { protegerBancoAntesDeMigrar } from '../backup/backupAntesDeMigrar'
+import { obterCaminhoDoBanco, obterPastaDeBackups } from './caminhos'
 import { executarMigracoes } from './migracoes/executarMigracoes'
 import { listaDeMigracoes } from './migracoes/listaDeMigracoes'
 
-const NOME_ARQUIVO_BANCO = 'caixa-forte.db'
-const NOME_PASTA_DE_BACKUPS = 'backups'
+// Falhar ao copiar (disco cheio, por exemplo) não pode impedir o app de abrir.
+function tentarCriarBackupAutomatico(banco: Database.Database): void {
+  try {
+    criarBackupAutomaticoSeNecessario(banco, obterPastaDeBackups())
+  } catch (erro) {
+    console.error('Não foi possível criar o backup automático:', erro)
+  }
+}
 
 export function abrirBanco(): Database.Database {
-  const pastaDeDados = app.getPath('userData')
-  const banco = new Database(join(pastaDeDados, NOME_ARQUIVO_BANCO))
+  const banco = new Database(obterCaminhoDoBanco())
   banco.pragma('journal_mode = WAL')
   banco.pragma('foreign_keys = ON')
-  protegerBancoAntesDeMigrar(banco, listaDeMigracoes, join(pastaDeDados, NOME_PASTA_DE_BACKUPS))
+  protegerBancoAntesDeMigrar(banco, listaDeMigracoes, obterPastaDeBackups())
   executarMigracoes(banco, listaDeMigracoes)
+  tentarCriarBackupAutomatico(banco)
   return banco
 }

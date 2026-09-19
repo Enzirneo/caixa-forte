@@ -3,6 +3,8 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { abrirBanco } from './banco/abrirBanco'
+import { registrarIpcArquivos } from './arquivos/registrarIpcArquivos'
+import { registrarIpcBackup } from './backup/registrarIpcBackup'
 import { registrarIpcFechamentos } from './fechamentos/registrarIpcFechamentos'
 import { registrarIpcInvestimentos } from './investimentos/registrarIpcInvestimentos'
 import { registrarIpcLancamentos } from './lancamentos/registrarIpcLancamentos'
@@ -47,6 +49,8 @@ app.whenReady().then(() => {
   registrarIpcLancamentos(banco)
   registrarIpcFechamentos(banco)
   registrarIpcInvestimentos(banco)
+  registrarIpcBackup(banco)
+  registrarIpcArquivos()
 
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')

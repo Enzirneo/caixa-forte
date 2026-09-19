@@ -4,7 +4,7 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { protegerBancoAntesDeMigrar } from './backupAntesDeMigrar'
-import { executarMigracoes, type Migracao } from './migracoes/executarMigracoes'
+import { executarMigracoes, type Migracao } from '../banco/migracoes/executarMigracoes'
 
 const criarTabela: Migracao = {
   versao: 1,

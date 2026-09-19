@@ -1,5 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { CANAIS_ARQUIVOS, type ApiArquivos } from '../shared/arquivos/tipos'
+import { CANAIS_BACKUP } from '../shared/backup/canais'
+import type { ApiBackup } from '../shared/backup/tipos'
 import { CANAIS_FECHAMENTOS } from '../shared/fechamentos/canais'
 import type { ApiFechamentos } from '../shared/fechamentos/tipos'
 import { CANAIS_INVESTIMENTOS } from '../shared/investimentos/canais'
@@ -31,7 +34,19 @@ const investimentos: ApiInvestimentos = {
   excluirMovimentacao: (id) => ipcRenderer.invoke(CANAIS_INVESTIMENTOS.excluirMovimentacao, id)
 }
 
-const api = { lancamentos, fechamentos, investimentos }
+const backup: ApiBackup = {
+  informacoes: () => ipcRenderer.invoke(CANAIS_BACKUP.informacoes),
+  criar: () => ipcRenderer.invoke(CANAIS_BACKUP.criar),
+  restaurar: () => ipcRenderer.invoke(CANAIS_BACKUP.restaurar),
+  abrirPasta: () => ipcRenderer.invoke(CANAIS_BACKUP.abrirPasta)
+}
+
+const arquivos: ApiArquivos = {
+  salvarTexto: (nomeSugerido, conteudo) =>
+    ipcRenderer.invoke(CANAIS_ARQUIVOS.salvarTexto, nomeSugerido, conteudo)
+}
+
+const api = { lancamentos, fechamentos, investimentos, backup, arquivos }
 
 if (process.contextIsolated) {
   try {
