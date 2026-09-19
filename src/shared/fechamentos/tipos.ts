@@ -7,6 +7,6 @@ export interface FechamentoMes {
 
 export interface ApiFechamentos {
   listar: () => Promise<FechamentoMes[]>
-  fechar: (mes: string) => Promise<void>
-  reabrir: (mes: string) => Promise<void>
+  fecharMesesEncerrados: () => Promise<void>
+  refazer: (mes: string) => Promise<void>
 }

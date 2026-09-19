@@ -14,8 +14,8 @@ const lancamentos: ApiLancamentos = {
 
 const fechamentos: ApiFechamentos = {
   listar: () => ipcRenderer.invoke(CANAIS_FECHAMENTOS.listar),
-  fechar: (mes) => ipcRenderer.invoke(CANAIS_FECHAMENTOS.fechar, mes),
-  reabrir: (mes) => ipcRenderer.invoke(CANAIS_FECHAMENTOS.reabrir, mes)
+  fecharMesesEncerrados: () => ipcRenderer.invoke(CANAIS_FECHAMENTOS.fecharMesesEncerrados),
+  refazer: (mes) => ipcRenderer.invoke(CANAIS_FECHAMENTOS.refazer, mes)
 }
 
 const api = { lancamentos, fechamentos }

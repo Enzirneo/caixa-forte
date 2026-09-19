@@ -23,3 +23,17 @@ export function foiAlteradoAposFechamento(
   const fechamento = fechamentos.find((candidato) => candidato.mes === mesDoLancamento)
   return fechamento !== undefined && lancamento.alteradoEm > fechamento.fechadoEm
 }
+
+export function identificarMesesParaFechar(
+  lancamentos: Lancamento[],
+  fechamentos: FechamentoMes[],
+  mesAtual: string
+): string[] {
+  const mesesJaFechados = new Set(fechamentos.map((fechamento) => fechamento.mes))
+  const mesesComLancamentos = new Set(
+    lancamentos.map((lancamento) => obterMesDaData(lancamento.data))
+  )
+  return [...mesesComLancamentos]
+    .filter((mes) => mes < mesAtual && !mesesJaFechados.has(mes))
+    .sort()
+}

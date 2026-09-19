@@ -13,20 +13,16 @@ interface Props {
   resumos: ResumoMensal[]
   lancamentos: Lancamento[]
   fechamentos: FechamentoMes[]
-  mesAtual: string
   aoSelecionarMes: (mes: string) => void
-  aoFecharMes: (mes: string) => Promise<void>
-  aoReabrirMes: (mes: string) => Promise<void>
+  aoRefazerFechamento: (mes: string) => Promise<void>
 }
 
 export function HistoricoMensal({
   resumos,
   lancamentos,
   fechamentos,
-  mesAtual,
   aoSelecionarMes,
-  aoFecharMes,
-  aoReabrirMes
+  aoRefazerFechamento
 }: Props): React.JSX.Element {
   if (resumos.length === 0) {
     return <p className="vazio">O histórico aparece quando houver lançamentos.</p>
@@ -41,29 +37,23 @@ export function HistoricoMensal({
 
   const renderizarSituacao = (mes: string): React.JSX.Element => {
     const fechamento = fechamentos.find((candidato) => candidato.mes === mes)
-    if (!fechamento) {
-      return mes < mesAtual ? (
-        <button className="secundario" onClick={() => aoFecharMes(mes)}>
-          Fechar mês
-        </button>
-      ) : (
-        <span className="situacao">Em andamento</span>
-      )
-    }
+    if (!fechamento) return <span className="situacao">Em andamento</span>
 
+    const dataDoFechamento = formatarDataIsoComoBrasileira(
+      converterTimestampDoBancoEmDataIsoLocal(fechamento.fechadoEm)
+    )
     const posteriores = contarPosteriores(mes)
     return (
       <span className="situacao">
-        Fechado em{' '}
-        {formatarDataIsoComoBrasileira(
-          converterTimestampDoBancoEmDataIsoLocal(fechamento.fechadoEm)
-        )}
+        Fechado em {dataDoFechamento}
         {posteriores > 0 && (
-          <span className="ressalva"> · {posteriores} lançado(s) após o fechamento</span>
+          <>
+            <span className="ressalva"> · {posteriores} lançado(s) após o fechamento</span>
+            <button className="secundario" onClick={() => aoRefazerFechamento(mes)}>
+              Refazer fechamento
+            </button>
+          </>
         )}
-        <button className="secundario" onClick={() => aoReabrirMes(mes)}>
-          Reabrir
-        </button>
       </span>
     )
   }

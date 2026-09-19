@@ -23,7 +23,7 @@ const MES_ATUAL = obterMesDaData(obterDataIsoDeHoje())
 
 export function PaginaLancamentos(): React.JSX.Element {
   const { lancamentos, criar, atualizar, excluir } = useLancamentos()
-  const { fechamentos, fecharMes, reabrirMes } = useFechamentos()
+  const { fechamentos, refazerFechamento } = useFechamentos()
   const [aba, setAba] = useState<Aba>('lancamentos')
   const [mesSelecionado, setMesSelecionado] = useState(MES_ATUAL)
   const [lancamentoEmEdicao, setLancamentoEmEdicao] = useState<Lancamento | null>(null)
@@ -76,10 +76,8 @@ export function PaginaLancamentos(): React.JSX.Element {
           resumos={resumirPorMes(lancamentos)}
           lancamentos={lancamentos}
           fechamentos={fechamentos}
-          mesAtual={MES_ATUAL}
           aoSelecionarMes={abrirMesNosLancamentos}
-          aoFecharMes={fecharMes}
-          aoReabrirMes={reabrirMes}
+          aoRefazerFechamento={refazerFechamento}
         />
       ) : (
         <>

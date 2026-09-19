@@ -1,5 +1,5 @@
 export const CANAIS_FECHAMENTOS = {
   listar: 'fechamentos:listar',
-  fechar: 'fechamentos:fechar',
-  reabrir: 'fechamentos:reabrir'
+  fecharMesesEncerrados: 'fechamentos:fechar-meses-encerrados',
+  refazer: 'fechamentos:refazer'
 } as const

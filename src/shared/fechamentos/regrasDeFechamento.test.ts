@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { Lancamento } from '../lancamentos/tipos'
-import { foiAlteradoAposFechamento, validarFechamento } from './regrasDeFechamento'
+import {
+  foiAlteradoAposFechamento,
+  identificarMesesParaFechar,
+  validarFechamento
+} from './regrasDeFechamento'
 import type { FechamentoMes } from './tipos'
 
 const fechamentoDeAgosto: FechamentoMes = {
@@ -59,5 +63,33 @@ describe('foiAlteradoAposFechamento', () => {
       alteradoEm: '2026-09-10 08:00:00.000'
     })
     expect(foiAlteradoAposFechamento(deSetembro, [fechamentoDeAgosto])).toBe(false)
+  })
+})
+
+describe('identificarMesesParaFechar', () => {
+  it('indica meses passados com lançamentos que ainda não foram fechados', () => {
+    const lancamentos = [
+      criarLancamento({ id: 1, data: '2026-06-10' }),
+      criarLancamento({ id: 2, data: '2026-08-20' }),
+      criarLancamento({ id: 3, data: '2026-09-02' })
+    ]
+
+    expect(identificarMesesParaFechar(lancamentos, [fechamentoDeAgosto], '2026-09')).toEqual([
+      '2026-06'
+    ])
+  })
+
+  it('não repete o mesmo mês nem inclui o mês atual', () => {
+    const lancamentos = [
+      criarLancamento({ id: 1, data: '2026-07-01' }),
+      criarLancamento({ id: 2, data: '2026-07-15' }),
+      criarLancamento({ id: 3, data: '2026-09-01' })
+    ]
+
+    expect(identificarMesesParaFechar(lancamentos, [], '2026-09')).toEqual(['2026-07'])
+  })
+
+  it('não indica nada quando não há lançamentos', () => {
+    expect(identificarMesesParaFechar([], [], '2026-09')).toEqual([])
   })
 })
