@@ -6,6 +6,11 @@ export interface Migracao {
   sql: string
 }
 
+export interface EstadoDasMigracoes {
+  quantidadeAplicadas: number
+  pendentes: Migracao[]
+}
+
 const TABELA_CONTROLE = 'migracoes_aplicadas'
 
 function criarTabelaDeControle(banco: Database): void {
@@ -42,7 +47,10 @@ function aplicarMigracao(banco: Database, migracao: Migracao): void {
   aplicarEmTransacao()
 }
 
-export function executarMigracoes(banco: Database, migracoes: Migracao[]): number {
+export function descreverEstadoDasMigracoes(
+  banco: Database,
+  migracoes: Migracao[]
+): EstadoDasMigracoes {
   validarVersoesUnicas(migracoes)
   criarTabelaDeControle(banco)
 
@@ -50,7 +58,11 @@ export function executarMigracoes(banco: Database, migracoes: Migracao[]): numbe
   const pendentes = migracoes
     .filter((migracao) => !versoesAplicadas.has(migracao.versao))
     .sort((a, b) => a.versao - b.versao)
+  return { quantidadeAplicadas: versoesAplicadas.size, pendentes }
+}
 
+export function executarMigracoes(banco: Database, migracoes: Migracao[]): number {
+  const { pendentes } = descreverEstadoDasMigracoes(banco, migracoes)
   pendentes.forEach((migracao) => aplicarMigracao(banco, migracao))
   return pendentes.length
 }
