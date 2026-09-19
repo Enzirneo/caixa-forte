@@ -3,7 +3,11 @@ import { ipcMain } from 'electron'
 import { calcularSaldoDoDestino } from '../../shared/investimentos/calculos'
 import { CANAIS_INVESTIMENTOS } from '../../shared/investimentos/canais'
 import type { NovaMovimentacao, NovoDestino } from '../../shared/investimentos/tipos'
-import { validarNovaMovimentacao, validarNovoDestino } from '../../shared/investimentos/validacoes'
+import {
+  validarExclusaoDeMovimentacao,
+  validarNovaMovimentacao,
+  validarNovoDestino
+} from '../../shared/investimentos/validacoes'
 import {
   excluirMovimentacao,
   inserirDestino,
@@ -44,7 +48,8 @@ export function registrarIpcInvestimentos(banco: Database): void {
     }
   )
 
-  ipcMain.handle(CANAIS_INVESTIMENTOS.excluirMovimentacao, (_evento, id: number) =>
+  ipcMain.handle(CANAIS_INVESTIMENTOS.excluirMovimentacao, (_evento, id: number) => {
+    lancarErroSeInvalido(validarExclusaoDeMovimentacao(listarMovimentacoes(banco), id))
     excluirMovimentacao(banco, id)
-  )
+  })
 }

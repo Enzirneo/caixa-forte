@@ -1,8 +1,10 @@
 import { ehDataIsoValida } from '../datas/dataIso'
+import { calcularSaldoDoDestino } from './calculos'
 import {
   PERIODICIDADES_DA_TAXA,
   TIPOS_DESTINO,
   TIPOS_MOVIMENTACAO,
+  type Movimentacao,
   type NovaMovimentacao,
   type NovoDestino
 } from './tipos'
@@ -50,4 +52,16 @@ export function validarNovaMovimentacao(
   }
 
   return erros
+}
+
+export function validarExclusaoDeMovimentacao(movimentacoes: Movimentacao[], id: number): string[] {
+  const movimentacaoExcluida = movimentacoes.find((movimentacao) => movimentacao.id === id)
+  if (!movimentacaoExcluida) return ['Movimentação não encontrada.']
+
+  const restantes = movimentacoes.filter((movimentacao) => movimentacao.id !== id)
+  const saldoRestante = calcularSaldoDoDestino(restantes, movimentacaoExcluida.destinoId)
+  if (saldoRestante < 0) {
+    return ['Não dá para excluir: o destino ficaria com saldo negativo. Exclua antes os resgates.']
+  }
+  return []
 }

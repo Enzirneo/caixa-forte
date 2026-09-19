@@ -8,7 +8,11 @@ import {
   calcularTotalGuardado
 } from './calculos'
 import type { Movimentacao, NovaMovimentacao, NovoDestino } from './tipos'
-import { validarNovaMovimentacao, validarNovoDestino } from './validacoes'
+import {
+  validarExclusaoDeMovimentacao,
+  validarNovaMovimentacao,
+  validarNovoDestino
+} from './validacoes'
 
 function movimentar(sobrescritas: Partial<Movimentacao>): Movimentacao {
   return {
@@ -141,5 +145,19 @@ describe('validarNovaMovimentacao', () => {
 
     expect(validarNovaMovimentacao(resgate, 50000)).toHaveLength(1)
     expect(validarNovaMovimentacao({ ...resgate, valorCentavos: 50000 }, 50000)).toEqual([])
+  })
+})
+
+describe('validarExclusaoDeMovimentacao', () => {
+  it('permite excluir quando o destino continua sem saldo negativo', () => {
+    expect(validarExclusaoDeMovimentacao(movimentacoes, 2)).toEqual([])
+  })
+
+  it('não deixa excluir um aporte que cobre um resgate', () => {
+    expect(validarExclusaoDeMovimentacao(movimentacoes, 1)).toHaveLength(1)
+  })
+
+  it('recusa movimentação que não existe', () => {
+    expect(validarExclusaoDeMovimentacao(movimentacoes, 99)).toHaveLength(1)
   })
 })
