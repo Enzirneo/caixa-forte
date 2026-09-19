@@ -7,6 +7,7 @@ import { BotaoExcluirComConfirmacao } from '../compartilhado/BotaoExcluirComConf
 
 interface Props {
   lancamentos: Lancamento[]
+  filtrando: boolean
   fechamentos: FechamentoMes[]
   rotulosDeCompra: Map<number, string>
   aoEditar: (lancamento: Lancamento) => void
@@ -15,13 +16,20 @@ interface Props {
 
 export function ListaLancamentos({
   lancamentos,
+  filtrando,
   fechamentos,
   rotulosDeCompra,
   aoEditar,
   aoExcluir
 }: Props): React.JSX.Element {
   if (lancamentos.length === 0) {
-    return <p className="vazio">Nenhum lançamento neste mês.</p>
+    return (
+      <p className="vazio">
+        {filtrando
+          ? 'Nenhum lançamento encontrado com esses filtros.'
+          : 'Nenhum lançamento neste mês.'}
+      </p>
+    )
   }
 
   return (

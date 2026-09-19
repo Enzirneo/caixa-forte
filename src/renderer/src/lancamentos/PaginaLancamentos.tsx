@@ -1,19 +1,26 @@
 import { useState } from 'react'
+import { listarCategoriasEmUso } from '../../../shared/categorias/nomeDaCategoria'
 import {
   converterTimestampDoBancoEmDataIsoLocal,
   formatarDataIsoComoBrasileira
 } from '../../../shared/datas/dataIso'
-import { listarCategoriasEmUso } from '../../../shared/categorias/nomeDaCategoria'
 import { obterMesDaData } from '../../../shared/datas/mes'
 import type { FechamentoMes } from '../../../shared/fechamentos/tipos'
 import { calcularGuardadoNoMes } from '../../../shared/investimentos/calculos'
 import type { Movimentacao } from '../../../shared/investimentos/tipos'
+import {
+  FILTRO_PADRAO_DE_LANCAMENTOS,
+  aplicarFiltroDeLancamentos,
+  filtroEstaAtivo,
+  type FiltroDeLancamentos
+} from '../../../shared/lancamentos/filtrarLancamentos'
 import { calcularResumo, filtrarPorMes } from '../../../shared/lancamentos/resumo'
 import type {
   Lancamento,
   LancamentoEditado,
   NovoLancamento
 } from '../../../shared/lancamentos/tipos'
+import { FiltrosDeLancamentos } from './FiltrosDeLancamentos'
 import { FormularioLancamento } from './FormularioLancamento'
 import { ListaLancamentos } from './ListaLancamentos'
 import { ResumoDoMes } from './ResumoDoMes'
@@ -43,8 +50,11 @@ export function PaginaLancamentos({
   aoExcluir
 }: Props): React.JSX.Element {
   const [lancamentoEmEdicao, setLancamentoEmEdicao] = useState<Lancamento | null>(null)
+  const [filtro, setFiltro] = useState<FiltroDeLancamentos>(FILTRO_PADRAO_DE_LANCAMENTOS)
 
+  const categoriasSugeridas = listarCategoriasEmUso(lancamentos)
   const lancamentosDoMes = filtrarPorMes(lancamentos, mesSelecionado)
+  const lancamentosExibidos = aplicarFiltroDeLancamentos(lancamentosDoMes, filtro)
   const fechamentoDoMes = fechamentos.find((fechamento) => fechamento.mes === mesSelecionado)
 
   const salvar = async (novoLancamento: NovoLancamento): Promise<void> => {
@@ -55,35 +65,48 @@ export function PaginaLancamentos({
   }
 
   return (
-    <>
-      <FormularioLancamento
-        key={lancamentoEmEdicao?.id ?? 'novo'}
-        lancamentoEmEdicao={lancamentoEmEdicao}
-        categoriasSugeridas={listarCategoriasEmUso(lancamentos)}
-        aoSalvar={salvar}
-        aoCancelarEdicao={() => setLancamentoEmEdicao(null)}
-      />
-      <SeletorDeMes mes={mesSelecionado} aoMudar={aoMudarMes} />
-      {fechamentoDoMes && (
-        <p className="aviso-de-fechamento">
-          Mês fechado em{' '}
-          {formatarDataIsoComoBrasileira(
-            converterTimestampDoBancoEmDataIsoLocal(fechamentoDoMes.fechadoEm)
-          )}
-          . Lançamentos feitos depois aparecem com a ressalva de que vieram após o fechamento.
-        </p>
-      )}
-      <ResumoDoMes
-        resumo={calcularResumo(lancamentosDoMes)}
-        guardadoNoMesCentavos={calcularGuardadoNoMes(movimentacoes, mesSelecionado)}
-      />
-      <ListaLancamentos
-        lancamentos={lancamentosDoMes}
-        fechamentos={fechamentos}
-        rotulosDeCompra={rotulosDeCompra}
-        aoEditar={setLancamentoEmEdicao}
-        aoExcluir={aoExcluir}
-      />
-    </>
+    <div className="pagina-de-lancamentos">
+      <div className="area-fixa">
+        <FormularioLancamento
+          key={lancamentoEmEdicao?.id ?? 'novo'}
+          lancamentoEmEdicao={lancamentoEmEdicao}
+          categoriasSugeridas={categoriasSugeridas}
+          aoSalvar={salvar}
+          aoCancelarEdicao={() => setLancamentoEmEdicao(null)}
+        />
+        <SeletorDeMes mes={mesSelecionado} aoMudar={aoMudarMes} />
+      </div>
+
+      <div className="area-rolavel">
+        {fechamentoDoMes && (
+          <p className="aviso-de-fechamento">
+            Mês fechado em{' '}
+            {formatarDataIsoComoBrasileira(
+              converterTimestampDoBancoEmDataIsoLocal(fechamentoDoMes.fechadoEm)
+            )}
+            . Lançamentos feitos depois aparecem com a ressalva de que vieram após o fechamento.
+          </p>
+        )}
+        <ResumoDoMes
+          resumo={calcularResumo(lancamentosDoMes)}
+          guardadoNoMesCentavos={calcularGuardadoNoMes(movimentacoes, mesSelecionado)}
+        />
+        <FiltrosDeLancamentos
+          filtro={filtro}
+          aoMudar={setFiltro}
+          categorias={categoriasSugeridas}
+          quantidadeExibida={lancamentosExibidos.length}
+          quantidadeNoMes={lancamentosDoMes.length}
+        />
+        <ListaLancamentos
+          lancamentos={lancamentosExibidos}
+          filtrando={filtroEstaAtivo(filtro)}
+          fechamentos={fechamentos}
+          rotulosDeCompra={rotulosDeCompra}
+          aoEditar={setLancamentoEmEdicao}
+          aoExcluir={aoExcluir}
+        />
+      </div>
+    </div>
   )
 }

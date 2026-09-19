@@ -47,6 +47,9 @@
   --grafico-receita: #2e9e68;
   --grafico-despesa: #d9713c;
 
+  /* Conteúdo com no máximo 1168px, centralizado; a barra de rolagem fica na borda da janela. */
+  --margem-lateral: max(36px, calc((100% - 1168px) / 2));
+
   --raio: 22px;
   --raio-medio: 16px;
   --raio-pequeno: 12px;
@@ -154,7 +157,8 @@ code {
 .aplicativo {
   display: grid;
   grid-template-columns: 264px minmax(0, 1fr);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   transition: grid-template-columns 0.25s ease;
 }
 
@@ -327,7 +331,10 @@ code {
 }
 
 .conteudo {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  min-height: 0;
 }
 
 .topo {
@@ -335,9 +342,7 @@ code {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  max-width: 1240px;
-  padding: 28px 36px 0;
-  margin: 0 auto;
+  padding: 28px var(--margem-lateral) 0;
 }
 
 .topo h1 {
@@ -371,9 +376,10 @@ code {
 }
 
 .pagina {
-  max-width: 1240px;
-  padding: 24px 36px 64px;
-  margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+  padding: 24px var(--margem-lateral) 40px;
+  overflow-y: auto;
 }
 
 /* --- Botões ---------------------------------------------------------------- */
@@ -1383,4 +1389,135 @@ input[type='number'] {
   grid-column: 1 / -1;
   justify-content: flex-end;
   padding-top: 4px;
+}
+
+/* --- Lançamentos: parte de cima fixa, só o resto rola ------------------------------------ */
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Na tela de lançamentos a página não rola: quem rola é a área de baixo. */
+.pagina:has(> .pagina-de-lancamentos) {
+  padding-bottom: 20px;
+  overflow: hidden;
+}
+
+.pagina-de-lancamentos {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.area-fixa {
+  position: relative;
+  z-index: 20;
+  flex: none;
+}
+
+.area-fixa .formulario {
+  margin-bottom: 14px;
+}
+
+.area-fixa .seletor-de-mes {
+  margin-bottom: 14px;
+}
+
+.area-rolavel {
+  flex: 1;
+  min-height: 0;
+  padding: 2px 10px 24px 0;
+  margin-right: -10px;
+  overflow-y: auto;
+}
+
+/* --- Barra de rolagem fina e verde ------------------------------------------------------- */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--primaria) 45%, transparent);
+  background-clip: content-box;
+  border: 2px solid transparent;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primaria);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* --- Filtros da lista --------------------------------------------------------------------- */
+
+.filtros-de-lancamentos {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: minmax(200px, 2.2fr) repeat(2, minmax(140px, 1.1fr)) repeat(2, minmax(96px, 0.7fr)) minmax(
+      150px,
+      1.2fr
+    );
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 14px;
+  background: color-mix(in srgb, var(--superficie) 92%, transparent);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-suave);
+  backdrop-filter: blur(10px);
+}
+
+.filtros-de-lancamentos input {
+  height: 44px;
+}
+
+.campo-com-icone-a-esquerda {
+  position: relative;
+}
+
+.campo-com-icone-a-esquerda svg {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  color: var(--texto-suave);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.campo-com-icone-a-esquerda input {
+  padding-left: 40px;
+}
+
+.contagem-de-lancamentos {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 1180px) {
+  .filtros-de-lancamentos {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
 }
