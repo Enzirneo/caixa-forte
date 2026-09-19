@@ -3,6 +3,7 @@ import {
   converterTimestampDoBancoEmDataIsoLocal,
   formatarDataIsoComoBrasileira
 } from '../../../shared/datas/dataIso'
+import { listarCategoriasEmUso } from '../../../shared/categorias/nomeDaCategoria'
 import { obterMesDaData } from '../../../shared/datas/mes'
 import type { FechamentoMes } from '../../../shared/fechamentos/tipos'
 import { calcularGuardadoNoMes } from '../../../shared/investimentos/calculos'
@@ -56,6 +57,7 @@ export function PaginaLancamentos({
       <FormularioLancamento
         key={lancamentoEmEdicao?.id ?? 'novo'}
         lancamentoEmEdicao={lancamentoEmEdicao}
+        categoriasSugeridas={listarCategoriasEmUso(lancamentos)}
         aoSalvar={salvar}
         aoCancelarEdicao={() => setLancamentoEmEdicao(null)}
       />

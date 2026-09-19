@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { listarCategoriasEmUso } from '../../../shared/categorias/nomeDaCategoria'
 import { obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
+import { canonizarCategoriasDoLote } from '../../../shared/importacao/canonizarCategoriasDoLote'
 import {
   interpretarPlanilha,
   interpretarTextoColado
@@ -50,7 +52,10 @@ export function PaginaImportacao({ lancamentosExistentes, aoImportar }: Props): 
   const linhasInterpretadas = arquivo
     ? interpretarPlanilha(arquivo.linhas, dataDoLote)
     : interpretarTextoColado(textoColado, dataDoLote)
-  const itens = marcarDuplicadas(linhasInterpretadas, lancamentosExistentes)
+  const itens = marcarDuplicadas(
+    canonizarCategoriasDoLote(linhasInterpretadas, listarCategoriasEmUso(lancamentosExistentes)),
+    lancamentosExistentes
+  )
 
   const estaIncluido = (item: ItemDaPrevia): boolean =>
     item.lancamento !== null && (escolhas[item.numeroDaLinha] ?? !item.duplicada)

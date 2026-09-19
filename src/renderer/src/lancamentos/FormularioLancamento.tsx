@@ -15,14 +15,18 @@ const ROTULO_DO_TIPO: Record<TipoLancamento, string> = {
   despesa: 'Despesa'
 }
 
+const ID_DAS_CATEGORIAS_SUGERIDAS = 'categorias-sugeridas'
+
 interface Props {
   lancamentoEmEdicao: Lancamento | null
+  categoriasSugeridas: string[]
   aoSalvar: (novoLancamento: NovoLancamento) => Promise<void>
   aoCancelarEdicao: () => void
 }
 
 export function FormularioLancamento({
   lancamentoEmEdicao,
+  categoriasSugeridas,
   aoSalvar,
   aoCancelarEdicao
 }: Props): React.JSX.Element {
@@ -90,7 +94,16 @@ export function FormularioLancamento({
       </label>
       <label>
         Categoria
-        <input value={categoria} onChange={(e) => setCategoria(e.target.value)} />
+        <input
+          list={ID_DAS_CATEGORIAS_SUGERIDAS}
+          value={categoria}
+          onChange={(e) => setCategoria(e.target.value)}
+        />
+        <datalist id={ID_DAS_CATEGORIAS_SUGERIDAS}>
+          {categoriasSugeridas.map((nome) => (
+            <option key={nome} value={nome} />
+          ))}
+        </datalist>
       </label>
       <div className="acoes-formulario">
         <button type="submit">{lancamentoEmEdicao ? 'Salvar' : 'Adicionar'}</button>
