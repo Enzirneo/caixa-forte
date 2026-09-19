@@ -5,6 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { abrirBanco } from './banco/abrirBanco'
 import { registrarIpcArquivos } from './arquivos/registrarIpcArquivos'
 import { registrarIpcBackup } from './backup/registrarIpcBackup'
+import { registrarIpcCartoes } from './cartoes/registrarIpcCartoes'
 import { registrarIpcFechamentos } from './fechamentos/registrarIpcFechamentos'
 import { registrarIpcInvestimentos } from './investimentos/registrarIpcInvestimentos'
 import { registrarIpcLancamentos } from './lancamentos/registrarIpcLancamentos'
@@ -55,6 +56,7 @@ app.whenReady().then(() => {
   registrarIpcFechamentos(banco)
   registrarIpcInvestimentos(banco)
   registrarIpcRecorrencias(banco)
+  registrarIpcCartoes(banco)
   registrarIpcBackup(banco)
   registrarIpcArquivos()
 

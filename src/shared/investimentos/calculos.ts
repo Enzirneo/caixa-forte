@@ -23,11 +23,20 @@ export function calcularGuardadoNoMes(movimentacoes: Movimentacao[], mes: string
   )
 }
 
+// Só conta o que já aconteceu: uma parcela de cartão de daqui a três meses ainda não saiu da conta.
 export function calcularSaldoDaContaCorrente(
   lancamentos: Lancamento[],
-  movimentacoes: Movimentacao[]
+  movimentacoes: Movimentacao[],
+  hojeIso: string
 ): number {
-  return calcularResumo(lancamentos).saldoCentavos - calcularTotalGuardado(movimentacoes)
+  const lancamentosJaOcorridos = lancamentos.filter((lancamento) => lancamento.data <= hojeIso)
+  const movimentacoesJaOcorridas = movimentacoes.filter(
+    (movimentacao) => movimentacao.data <= hojeIso
+  )
+  return (
+    calcularResumo(lancamentosJaOcorridos).saldoCentavos -
+    calcularTotalGuardado(movimentacoesJaOcorridas)
+  )
 }
 
 export function calcularSaldoDaContaNoMes(resumo: Resumo, guardadoNoMesCentavos: number): number {

@@ -9,6 +9,8 @@ import { CANAIS_INVESTIMENTOS } from '../shared/investimentos/canais'
 import type { ApiInvestimentos } from '../shared/investimentos/tipos'
 import { CANAIS_RECORRENCIAS } from '../shared/recorrencias/canais'
 import type { ApiRecorrencias } from '../shared/recorrencias/tipos'
+import { CANAIS_CARTOES } from '../shared/cartoes/canais'
+import type { ApiCartoes } from '../shared/cartoes/tipos'
 import { CANAIS_LANCAMENTOS } from '../shared/lancamentos/canais'
 import type { ApiLancamentos } from '../shared/lancamentos/tipos'
 
@@ -57,7 +59,17 @@ const recorrencias: ApiRecorrencias = {
   gerarPendentes: () => ipcRenderer.invoke(CANAIS_RECORRENCIAS.gerarPendentes)
 }
 
-const api = { lancamentos, fechamentos, investimentos, backup, arquivos, recorrencias }
+const cartoes: ApiCartoes = {
+  listarCartoes: () => ipcRenderer.invoke(CANAIS_CARTOES.listarCartoes),
+  criarCartao: (novo) => ipcRenderer.invoke(CANAIS_CARTOES.criarCartao, novo),
+  atualizarCartao: (cartao) => ipcRenderer.invoke(CANAIS_CARTOES.atualizarCartao, cartao),
+  excluirCartao: (id) => ipcRenderer.invoke(CANAIS_CARTOES.excluirCartao, id),
+  listarVinculos: () => ipcRenderer.invoke(CANAIS_CARTOES.listarVinculos),
+  registrarCompra: (compra) => ipcRenderer.invoke(CANAIS_CARTOES.registrarCompra, compra),
+  excluirCompra: (grupoId) => ipcRenderer.invoke(CANAIS_CARTOES.excluirCompra, grupoId)
+}
+
+const api = { lancamentos, fechamentos, investimentos, backup, arquivos, recorrencias, cartoes }
 
 if (process.contextIsolated) {
   try {

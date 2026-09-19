@@ -79,5 +79,28 @@ export const listaDeMigracoes: Migracao[] = [
         PRIMARY KEY (recorrencia_id, competencia)
       );
     `
+  },
+  {
+    versao: 6,
+    descricao: 'cria cartões de crédito e o vínculo das parcelas com os lançamentos',
+    sql: `
+      CREATE TABLE cartoes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        dia_de_fechamento INTEGER NOT NULL CHECK (dia_de_fechamento BETWEEN 1 AND 31),
+        dia_de_vencimento INTEGER NOT NULL CHECK (dia_de_vencimento BETWEEN 1 AND 31),
+        limite_centavos INTEGER CHECK (limite_centavos IS NULL OR limite_centavos > 0)
+      );
+      CREATE TABLE compras_no_cartao (
+        lancamento_id INTEGER PRIMARY KEY REFERENCES lancamentos (id) ON DELETE CASCADE,
+        cartao_id INTEGER NOT NULL REFERENCES cartoes (id),
+        grupo_id INTEGER NOT NULL,
+        data_da_compra TEXT NOT NULL,
+        parcela_numero INTEGER NOT NULL,
+        parcelas_total INTEGER NOT NULL
+      );
+      CREATE INDEX indice_compras_no_cartao_grupo ON compras_no_cartao (grupo_id);
+      CREATE INDEX indice_compras_no_cartao_cartao ON compras_no_cartao (cartao_id);
+    `
   }
 ]

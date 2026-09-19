@@ -13,6 +13,8 @@ import {
   validarNovoDestino
 } from './validacoes'
 
+const HOJE = '2026-12-31'
+
 function movimentar(sobrescritas: Partial<Movimentacao>): Movimentacao {
   return {
     id: 1,
@@ -59,7 +61,7 @@ describe('cálculos de investimentos', () => {
       lancar({ id: 2, tipo: 'despesa', valorCentavos: 100000 })
     ]
 
-    expect(calcularSaldoDaContaCorrente(lancamentos, movimentacoes)).toBe(280000)
+    expect(calcularSaldoDaContaCorrente(lancamentos, movimentacoes, HOJE)).toBe(280000)
   })
 
   it('o resgate devolve dinheiro para a conta corrente', () => {
@@ -69,13 +71,36 @@ describe('cálculos de investimentos', () => {
       movimentar({ id: 2, tipo: 'resgate', valorCentavos: 200000 })
     ]
 
-    expect(calcularSaldoDaContaCorrente(lancamentos, aplicouEResgatou)).toBe(500000)
+    expect(calcularSaldoDaContaCorrente(lancamentos, aplicouEResgatou, HOJE)).toBe(500000)
   })
 
   it('saldo do mês na conta desconta o guardado do mês', () => {
     const resumo = { receitasCentavos: 500000, despesasCentavos: 100000, saldoCentavos: 400000 }
 
     expect(calcularSaldoDaContaNoMes(resumo, 150000)).toBe(250000)
+  })
+})
+
+describe('saldo da conta corrente só com o que já aconteceu', () => {
+  it('ignora lançamentos e movimentações com data futura', () => {
+    const lancamentos = [
+      lancar({ id: 1, tipo: 'receita', valorCentavos: 500000, data: '2026-09-05' }),
+      lancar({ id: 2, valorCentavos: 100000, data: '2026-09-10' }),
+      lancar({ id: 3, valorCentavos: 300000, data: '2026-11-05' })
+    ]
+    const guardar = [
+      movimentar({ id: 1, valorCentavos: 50000, data: '2026-09-12' }),
+      movimentar({ id: 2, valorCentavos: 70000, data: '2026-10-01' })
+    ]
+
+    expect(calcularSaldoDaContaCorrente(lancamentos, guardar, '2026-09-19')).toBe(350000)
+  })
+
+  it('no próprio dia o lançamento já conta', () => {
+    const lancamentos = [lancar({ valorCentavos: 1000, data: '2026-09-19' })]
+
+    expect(calcularSaldoDaContaCorrente(lancamentos, [], '2026-09-19')).toBe(-1000)
+    expect(calcularSaldoDaContaCorrente(lancamentos, [], '2026-09-18')).toBe(0)
   })
 })
 

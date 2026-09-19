@@ -61,7 +61,8 @@ function App(): React.JSX.Element {
 
   const saldoDaContaCorrente = calcularSaldoDaContaCorrente(
     lancamentos,
-    investimentos.movimentacoes
+    investimentos.movimentacoes,
+    obterDataIsoDeHoje()
   )
   const tituloDaPagina = OPCOES_DE_NAVEGACAO.find((opcao) => opcao.id === aba)?.rotulo
 
