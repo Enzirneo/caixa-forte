@@ -4,8 +4,10 @@ import { converterTextoEmCentavos } from '../../../shared/dinheiro/converterText
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
 import { montarParcelasDaCompra, validarNovaCompra } from '../../../shared/cartoes/regras'
 import type { Cartao, NovaCompraNoCartao } from '../../../shared/cartoes/tipos'
+import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
+import { CampoDeData } from '../componentes/CampoDeData'
+import { Selecao } from '../componentes/Selecao'
 
-const ID_DAS_CATEGORIAS_DA_COMPRA = 'categorias-da-compra'
 const PARCELAS_PADRAO = '1'
 
 interface Props {
@@ -61,16 +63,15 @@ export function FormularioCompra({
 
   return (
     <form className="formulario formulario-compra" onSubmit={enviar}>
-      <label>
-        Cartão
-        <select value={cartao.id} onChange={(e) => setCartaoEscolhido(Number(e.target.value))}>
-          {cartoes.map((opcao) => (
-            <option key={opcao.id} value={opcao.id}>
-              {opcao.nome}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="campo">
+        <span className="rotulo-do-campo">Cartão</span>
+        <Selecao
+          valor={String(cartao.id)}
+          opcoes={cartoes.map((opcao) => ({ valor: String(opcao.id), rotulo: opcao.nome }))}
+          aoMudar={(valor) => setCartaoEscolhido(Number(valor))}
+          rotuloDeAcessibilidade="Cartão"
+        />
+      </div>
       <label>
         Descrição
         <input value={descricao} onChange={(e) => setDescricao(e.target.value)} />
@@ -94,23 +95,22 @@ export function FormularioCompra({
           onChange={(e) => setParcelasTexto(e.target.value)}
         />
       </label>
-      <label>
-        Data da compra
-        <input type="date" value={dataDaCompra} onChange={(e) => setDataDaCompra(e.target.value)} />
-      </label>
-      <label>
-        Categoria
-        <input
-          list={ID_DAS_CATEGORIAS_DA_COMPRA}
-          value={categoria}
-          onChange={(e) => setCategoria(e.target.value)}
+      <div className="campo">
+        <span className="rotulo-do-campo">Data da compra</span>
+        <CampoDeData
+          valor={dataDaCompra}
+          aoMudar={setDataDaCompra}
+          rotuloDeAcessibilidade="Data da compra"
         />
-        <datalist id={ID_DAS_CATEGORIAS_DA_COMPRA}>
-          {categoriasSugeridas.map((nome) => (
-            <option key={nome} value={nome} />
-          ))}
-        </datalist>
-      </label>
+      </div>
+      <div className="campo">
+        <span className="rotulo-do-campo">Categoria</span>
+        <CampoDeCategoria
+          valor={categoria}
+          aoMudar={setCategoria}
+          sugestoes={categoriasSugeridas}
+        />
+      </div>
       <button type="submit">Registrar compra</button>
 
       {primeira && ultima && (

@@ -54,7 +54,12 @@ export function FormularioCartao({
   }
 
   return (
-    <form className="formulario formulario-cartao" onSubmit={enviar}>
+    <form
+      className={
+        cartaoEmEdicao ? 'formulario formulario-cartao em-edicao' : 'formulario formulario-cartao'
+      }
+      onSubmit={enviar}
+    >
       <label>
         Nome do cartão
         <input

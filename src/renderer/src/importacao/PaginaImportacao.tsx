@@ -18,6 +18,7 @@ import { extrairMensagemDeErro } from '../compartilhado/extrairMensagemDeErro'
 import { lerArquivoDeTexto } from '../compartilhado/lerArquivoDeTexto'
 import { lerPlanilhaXlsx } from '../compartilhado/lerPlanilhaXlsx'
 import { PreviaDaImportacao } from './PreviaDaImportacao'
+import { CampoDeData } from '../componentes/CampoDeData'
 
 interface Props {
   lancamentosExistentes: Lancamento[]
@@ -128,10 +129,14 @@ export function PaginaImportacao({ lancamentosExistentes, aoImportar }: Props): 
             onChange={(e) => alterarTexto(e.target.value)}
           />
         </label>
-        <label>
-          Data das linhas sem data
-          <input type="date" value={dataDoLote} onChange={(e) => setDataDoLote(e.target.value)} />
-        </label>
+        <div className="campo">
+          <span className="rotulo-do-campo">Data das linhas sem data</span>
+          <CampoDeData
+            valor={dataDoLote}
+            aoMudar={setDataDoLote}
+            rotuloDeAcessibilidade="Data das linhas sem data"
+          />
+        </div>
         <label>
           Ou escolha um arquivo (Excel .xlsx ou CSV)
           <input

@@ -1117,3 +1117,270 @@ label {
   font-size: 11.5px;
   font-weight: 600;
 }
+
+/* --- Campos próprios: menus, calendário e categoria ----------------------------------- */
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.popover-ancora {
+  position: relative;
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 60;
+  min-width: 100%;
+  padding: 6px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-medio);
+  box-shadow:
+    0 22px 44px -14px rgb(6 40 27 / 0.4),
+    var(--sombra-suave);
+  animation: aparecer 0.14s ease;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+
+.selecao-botao {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  color: var(--texto);
+  text-align: left;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-medio);
+  box-shadow: none;
+  font-weight: 500;
+}
+
+.selecao-botao:hover:not(:disabled) {
+  border-color: var(--primaria);
+  filter: none;
+}
+
+.selecao-botao[aria-expanded='true'] {
+  border-color: var(--primaria);
+  box-shadow: var(--foco);
+}
+
+.selecao-botao svg {
+  flex: none;
+  color: var(--texto-suave);
+}
+
+.selecao-vazia {
+  color: var(--texto-suave);
+}
+
+.selecao-lista {
+  max-height: 264px;
+  padding: 6px;
+  margin: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.selecao-opcao {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 12px;
+  color: var(--texto);
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  box-shadow: none;
+  font-weight: 500;
+}
+
+.selecao-opcao:hover:not(:disabled) {
+  filter: none;
+}
+
+.selecao-opcao.destacada {
+  color: var(--primaria);
+  background: var(--primaria-suave);
+}
+
+.campo-com-icone {
+  position: relative;
+}
+
+.campo-com-icone input {
+  padding-right: 46px;
+}
+
+.botao-de-icone {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--texto-suave);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  box-shadow: none;
+}
+
+.botao-de-icone:hover:not(:disabled) {
+  color: var(--primaria);
+  background: var(--superficie-suave);
+  filter: none;
+}
+
+.campo-com-icone .botao-de-icone {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+}
+
+.botao-de-texto {
+  padding: 6px 16px;
+  color: var(--primaria);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  font-weight: 700;
+}
+
+.botao-de-texto:hover:not(:disabled) {
+  background: var(--primaria-suave);
+  filter: none;
+}
+
+.calendario {
+  width: 304px;
+  padding: 14px;
+}
+
+.calendario-de-meses {
+  width: 284px;
+}
+
+.calendario-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.calendario-cabecalho strong {
+  font-family: var(--fonte-destaque);
+  font-size: 19px;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.calendario-cabecalho strong::first-letter {
+  text-transform: uppercase;
+}
+
+.calendario-semana {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calendario-dias-da-semana span {
+  padding: 4px 0 6px;
+  color: var(--texto-suave);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.calendario-dia {
+  height: 37px;
+  padding: 0;
+  color: var(--texto);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.calendario-dia:hover:not(:disabled) {
+  background: var(--superficie-suave);
+  filter: none;
+}
+
+.calendario-dia.fora-do-mes {
+  color: var(--texto-suave);
+  opacity: 0.45;
+}
+
+.calendario-dia.hoje {
+  border-color: var(--primaria);
+}
+
+.calendario-dia.selecionado {
+  color: var(--primaria-contraste);
+  background: var(--primaria);
+  border-color: var(--primaria);
+  opacity: 1;
+}
+
+.grade-de-meses {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.grade-de-meses .calendario-dia {
+  height: 42px;
+  border-radius: 14px;
+  text-transform: capitalize;
+}
+
+.calendario-rodape {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+  margin-top: 8px;
+  border-top: 1px solid var(--borda);
+}
+
+/* Sem as setinhas nativas dos campos numéricos. */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  appearance: textfield;
+}
+
+/* Na edição, Salvar e Cancelar ganham uma linha própria, sempre dentro do cartão. */
+.formulario.em-edicao .acoes-formulario {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  padding-top: 4px;
+}

@@ -6,9 +6,11 @@ import { formatarCentavosParaCampo } from '../../../shared/dinheiro/formatarCent
 import { TIPOS_LANCAMENTO, type TipoLancamento } from '../../../shared/lancamentos/tipos'
 import { validarNovaRecorrencia } from '../../../shared/recorrencias/regras'
 import type { NovaRecorrencia, Recorrencia } from '../../../shared/recorrencias/tipos'
+import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
+import { CampoDeMes } from '../componentes/CampoDeMes'
+import { Selecao } from '../componentes/Selecao'
 
 const ROTULO_DO_TIPO: Record<TipoLancamento, string> = { receita: 'Receita', despesa: 'Despesa' }
-const ID_DAS_CATEGORIAS_DA_RECORRENCIA = 'categorias-da-recorrencia'
 const DIA_PADRAO_DO_MES = '5'
 
 interface Props {
@@ -63,7 +65,14 @@ export function FormularioRecorrencia({
   }
 
   return (
-    <form className="formulario formulario-recorrencia" onSubmit={enviar}>
+    <form
+      className={
+        recorrenciaEmEdicao
+          ? 'formulario formulario-recorrencia em-edicao'
+          : 'formulario formulario-recorrencia'
+      }
+      onSubmit={enviar}
+    >
       <label>
         Descrição
         <input
@@ -81,29 +90,26 @@ export function FormularioRecorrencia({
           onChange={(e) => setValorTexto(e.target.value)}
         />
       </label>
-      <label>
-        Tipo
-        <select value={tipo} onChange={(e) => setTipo(e.target.value as TipoLancamento)}>
-          {TIPOS_LANCAMENTO.map((opcao) => (
-            <option key={opcao} value={opcao}>
-              {ROTULO_DO_TIPO[opcao]}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Categoria
-        <input
-          list={ID_DAS_CATEGORIAS_DA_RECORRENCIA}
-          value={categoria}
-          onChange={(e) => setCategoria(e.target.value)}
+      <div className="campo">
+        <span className="rotulo-do-campo">Tipo</span>
+        <Selecao
+          valor={tipo}
+          opcoes={TIPOS_LANCAMENTO.map((opcao) => ({
+            valor: opcao,
+            rotulo: ROTULO_DO_TIPO[opcao]
+          }))}
+          aoMudar={(valor) => setTipo(valor as TipoLancamento)}
+          rotuloDeAcessibilidade="Tipo"
         />
-        <datalist id={ID_DAS_CATEGORIAS_DA_RECORRENCIA}>
-          {categoriasSugeridas.map((nome) => (
-            <option key={nome} value={nome} />
-          ))}
-        </datalist>
-      </label>
+      </div>
+      <div className="campo">
+        <span className="rotulo-do-campo">Categoria</span>
+        <CampoDeCategoria
+          valor={categoria}
+          aoMudar={setCategoria}
+          sugestoes={categoriasSugeridas}
+        />
+      </div>
       <label>
         Todo dia
         <input
@@ -114,14 +120,24 @@ export function FormularioRecorrencia({
           onChange={(e) => setDiaTexto(e.target.value)}
         />
       </label>
-      <label>
-        Começa em
-        <input type="month" value={mesDeInicio} onChange={(e) => setMesDeInicio(e.target.value)} />
-      </label>
-      <label>
-        Termina em (opcional)
-        <input type="month" value={mesDeFim} onChange={(e) => setMesDeFim(e.target.value)} />
-      </label>
+      <div className="campo">
+        <span className="rotulo-do-campo">Começa em</span>
+        <CampoDeMes
+          valor={mesDeInicio}
+          aoMudar={setMesDeInicio}
+          rotuloDeAcessibilidade="Começa em"
+        />
+      </div>
+      <div className="campo">
+        <span className="rotulo-do-campo">Termina em (opcional)</span>
+        <CampoDeMes
+          valor={mesDeFim}
+          aoMudar={setMesDeFim}
+          rotuloDeAcessibilidade="Termina em"
+          textoQuandoVazio="Sem término"
+          podeLimpar
+        />
+      </div>
       <div className="acoes-formulario">
         <button type="submit">{recorrenciaEmEdicao ? 'Salvar' : 'Adicionar'}</button>
         {recorrenciaEmEdicao && (

@@ -10,6 +10,8 @@ import {
 } from '../../../shared/investimentos/tipos'
 import { validarNovaMovimentacao } from '../../../shared/investimentos/validacoes'
 import { ROTULO_DO_TIPO_DE_MOVIMENTACAO } from './rotulos'
+import { CampoDeData } from '../componentes/CampoDeData'
+import { Selecao } from '../componentes/Selecao'
 
 interface Props {
   destinos: Destino[]
@@ -54,26 +56,27 @@ export function FormularioMovimentacao({
 
   return (
     <form className="formulario formulario-movimentacao" onSubmit={enviar}>
-      <label>
-        Destino
-        <select value={destinoId} onChange={(e) => setDestinoEscolhido(Number(e.target.value))}>
-          {destinos.map((destino) => (
-            <option key={destino.id} value={destino.id}>
-              {destino.nome}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Operação
-        <select value={tipo} onChange={(e) => setTipo(e.target.value as TipoMovimentacao)}>
-          {TIPOS_MOVIMENTACAO.map((opcao) => (
-            <option key={opcao} value={opcao}>
-              {ROTULO_DO_TIPO_DE_MOVIMENTACAO[opcao]}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="campo">
+        <span className="rotulo-do-campo">Destino</span>
+        <Selecao
+          valor={String(destinoId)}
+          opcoes={destinos.map((opcao) => ({ valor: String(opcao.id), rotulo: opcao.nome }))}
+          aoMudar={(valor) => setDestinoEscolhido(Number(valor))}
+          rotuloDeAcessibilidade="Destino"
+        />
+      </div>
+      <div className="campo">
+        <span className="rotulo-do-campo">Operação</span>
+        <Selecao
+          valor={tipo}
+          opcoes={TIPOS_MOVIMENTACAO.map((opcao) => ({
+            valor: opcao,
+            rotulo: ROTULO_DO_TIPO_DE_MOVIMENTACAO[opcao]
+          }))}
+          aoMudar={(valor) => setTipo(valor as TipoMovimentacao)}
+          rotuloDeAcessibilidade="Operação"
+        />
+      </div>
       <label>
         Valor (R$)
         <input
@@ -83,10 +86,10 @@ export function FormularioMovimentacao({
           onChange={(e) => setValorTexto(e.target.value)}
         />
       </label>
-      <label>
-        Data
-        <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
-      </label>
+      <div className="campo">
+        <span className="rotulo-do-campo">Data</span>
+        <CampoDeData valor={data} aoMudar={setData} rotuloDeAcessibilidade="Data" />
+      </div>
       <button type="submit">Registrar</button>
       {erros.length > 0 && (
         <ul className="erros">

@@ -9,13 +9,14 @@ import {
   type TipoLancamento
 } from '../../../shared/lancamentos/tipos'
 import { validarNovoLancamento } from '../../../shared/lancamentos/validarNovoLancamento'
+import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
+import { CampoDeData } from '../componentes/CampoDeData'
+import { Selecao } from '../componentes/Selecao'
 
 const ROTULO_DO_TIPO: Record<TipoLancamento, string> = {
   receita: 'Receita',
   despesa: 'Despesa'
 }
-
-const ID_DAS_CATEGORIAS_SUGERIDAS = 'categorias-sugeridas'
 
 interface Props {
   lancamentoEmEdicao: Lancamento | null
@@ -64,7 +65,14 @@ export function FormularioLancamento({
   }
 
   return (
-    <form className="formulario formulario-lancamento" onSubmit={enviar}>
+    <form
+      className={
+        lancamentoEmEdicao
+          ? 'formulario formulario-lancamento em-edicao'
+          : 'formulario formulario-lancamento'
+      }
+      onSubmit={enviar}
+    >
       <label>
         Descrição
         <input value={descricao} onChange={(e) => setDescricao(e.target.value)} />
@@ -78,33 +86,30 @@ export function FormularioLancamento({
           onChange={(e) => setValorTexto(e.target.value)}
         />
       </label>
-      <label>
-        Data
-        <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
-      </label>
-      <label>
-        Tipo
-        <select value={tipo} onChange={(e) => setTipo(e.target.value as TipoLancamento)}>
-          {TIPOS_LANCAMENTO.map((opcao) => (
-            <option key={opcao} value={opcao}>
-              {ROTULO_DO_TIPO[opcao]}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Categoria
-        <input
-          list={ID_DAS_CATEGORIAS_SUGERIDAS}
-          value={categoria}
-          onChange={(e) => setCategoria(e.target.value)}
+      <div className="campo">
+        <span className="rotulo-do-campo">Data</span>
+        <CampoDeData valor={data} aoMudar={setData} rotuloDeAcessibilidade="Data" />
+      </div>
+      <div className="campo">
+        <span className="rotulo-do-campo">Tipo</span>
+        <Selecao
+          valor={tipo}
+          opcoes={TIPOS_LANCAMENTO.map((opcao) => ({
+            valor: opcao,
+            rotulo: ROTULO_DO_TIPO[opcao]
+          }))}
+          aoMudar={(valor) => setTipo(valor as TipoLancamento)}
+          rotuloDeAcessibilidade="Tipo"
         />
-        <datalist id={ID_DAS_CATEGORIAS_SUGERIDAS}>
-          {categoriasSugeridas.map((nome) => (
-            <option key={nome} value={nome} />
-          ))}
-        </datalist>
-      </label>
+      </div>
+      <div className="campo">
+        <span className="rotulo-do-campo">Categoria</span>
+        <CampoDeCategoria
+          valor={categoria}
+          aoMudar={setCategoria}
+          sugestoes={categoriasSugeridas}
+        />
+      </div>
       <div className="acoes-formulario">
         <button type="submit">{lancamentoEmEdicao ? 'Salvar' : 'Adicionar'}</button>
         {lancamentoEmEdicao && (

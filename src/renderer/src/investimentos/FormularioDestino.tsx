@@ -9,6 +9,7 @@ import {
 import { converterTextoEmCentesimosDePercentual } from '../../../shared/investimentos/taxa'
 import { validarNovoDestino } from '../../../shared/investimentos/validacoes'
 import { ROTULO_DO_TIPO_DE_DESTINO } from './rotulos'
+import { Selecao } from '../componentes/Selecao'
 
 const ROTULO_DA_PERIODICIDADE: Record<PeriodicidadeDaTaxa, string> = {
   mensal: 'ao mês',
@@ -60,16 +61,18 @@ export function FormularioDestino({ aoCriar }: Props): React.JSX.Element {
           onChange={(e) => setNome(e.target.value)}
         />
       </label>
-      <label>
-        Tipo
-        <select value={tipo} onChange={(e) => setTipo(e.target.value as TipoDestino)}>
-          {TIPOS_DESTINO.map((opcao) => (
-            <option key={opcao} value={opcao}>
-              {ROTULO_DO_TIPO_DE_DESTINO[opcao]}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="campo">
+        <span className="rotulo-do-campo">Tipo</span>
+        <Selecao
+          valor={tipo}
+          opcoes={TIPOS_DESTINO.map((opcao) => ({
+            valor: opcao,
+            rotulo: ROTULO_DO_TIPO_DE_DESTINO[opcao]
+          }))}
+          aoMudar={(valor) => setTipo(valor as TipoDestino)}
+          rotuloDeAcessibilidade="Tipo"
+        />
+      </div>
       <label>
         Rendimento (%)
         <input
@@ -79,19 +82,18 @@ export function FormularioDestino({ aoCriar }: Props): React.JSX.Element {
           onChange={(e) => setTaxaTexto(e.target.value)}
         />
       </label>
-      <label>
-        Período da taxa
-        <select
-          value={periodicidade}
-          onChange={(e) => setPeriodicidade(e.target.value as PeriodicidadeDaTaxa)}
-        >
-          {PERIODICIDADES_DA_TAXA.map((opcao) => (
-            <option key={opcao} value={opcao}>
-              {ROTULO_DA_PERIODICIDADE[opcao]}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="campo">
+        <span className="rotulo-do-campo">Período da taxa</span>
+        <Selecao
+          valor={periodicidade}
+          opcoes={PERIODICIDADES_DA_TAXA.map((opcao) => ({
+            valor: opcao,
+            rotulo: ROTULO_DA_PERIODICIDADE[opcao]
+          }))}
+          aoMudar={(valor) => setPeriodicidade(valor as PeriodicidadeDaTaxa)}
+          rotuloDeAcessibilidade="Período da taxa"
+        />
+      </div>
       <button type="submit">Cadastrar destino</button>
       {erros.length > 0 && (
         <ul className="erros">
