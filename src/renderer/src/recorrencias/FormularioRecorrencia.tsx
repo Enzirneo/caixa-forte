@@ -150,14 +150,16 @@ export function FormularioRecorrencia({
         />
       </div>
       {podeUsarCartao && (
-        <OpcaoDeCartao
-          cartoes={cartoes}
-          ehDeCartao={ehDeCartao}
-          aoMudarEhDeCartao={setEhDeCartao}
-          cartaoEscolhido={cartao}
-          aoEscolherCartao={setCartaoEscolhidoId}
-          textoDaCaixa="Esta cobrança é de um cartão de crédito"
-        />
+        <div className="opcoes-extras">
+          <OpcaoDeCartao
+            cartoes={cartoes}
+            ehDeCartao={ehDeCartao}
+            aoMudarEhDeCartao={setEhDeCartao}
+            cartaoEscolhido={cartao}
+            aoEscolherCartao={setCartaoEscolhidoId}
+            textoDaCaixa="Esta cobrança é de um cartão de crédito"
+          />
+        </div>
       )}
       <div className="acoes-formulario">
         <button type="submit">{recorrenciaEmEdicao ? 'Salvar' : 'Adicionar'}</button>

@@ -3,7 +3,11 @@ import { ipcMain } from 'electron'
 import { obterDataIsoDeHoje } from '../../shared/datas/dataIso'
 import { CANAIS_RECORRENCIAS } from '../../shared/recorrencias/canais'
 import { validarNovaRecorrencia } from '../../shared/recorrencias/regras'
-import type { NovaRecorrencia, RecorrenciaEditada } from '../../shared/recorrencias/tipos'
+import type {
+  DefinicaoDeRecorrencia,
+  NovaRecorrencia,
+  RecorrenciaEditada
+} from '../../shared/recorrencias/tipos'
 import { definirLancamentoRecorrente } from './definirLancamentoRecorrente'
 import { gerarLancamentosRecorrentes } from './gerarLancamentosRecorrentes'
 import {
@@ -46,8 +50,8 @@ export function registrarIpcRecorrencias(banco: Database): void {
 
   ipcMain.handle(
     CANAIS_RECORRENCIAS.definirDoLancamento,
-    (_evento, lancamentoId: number, recorrente: boolean) => {
-      definirLancamentoRecorrente(banco, lancamentoId, recorrente, obterDataIsoDeHoje())
+    (_evento, lancamentoId: number, definicao: DefinicaoDeRecorrencia) => {
+      definirLancamentoRecorrente(banco, lancamentoId, definicao, obterDataIsoDeHoje())
       gerarLancamentosRecorrentes(banco, obterDataIsoDeHoje())
     }
   )

@@ -3,7 +3,8 @@ import { listarCategoriasEmUso } from '../../../shared/categorias/nomeDaCategori
 import type { AjusteDeFechamento, Cartao, NovaCompraNoCartao } from '../../../shared/cartoes/tipos'
 import {
   converterTimestampDoBancoEmDataIsoLocal,
-  formatarDataIsoComoBrasileira
+  formatarDataIsoComoBrasileira,
+  obterDataIsoDeHoje
 } from '../../../shared/datas/dataIso'
 import { obterMesDaData } from '../../../shared/datas/mes'
 import type { FechamentoMes } from '../../../shared/fechamentos/tipos'
@@ -22,7 +23,8 @@ import type {
   LancamentoEditado,
   NovoLancamento
 } from '../../../shared/lancamentos/tipos'
-import type { Recorrencia } from '../../../shared/recorrencias/tipos'
+import { calcularMesDeInicioAPartirDoLancamento } from '../../../shared/recorrencias/regras'
+import type { DefinicaoDeRecorrencia, Recorrencia } from '../../../shared/recorrencias/tipos'
 import { FiltrosDeLancamentos } from './FiltrosDeLancamentos'
 import { FormularioLancamento } from './FormularioLancamento'
 import { ListaLancamentos } from './ListaLancamentos'
@@ -43,7 +45,7 @@ interface Props {
   aoAtualizar: (lancamento: LancamentoEditado) => Promise<void>
   aoExcluir: (id: number) => Promise<void>
   aoRegistrarCompraNoCartao: (compra: NovaCompraNoCartao) => Promise<void>
-  aoDefinirRecorrente: (lancamentoId: number, recorrente: boolean) => Promise<void>
+  aoDefinirRecorrente: (lancamentoId: number, definicao: DefinicaoDeRecorrencia) => Promise<void>
 }
 
 export function PaginaLancamentos({
@@ -75,14 +77,26 @@ export function PaginaLancamentos({
     lancamentoEmEdicao !== null &&
     lancamentoEmEdicao.tipo !== 'reembolso' &&
     !rotulosDeCompra.has(lancamentoEmEdicao.id)
-  const recorrenteInicial =
-    recorrencias.find((recorrencia) => recorrencia.id === lancamentoEmEdicao?.recorrenciaId)
-      ?.ativa ?? false
+  const recorrenciaDoLancamento = recorrencias.find(
+    (recorrencia) => recorrencia.id === lancamentoEmEdicao?.recorrenciaId
+  )
+  const recorrenteInicial = recorrenciaDoLancamento?.ativa ?? false
+  const mesMinimoDeTermino =
+    recorrenciaDoLancamento?.mesDeInicio ??
+    calcularMesDeInicioAPartirDoLancamento(
+      lancamentoEmEdicao?.data ?? obterDataIsoDeHoje(),
+      obterDataIsoDeHoje()
+    )
 
-  const salvar = async (novoLancamento: NovoLancamento, recorrente?: boolean): Promise<void> => {
+  const salvar = async (
+    novoLancamento: NovoLancamento,
+    definicaoDeRecorrencia?: DefinicaoDeRecorrencia
+  ): Promise<void> => {
     if (lancamentoEmEdicao) {
       await aoAtualizar({ ...novoLancamento, id: lancamentoEmEdicao.id })
-      if (recorrente !== undefined) await aoDefinirRecorrente(lancamentoEmEdicao.id, recorrente)
+      if (definicaoDeRecorrencia) {
+        await aoDefinirRecorrente(lancamentoEmEdicao.id, definicaoDeRecorrencia)
+      }
     } else {
       await aoCriar(novoLancamento)
     }
@@ -99,6 +113,8 @@ export function PaginaLancamentos({
           todosOsLancamentos={lancamentos}
           podeSerRecorrente={podeSerRecorrente}
           recorrenteInicial={recorrenteInicial}
+          mesDeFimInicial={recorrenciaDoLancamento?.mesDeFim ?? ''}
+          mesMinimoDeTermino={mesMinimoDeTermino}
           categoriasSugeridas={categoriasSugeridas}
           cartoes={cartoes}
           ajustesDeFechamento={ajustesDeFechamento}

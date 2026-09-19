@@ -23,7 +23,7 @@ export function OpcaoDeCartao({
   children
 }: Props): React.JSX.Element {
   return (
-    <div className="opcao-de-cartao">
+    <div className="opcao-extra">
       <label className="caixa-de-selecao">
         <input
           type="checkbox"
@@ -33,7 +33,7 @@ export function OpcaoDeCartao({
         {textoDaCaixa}
       </label>
       {ehDeCartao && cartaoEscolhido && (
-        <>
+        <div className="campos-da-opcao">
           <div className="campo">
             <span className="rotulo-do-campo">Cartão</span>
             <Selecao
@@ -44,7 +44,7 @@ export function OpcaoDeCartao({
             />
           </div>
           {children}
-        </>
+        </div>
       )}
     </div>
   )

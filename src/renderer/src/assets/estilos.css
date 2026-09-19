@@ -536,60 +536,14 @@ label {
   min-width: 136px;
 }
 
-.opcao-de-cartao,
-.opcao-de-recorrencia {
-  grid-column: 1 / -1;
-  display: flex;
-  flex: 1 1 100%;
-  flex-wrap: wrap;
-  gap: 12px 20px;
-  align-items: flex-end;
-}
-
-.formulario-lancamento .opcao-de-reembolso {
-  display: flex;
-  flex: 1 1 100%;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  align-items: flex-end;
-}
-
-.opcao-de-reembolso .campo-da-despesa-reembolsada {
-  flex: 1 1 360px;
-}
-
-.dica-do-reembolso {
-  flex: 1 1 260px;
-  margin: 0;
-  color: var(--texto-suave);
-  font-size: 12px;
-  font-weight: 600;
-}
-
 .lista-com-busca {
   min-width: 100%;
   max-height: 260px;
   overflow-y: auto;
 }
 
-.opcao-de-cartao .campo {
-  width: 220px;
-}
-
-.opcao-de-cartao .campo-de-parcelas {
-  width: 100px;
-}
-
-.caixa-de-selecao {
-  flex-direction: row;
-  gap: 10px;
-  align-items: center;
-  min-height: 44px;
-  font-size: 13px;
-  cursor: pointer;
-}
-
 .formulario-cartao .acoes-formulario,
+.formulario-recorrencia .acoes-formulario,
 .formulario-compra > button,
 .ajuste-de-fechamento > button {
   grid-column: 1 / -1;
@@ -1605,4 +1559,96 @@ body {
 
 .cabecalho-ordenavel:hover {
   color: var(--primaria);
+}
+
+/* --- Opções extras dos formulários (cartão, recorrência, reembolso) ------------------------ */
+
+.opcoes-extras {
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  grid-column: 1 / -1;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--borda);
+}
+
+.opcao-extra {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 8px 20px;
+  align-items: end;
+}
+
+.campos-da-opcao {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.campos-da-opcao .campo {
+  width: 220px;
+}
+
+.campos-da-opcao .campo-da-despesa-reembolsada {
+  flex: 1 1 360px;
+  width: auto;
+}
+
+.campos-da-opcao .campo-de-parcelas {
+  width: 100px;
+}
+
+.caixa-de-selecao,
+.titulo-da-opcao {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  color: var(--texto-suave);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.caixa-de-selecao {
+  cursor: pointer;
+}
+
+.dica-da-opcao {
+  flex: 1 1 240px;
+  align-self: center;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.formulario-lancamento > .acoes-formulario {
+  order: 1;
+}
+
+.formulario-lancamento > .opcoes-extras {
+  order: 2;
+}
+
+.formulario-lancamento > .erros {
+  order: 3;
+}
+
+/* Editando: as opções vêm primeiro e os botões fecham o cartão. */
+.formulario-lancamento.em-edicao > .opcoes-extras {
+  order: 1;
+}
+
+.formulario-lancamento.em-edicao > .acoes-formulario {
+  order: 2;
+}
+
+@media (max-width: 1100px) {
+  .opcao-extra {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

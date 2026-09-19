@@ -93,6 +93,14 @@ export function definirRecorrenciaAtiva(banco: Database, id: number, ativa: bool
   if (changes === 0) throw new Error(`Recorrência ${id} não encontrada`)
 }
 
+export function definirFimDaRecorrencia(
+  banco: Database,
+  id: number,
+  mesDeFim: string | null
+): void {
+  banco.prepare('UPDATE recorrencias SET mes_de_fim = ? WHERE id = ?').run(mesDeFim, id)
+}
+
 // Os lançamentos que ela já criou continuam: só a regra de criar os próximos é removida.
 export function excluirRecorrencia(banco: Database, id: number): void {
   banco.prepare('DELETE FROM recorrencias WHERE id = ?').run(id)

@@ -13,11 +13,14 @@ import {
   type NovoLancamento,
   type TipoLancamento
 } from '../../../shared/lancamentos/tipos'
+import { formatarMesPorExtenso } from '../../../shared/datas/mes'
+import type { DefinicaoDeRecorrencia } from '../../../shared/recorrencias/tipos'
 import {
   listarDespesasReembolsaveis,
   validarReembolso
 } from '../../../shared/lancamentos/reembolsos'
 import { validarNovoLancamento } from '../../../shared/lancamentos/validarNovoLancamento'
+import { CampoDeMes } from '../componentes/CampoDeMes'
 import { CampoDeEscolhaComBusca } from '../componentes/CampoDeEscolhaComBusca'
 import { OpcaoDeCartao } from '../componentes/OpcaoDeCartao'
 import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
@@ -29,8 +32,11 @@ const PARCELAS_PADRAO = '1'
 const MAXIMO_DE_PARCELAS_NO_CAMPO = 60
 
 function descreverEfeitoDaRecorrencia(recorrente: boolean, recorrenteInicial: boolean): string {
-  if (recorrente && recorrenteInicial) return 'Continua sendo lançado todo mês.'
-  if (recorrente) return 'Os próximos meses serão lançados sozinhos, a partir do mês seguinte.'
+  if (recorrente && recorrenteInicial)
+    return 'Continua sendo lançado todo mês, até o mês escolhido.'
+  if (recorrente) {
+    return 'Os próximos meses são lançados sozinhos, a partir do mês seguinte, até o mês escolhido.'
+  }
   if (recorrenteInicial) return 'Ao salvar, deixa de ser lançado nos próximos meses.'
   return ''
 }
@@ -46,10 +52,15 @@ interface Props {
   todosOsLancamentos: Lancamento[]
   podeSerRecorrente: boolean
   recorrenteInicial: boolean
+  mesDeFimInicial: string
+  mesMinimoDeTermino: string
   categoriasSugeridas: string[]
   cartoes: Cartao[]
   ajustesDeFechamento: AjusteDeFechamento[]
-  aoSalvar: (novoLancamento: NovoLancamento, recorrente?: boolean) => Promise<void>
+  aoSalvar: (
+    novoLancamento: NovoLancamento,
+    definicaoDeRecorrencia?: DefinicaoDeRecorrencia
+  ) => Promise<void>
   aoRegistrarNoCartao: (compra: NovaCompraNoCartao) => Promise<void>
   aoCancelarEdicao: () => void
 }
@@ -59,6 +70,8 @@ export function FormularioLancamento({
   todosOsLancamentos,
   podeSerRecorrente,
   recorrenteInicial,
+  mesDeFimInicial,
+  mesMinimoDeTermino,
   categoriasSugeridas,
   cartoes,
   ajustesDeFechamento,
@@ -77,6 +90,7 @@ export function FormularioLancamento({
     lancamentoEmEdicao?.reembolsoDeId ? String(lancamentoEmEdicao.reembolsoDeId) : ''
   )
   const [recorrente, setRecorrente] = useState(recorrenteInicial)
+  const [mesDeFim, setMesDeFim] = useState(mesDeFimInicial)
   const [ehDeCartao, setEhDeCartao] = useState(false)
   const [cartaoEscolhido, setCartaoEscolhido] = useState('')
   const [parcelasTexto, setParcelasTexto] = useState(PARCELAS_PADRAO)
@@ -106,6 +120,8 @@ export function FormularioLancamento({
     podeUsarCartao && ehDeCartao
       ? (cartoes.find((candidato) => String(candidato.id) === cartaoEscolhido) ?? cartoes[0])
       : undefined
+
+  const temOpcoesExtras = ehReembolso || podeUsarCartao || mostrarRecorrente
 
   const montarCompra = (cartaoDaCompra: Cartao): NovaCompraNoCartao => ({
     cartaoId: cartaoDaCompra.id,
@@ -143,6 +159,13 @@ export function FormularioLancamento({
     limparCamposDigitados()
   }
 
+  // Só avisa o sistema quando a pessoa mudou algo: marcar, desmarcar ou trocar o término.
+  const montarDefinicaoDeRecorrencia = (): DefinicaoDeRecorrencia | undefined => {
+    const mudouTermino = recorrente && mesDeFim !== mesDeFimInicial
+    if (!mostrarRecorrente || (recorrente === recorrenteInicial && !mudouTermino)) return undefined
+    return { recorrente, mesDeFim: mesDeFim === '' ? null : mesDeFim }
+  }
+
   const enviar = async (evento: FormEvent): Promise<void> => {
     evento.preventDefault()
     if (cartao) {
@@ -161,6 +184,9 @@ export function FormularioLancamento({
 
     const errosEncontrados = [
       ...validarNovoLancamento(novoLancamento),
+      ...(mostrarRecorrente && recorrente && mesDeFim !== '' && mesDeFim < mesMinimoDeTermino
+        ? [`O término não pode ser antes de ${formatarMesPorExtenso(mesMinimoDeTermino)}.`]
+        : []),
       ...(ehReembolso && !despesaReembolsadaId
         ? ['Escolha a despesa que foi reembolsada.']
         : validarReembolso(novoLancamento, todosOsLancamentos, lancamentoEmEdicao?.id))
@@ -168,8 +194,8 @@ export function FormularioLancamento({
     setErros(errosEncontrados)
     if (errosEncontrados.length > 0) return
 
-    const mudouRecorrencia = mostrarRecorrente && recorrente !== recorrenteInicial
-    await aoSalvar(novoLancamento, mudouRecorrencia ? recorrente : undefined)
+    const definicaoDeRecorrencia = montarDefinicaoDeRecorrencia()
+    await aoSalvar(novoLancamento, definicaoDeRecorrencia)
     limparCamposDigitados()
   }
 
@@ -214,6 +240,97 @@ export function FormularioLancamento({
           sugestoes={categoriasSugeridas}
         />
       </div>
+      {temOpcoesExtras && (
+        <div className="opcoes-extras">
+          {ehReembolso && (
+            <div className="opcao-extra">
+              <span className="titulo-da-opcao">Reembolso de uma despesa</span>
+              <div className="campos-da-opcao">
+                <div className="campo campo-da-despesa-reembolsada">
+                  <span className="rotulo-do-campo">Despesa reembolsada</span>
+                  <CampoDeEscolhaComBusca
+                    valor={despesaReembolsadaId}
+                    opcoes={despesasReembolsaveis.map(({ despesa, reembolsavelCentavos }) => ({
+                      valor: String(despesa.id),
+                      rotulo: `${despesa.descricao} · ${formatarDataIsoComoBrasileira(despesa.data)} · falta devolver ${formatarCentavosComoReal(reembolsavelCentavos)}`
+                    }))}
+                    aoEscolher={escolherDespesaReembolsada}
+                    placeholder="Busque pela descrição da despesa"
+                    rotuloDeAcessibilidade="Despesa reembolsada"
+                  />
+                </div>
+                <p className="dica-da-opcao">
+                  {despesaEscolhida
+                    ? `Pode devolver até ${formatarCentavosComoReal(despesaEscolhida.reembolsavelCentavos)}. Para devolução parcial, digite um valor menor.`
+                    : 'O reembolso abate a despesa escolhida, no todo ou em parte, e fica datado neste dia.'}
+                </p>
+              </div>
+            </div>
+          )}
+          {podeUsarCartao && (
+            <OpcaoDeCartao
+              cartoes={cartoes}
+              ehDeCartao={ehDeCartao}
+              aoMudarEhDeCartao={setEhDeCartao}
+              cartaoEscolhido={cartao}
+              aoEscolherCartao={setCartaoEscolhido}
+              textoDaCaixa="Esta despesa é de um cartão de crédito"
+            >
+              <label className="campo-de-parcelas">
+                Parcelas
+                <input
+                  type="number"
+                  min={1}
+                  max={MAXIMO_DE_PARCELAS_NO_CAMPO}
+                  value={parcelasTexto}
+                  onChange={(e) => setParcelasTexto(e.target.value)}
+                />
+              </label>
+              {parcelasDaCompra.length > 0 && (
+                <p className="dica-da-opcao">
+                  {parcelasDaCompra.length}× de{' '}
+                  {formatarCentavosComoReal(parcelasDaCompra[0].lancamento.valorCentavos)} · a
+                  primeira parcela vence em{' '}
+                  {formatarDataIsoComoBrasileira(parcelasDaCompra[0].lancamento.data)}
+                  {parcelasDaCompra.length > 1 &&
+                    ` e a última em ${formatarDataIsoComoBrasileira(parcelasDaCompra[parcelasDaCompra.length - 1].lancamento.data)}`}
+                </p>
+              )}
+            </OpcaoDeCartao>
+          )}
+          {mostrarRecorrente && (
+            <div className="opcao-extra">
+              <label className="caixa-de-selecao">
+                <input
+                  type="checkbox"
+                  checked={recorrente}
+                  onChange={(e) => setRecorrente(e.target.checked)}
+                />
+                Este lançamento se repete todo mês
+              </label>
+              {(recorrente || recorrenteInicial) && (
+                <div className="campos-da-opcao">
+                  {recorrente && (
+                    <div className="campo">
+                      <span className="rotulo-do-campo">Repete até</span>
+                      <CampoDeMes
+                        valor={mesDeFim}
+                        aoMudar={setMesDeFim}
+                        rotuloDeAcessibilidade="Repete até"
+                        textoQuandoVazio="Até eu parar"
+                        podeLimpar
+                      />
+                    </div>
+                  )}
+                  <p className="dica-da-opcao">
+                    {descreverEfeitoDaRecorrencia(recorrente, recorrenteInicial)}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
       <div className="acoes-formulario">
         <button type="submit">{lancamentoEmEdicao ? 'Salvar' : 'Adicionar'}</button>
         {lancamentoEmEdicao && (
@@ -222,73 +339,6 @@ export function FormularioLancamento({
           </button>
         )}
       </div>
-      {ehReembolso && (
-        <div className="opcao-de-reembolso">
-          <div className="campo campo-da-despesa-reembolsada">
-            <span className="rotulo-do-campo">Despesa reembolsada</span>
-            <CampoDeEscolhaComBusca
-              valor={despesaReembolsadaId}
-              opcoes={despesasReembolsaveis.map(({ despesa, reembolsavelCentavos }) => ({
-                valor: String(despesa.id),
-                rotulo: `${despesa.descricao} · ${formatarDataIsoComoBrasileira(despesa.data)} · falta devolver ${formatarCentavosComoReal(reembolsavelCentavos)}`
-              }))}
-              aoEscolher={escolherDespesaReembolsada}
-              placeholder="Busque pela descrição da despesa"
-              rotuloDeAcessibilidade="Despesa reembolsada"
-            />
-          </div>
-          <p className="dica-do-reembolso">
-            {despesaEscolhida
-              ? `Pode devolver até ${formatarCentavosComoReal(despesaEscolhida.reembolsavelCentavos)}. Para devolução parcial, digite um valor menor.`
-              : 'O reembolso abate a despesa escolhida, no todo ou em parte, e fica datado neste dia.'}
-          </p>
-        </div>
-      )}
-      {podeUsarCartao && (
-        <OpcaoDeCartao
-          cartoes={cartoes}
-          ehDeCartao={ehDeCartao}
-          aoMudarEhDeCartao={setEhDeCartao}
-          cartaoEscolhido={cartao}
-          aoEscolherCartao={setCartaoEscolhido}
-          textoDaCaixa="Esta despesa é de um cartão de crédito"
-        >
-          <label className="campo-de-parcelas">
-            Parcelas
-            <input
-              type="number"
-              min={1}
-              max={MAXIMO_DE_PARCELAS_NO_CAMPO}
-              value={parcelasTexto}
-              onChange={(e) => setParcelasTexto(e.target.value)}
-            />
-          </label>
-        </OpcaoDeCartao>
-      )}
-      {mostrarRecorrente && (
-        <div className="opcao-de-recorrencia">
-          <label className="caixa-de-selecao">
-            <input
-              type="checkbox"
-              checked={recorrente}
-              onChange={(e) => setRecorrente(e.target.checked)}
-            />
-            Este lançamento se repete todo mês
-          </label>
-          <p className="dica-do-reembolso">
-            {descreverEfeitoDaRecorrencia(recorrente, recorrenteInicial)}
-          </p>
-        </div>
-      )}
-      {parcelasDaCompra.length > 0 && (
-        <p className="previa-da-compra">
-          {parcelasDaCompra.length}× de{' '}
-          {formatarCentavosComoReal(parcelasDaCompra[0].lancamento.valorCentavos)} · a primeira
-          parcela vence em {formatarDataIsoComoBrasileira(parcelasDaCompra[0].lancamento.data)}
-          {parcelasDaCompra.length > 1 &&
-            ` e a última em ${formatarDataIsoComoBrasileira(parcelasDaCompra[parcelasDaCompra.length - 1].lancamento.data)}`}
-        </p>
-      )}
       {erros.length > 0 && (
         <ul className="erros">
           {erros.map((erro) => (

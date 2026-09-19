@@ -95,7 +95,12 @@ describe('transformar um lançamento em recorrente', () => {
   it('cria a recorrência a partir do mês seguinte e liga o próprio lançamento a ela', () => {
     const lancamento = inserirLancamento(banco, salario)
 
-    definirLancamentoRecorrente(banco, lancamento.id, true, '2026-09-19')
+    definirLancamentoRecorrente(
+      banco,
+      lancamento.id,
+      { recorrente: true, mesDeFim: null },
+      '2026-09-19'
+    )
 
     const [recorrencia] = listarRecorrencias(banco)
     expect(recorrencia).toMatchObject({
@@ -112,7 +117,12 @@ describe('transformar um lançamento em recorrente', () => {
 
   it('o mês do próprio lançamento não é gerado de novo', () => {
     const lancamento = inserirLancamento(banco, salario)
-    definirLancamentoRecorrente(banco, lancamento.id, true, '2026-09-19')
+    definirLancamentoRecorrente(
+      banco,
+      lancamento.id,
+      { recorrente: true, mesDeFim: null },
+      '2026-09-19'
+    )
 
     gerarLancamentosRecorrentes(banco, '2026-09-30')
 
@@ -121,12 +131,27 @@ describe('transformar um lançamento em recorrente', () => {
 
   it('desmarcar pausa a recorrência e marcar de novo retoma, sem criar outra', () => {
     const lancamento = inserirLancamento(banco, salario)
-    definirLancamentoRecorrente(banco, lancamento.id, true, '2026-09-19')
+    definirLancamentoRecorrente(
+      banco,
+      lancamento.id,
+      { recorrente: true, mesDeFim: null },
+      '2026-09-19'
+    )
 
-    definirLancamentoRecorrente(banco, lancamento.id, false, '2026-09-19')
+    definirLancamentoRecorrente(
+      banco,
+      lancamento.id,
+      { recorrente: false, mesDeFim: null },
+      '2026-09-19'
+    )
     expect(listarRecorrencias(banco)[0].ativa).toBe(false)
 
-    definirLancamentoRecorrente(banco, lancamento.id, true, '2026-09-19')
+    definirLancamentoRecorrente(
+      banco,
+      lancamento.id,
+      { recorrente: true, mesDeFim: null },
+      '2026-09-19'
+    )
     expect(listarRecorrencias(banco)).toHaveLength(1)
     expect(listarRecorrencias(banco)[0].ativa).toBe(true)
   })
@@ -134,7 +159,12 @@ describe('transformar um lançamento em recorrente', () => {
   it('desmarcar um lançamento que nunca foi recorrente não faz nada', () => {
     const lancamento = inserirLancamento(banco, salario)
 
-    definirLancamentoRecorrente(banco, lancamento.id, false, '2026-09-19')
+    definirLancamentoRecorrente(
+      banco,
+      lancamento.id,
+      { recorrente: false, mesDeFim: null },
+      '2026-09-19'
+    )
 
     expect(listarRecorrencias(banco)).toEqual([])
   })
@@ -158,11 +188,71 @@ describe('transformar um lançamento em recorrente', () => {
     })
     const daCompra = listarLancamentos(banco).find((l) => l.descricao === 'Fone')!
 
-    expect(() => definirLancamentoRecorrente(banco, reembolso.id, true, '2026-09-19')).toThrow(
-      'reembolso'
+    expect(() =>
+      definirLancamentoRecorrente(
+        banco,
+        reembolso.id,
+        { recorrente: true, mesDeFim: null },
+        '2026-09-19'
+      )
+    ).toThrow('reembolso')
+    expect(() =>
+      definirLancamentoRecorrente(
+        banco,
+        daCompra.id,
+        { recorrente: true, mesDeFim: null },
+        '2026-09-19'
+      )
+    ).toThrow('cartão')
+  })
+
+  it('cria a recorrência com o mês de término escolhido', () => {
+    const lancamento = inserirLancamento(banco, salario)
+
+    definirLancamentoRecorrente(
+      banco,
+      lancamento.id,
+      { recorrente: true, mesDeFim: '2027-03' },
+      '2026-09-19'
     )
-    expect(() => definirLancamentoRecorrente(banco, daCompra.id, true, '2026-09-19')).toThrow(
-      'cartão'
+
+    expect(listarRecorrencias(banco)[0]).toMatchObject({
+      mesDeInicio: '2026-10',
+      mesDeFim: '2027-03'
+    })
+  })
+
+  it('recusa um término antes de a recorrência começar', () => {
+    const lancamento = inserirLancamento(banco, salario)
+
+    expect(() =>
+      definirLancamentoRecorrente(
+        banco,
+        lancamento.id,
+        { recorrente: true, mesDeFim: '2026-09' },
+        '2026-09-19'
+      )
+    ).toThrow('outubro de 2026')
+    expect(listarRecorrencias(banco)).toEqual([])
+  })
+
+  it('trocar o término de uma recorrência que já existe atualiza só o término', () => {
+    const lancamento = inserirLancamento(banco, salario)
+    definirLancamentoRecorrente(
+      banco,
+      lancamento.id,
+      { recorrente: true, mesDeFim: '2027-03' },
+      '2026-09-19'
     )
+
+    definirLancamentoRecorrente(
+      banco,
+      lancamento.id,
+      { recorrente: true, mesDeFim: null },
+      '2026-09-19'
+    )
+
+    expect(listarRecorrencias(banco)).toHaveLength(1)
+    expect(listarRecorrencias(banco)[0].mesDeFim).toBeNull()
   })
 })

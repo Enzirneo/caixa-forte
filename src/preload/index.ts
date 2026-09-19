@@ -60,8 +60,8 @@ const recorrencias: ApiRecorrencias = {
   definirAtiva: (id, ativa) => ipcRenderer.invoke(CANAIS_RECORRENCIAS.definirAtiva, id, ativa),
   excluir: (id) => ipcRenderer.invoke(CANAIS_RECORRENCIAS.excluir, id),
   gerarPendentes: () => ipcRenderer.invoke(CANAIS_RECORRENCIAS.gerarPendentes),
-  definirDoLancamento: (lancamentoId, recorrente) =>
-    ipcRenderer.invoke(CANAIS_RECORRENCIAS.definirDoLancamento, lancamentoId, recorrente)
+  definirDoLancamento: (lancamentoId, definicao) =>
+    ipcRenderer.invoke(CANAIS_RECORRENCIAS.definirDoLancamento, lancamentoId, definicao)
 }
 
 const cartoes: ApiCartoes = {
