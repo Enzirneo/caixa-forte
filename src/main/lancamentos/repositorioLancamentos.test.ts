@@ -29,7 +29,7 @@ describe('repositorioLancamentos', () => {
   it('insere e devolve o lançamento com id', () => {
     const inserido = inserirLancamento(banco, mercado)
 
-    expect(inserido).toEqual({ id: 1, ...mercado })
+    expect(inserido).toMatchObject({ id: 1, ...mercado })
   })
 
   it('lista do mais recente para o mais antigo', () => {
@@ -68,12 +68,27 @@ describe('atualizarLancamento', () => {
 
     atualizarLancamento(banco, { ...original, descricao: 'Feira', valorCentavos: 9990 })
 
-    expect(listarLancamentos(banco)).toEqual([
-      { ...original, descricao: 'Feira', valorCentavos: 9990 }
+    expect(listarLancamentos(banco)).toMatchObject([
+      { id: original.id, ...mercado, descricao: 'Feira', valorCentavos: 9990 }
     ])
   })
 
   it('falha se o lançamento não existe', () => {
     expect(() => atualizarLancamento(banco, { id: 99, ...mercado })).toThrow('não encontrado')
+  })
+})
+
+describe('alteradoEm', () => {
+  it('é preenchido ao inserir e ao atualizar', () => {
+    const banco = new Database(':memory:')
+    executarMigracoes(banco, listaDeMigracoes)
+
+    const inserido = inserirLancamento(banco, mercado)
+    expect(inserido.alteradoEm).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}$/)
+
+    banco.prepare("UPDATE lancamentos SET alterado_em = '2000-01-01 00:00:00.000'").run()
+    atualizarLancamento(banco, { ...inserido, descricao: 'Feira' })
+
+    expect(listarLancamentos(banco)[0].alteradoEm > '2000-01-01').toBe(true)
   })
 })

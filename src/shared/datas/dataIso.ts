@@ -22,3 +22,7 @@ export function obterDataIsoDeHoje(agora: Date = new Date()): string {
   const dia = String(agora.getDate()).padStart(2, '0')
   return `${ano}-${mes}-${dia}`
 }
+
+export function converterTimestampDoBancoEmDataIsoLocal(timestampUtc: string): string {
+  return obterDataIsoDeHoje(new Date(`${timestampUtc.replace(' ', 'T')}Z`))
+}

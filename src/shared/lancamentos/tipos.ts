@@ -10,13 +10,17 @@ export interface NovoLancamento {
   categoria: string
 }
 
-export interface Lancamento extends NovoLancamento {
+export interface LancamentoEditado extends NovoLancamento {
   id: number
+}
+
+export interface Lancamento extends LancamentoEditado {
+  alteradoEm: string
 }
 
 export interface ApiLancamentos {
   listar: () => Promise<Lancamento[]>
   criar: (novoLancamento: NovoLancamento) => Promise<Lancamento>
-  atualizar: (lancamento: Lancamento) => Promise<void>
+  atualizar: (lancamento: LancamentoEditado) => Promise<void>
   excluir: (id: number) => Promise<void>
 }

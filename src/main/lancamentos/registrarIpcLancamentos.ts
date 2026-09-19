@@ -1,7 +1,7 @@
 import type { Database } from 'better-sqlite3'
 import { ipcMain } from 'electron'
 import { CANAIS_LANCAMENTOS } from '../../shared/lancamentos/canais'
-import type { Lancamento, NovoLancamento } from '../../shared/lancamentos/tipos'
+import type { LancamentoEditado, NovoLancamento } from '../../shared/lancamentos/tipos'
 import { validarNovoLancamento } from '../../shared/lancamentos/validarNovoLancamento'
 import {
   atualizarLancamento,
@@ -19,7 +19,7 @@ export function registrarIpcLancamentos(banco: Database): void {
     return inserirLancamento(banco, novoLancamento)
   })
 
-  ipcMain.handle(CANAIS_LANCAMENTOS.atualizar, (_evento, lancamento: Lancamento) => {
+  ipcMain.handle(CANAIS_LANCAMENTOS.atualizar, (_evento, lancamento: LancamentoEditado) => {
     const erros = validarNovoLancamento(lancamento)
     if (erros.length > 0) throw new Error(erros.join(' '))
     atualizarLancamento(banco, lancamento)

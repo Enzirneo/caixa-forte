@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { ehDataIsoValida, formatarDataIsoComoBrasileira, obterDataIsoDeHoje } from './dataIso'
+import {
+  converterTimestampDoBancoEmDataIsoLocal,
+  ehDataIsoValida,
+  formatarDataIsoComoBrasileira,
+  obterDataIsoDeHoje
+} from './dataIso'
 
 describe('ehDataIsoValida', () => {
   it('aceita data real', () => {
@@ -28,5 +33,11 @@ describe('formatarDataIsoComoBrasileira', () => {
 describe('obterDataIsoDeHoje', () => {
   it('usa a data local, com zeros à esquerda', () => {
     expect(obterDataIsoDeHoje(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05')
+  })
+})
+
+describe('converterTimestampDoBancoEmDataIsoLocal', () => {
+  it('lê o timestamp do banco como UTC e devolve uma data AAAA-MM-DD', () => {
+    expect(converterTimestampDoBancoEmDataIsoLocal('2026-09-19 12:00:00.000')).toBe('2026-09-19')
   })
 })

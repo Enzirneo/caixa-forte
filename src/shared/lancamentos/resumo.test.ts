@@ -10,6 +10,7 @@ function criarLancamento(sobrescritas: Partial<Lancamento>): Lancamento {
     data: '2026-09-10',
     tipo: 'despesa',
     categoria: 'Geral',
+    alteradoEm: '2026-09-01 00:00:00.000',
     ...sobrescritas
   }
 }

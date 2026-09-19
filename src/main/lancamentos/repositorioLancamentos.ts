@@ -1,5 +1,12 @@
 import type { Database } from 'better-sqlite3'
-import type { Lancamento, NovoLancamento, TipoLancamento } from '../../shared/lancamentos/tipos'
+import type {
+  Lancamento,
+  LancamentoEditado,
+  NovoLancamento,
+  TipoLancamento
+} from '../../shared/lancamentos/tipos'
+
+const AGORA_COM_MILISSEGUNDOS = "strftime('%Y-%m-%d %H:%M:%f', 'now')"
 
 interface LinhaLancamento {
   id: number
@@ -8,6 +15,7 @@ interface LinhaLancamento {
   data: string
   tipo: TipoLancamento
   categoria: string
+  alterado_em: string
 }
 
 function converterLinhaEmLancamento(linha: LinhaLancamento): Lancamento {
@@ -17,8 +25,14 @@ function converterLinhaEmLancamento(linha: LinhaLancamento): Lancamento {
     valorCentavos: linha.valor_centavos,
     data: linha.data,
     tipo: linha.tipo,
-    categoria: linha.categoria
+    categoria: linha.categoria,
+    alteradoEm: linha.alterado_em
   }
+}
+
+function buscarLancamentoPorId(banco: Database, id: number): Lancamento {
+  const linha = banco.prepare('SELECT * FROM lancamentos WHERE id = ?').get(id) as LinhaLancamento
+  return converterLinhaEmLancamento(linha)
 }
 
 export function listarLancamentos(banco: Database): Lancamento[] {
@@ -31,25 +45,26 @@ export function listarLancamentos(banco: Database): Lancamento[] {
 export function inserirLancamento(banco: Database, novoLancamento: NovoLancamento): Lancamento {
   const { lastInsertRowid } = banco
     .prepare(
-      `INSERT INTO lancamentos (descricao, valor_centavos, data, tipo, categoria)
-       VALUES (@descricao, @valorCentavos, @data, @tipo, @categoria)`
+      `INSERT INTO lancamentos (descricao, valor_centavos, data, tipo, categoria, alterado_em)
+       VALUES (@descricao, @valorCentavos, @data, @tipo, @categoria, ${AGORA_COM_MILISSEGUNDOS})`
     )
     .run(novoLancamento)
-  return { id: Number(lastInsertRowid), ...novoLancamento }
+  return buscarLancamentoPorId(banco, Number(lastInsertRowid))
 }
 
-export function excluirLancamento(banco: Database, id: number): void {
-  banco.prepare('DELETE FROM lancamentos WHERE id = ?').run(id)
-}
-
-export function atualizarLancamento(banco: Database, lancamento: Lancamento): void {
+export function atualizarLancamento(banco: Database, lancamento: LancamentoEditado): void {
   const { changes } = banco
     .prepare(
       `UPDATE lancamentos
        SET descricao = @descricao, valor_centavos = @valorCentavos,
-           data = @data, tipo = @tipo, categoria = @categoria
+           data = @data, tipo = @tipo, categoria = @categoria,
+           alterado_em = ${AGORA_COM_MILISSEGUNDOS}
        WHERE id = @id`
     )
     .run(lancamento)
   if (changes === 0) throw new Error(`Lançamento ${lancamento.id} não encontrado`)
+}
+
+export function excluirLancamento(banco: Database, id: number): void {
+  banco.prepare('DELETE FROM lancamentos WHERE id = ?').run(id)
 }
