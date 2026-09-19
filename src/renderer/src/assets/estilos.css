@@ -1,0 +1,159 @@
+:root {
+  --fundo: #f5f6f8;
+  --superficie: #ffffff;
+  --texto: #1c2430;
+  --texto-suave: #667085;
+  --borda: #e2e5ea;
+  --destaque: #1f6feb;
+  --receita: #15803d;
+  --despesa: #c2410c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fundo: #14171c;
+    --superficie: #1d2128;
+    --texto: #e6e9ee;
+    --texto-suave: #9aa4b2;
+    --borda: #2c323c;
+    --destaque: #4c8dff;
+    --receita: #4ade80;
+    --despesa: #fb923c;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 15px;
+}
+
+.pagina {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.cabecalho h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.saldo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  color: var(--texto-suave);
+}
+
+.saldo strong {
+  font-size: 24px;
+}
+
+.receita {
+  color: var(--receita);
+}
+
+.despesa {
+  color: var(--despesa);
+}
+
+.formulario {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.4fr auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  margin-bottom: 20px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+}
+
+.formulario label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--texto-suave);
+}
+
+input,
+select {
+  padding: 8px;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  font: inherit;
+}
+
+button {
+  padding: 9px 16px;
+  color: #fff;
+  background: var(--destaque);
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.erros {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--despesa);
+  font-size: 13px;
+}
+
+.lista {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+}
+
+.lista th,
+.lista td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--borda);
+}
+
+.lista th {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.lista .numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.lista .excluir {
+  padding: 4px 10px;
+  color: var(--texto-suave);
+  background: transparent;
+  border: 1px solid var(--borda);
+}
+
+.vazio {
+  padding: 32px;
+  text-align: center;
+  color: var(--texto-suave);
+}
