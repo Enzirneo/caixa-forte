@@ -4,7 +4,8 @@ import {
   agruparComprasPorGrupo,
   calcularComprometidoNoCartao,
   montarFaturas,
-  montarRotulosDeCompra
+  montarRotulosDeCompra,
+  resumirComprasParceladas
 } from './faturas'
 import {
   calcularMesDoVencimentoDaPrimeiraParcela,
@@ -266,5 +267,54 @@ describe('faturas e compras', () => {
     expect(rotulos.get(1)).toBe('Nubank · 1/2 · compra em 10/09/2026')
     expect(rotulos.get(3)).toBe('Nubank · compra em 10/09/2026')
     expect(rotulos.get(4)).toBeUndefined()
+  })
+})
+
+describe('resumirComprasParceladas', () => {
+  function parcela(id: number, data: string, valorCentavos: number): Lancamento {
+    return {
+      id,
+      descricao: `Notebook (${id}/3)`,
+      valorCentavos,
+      data,
+      tipo: 'despesa',
+      categoria: 'Tecnologia',
+      alteradoEm: '2026-09-01 00:00:00.000'
+    }
+  }
+
+  const lancamentos = [
+    parcela(1, '2026-09-01', 3334),
+    parcela(2, '2026-10-01', 3333),
+    parcela(3, '2026-11-01', 3333)
+  ]
+  const vinculos: VinculoDeCompra[] = [1, 2, 3].map((numero) => ({
+    lancamentoId: numero,
+    cartaoId: 1,
+    grupoId: 1,
+    dataDaCompra: '2026-08-20',
+    parcelaNumero: numero,
+    parcelasTotal: 3
+  }))
+
+  it('mostra quantas parcelas já saíram, a próxima e quanto falta', () => {
+    expect(resumirComprasParceladas(lancamentos, vinculos, [cartao], '2026-09-19')).toEqual([
+      {
+        grupoId: 1,
+        descricao: 'Notebook',
+        cartaoNome: 'Nubank',
+        parcelasTotal: 3,
+        parcelasPagas: 1,
+        valorDaParcelaCentavos: 3333,
+        proximoVencimento: '2026-10-01',
+        restanteCentavos: 6666
+      }
+    ])
+  })
+
+  it('compra quitada ou de uma parcela só não aparece', () => {
+    expect(resumirComprasParceladas(lancamentos, vinculos, [cartao], '2026-12-01')).toEqual([])
+    const avista = vinculos.map((vinculo) => ({ ...vinculo, parcelasTotal: 1 }))
+    expect(resumirComprasParceladas(lancamentos, avista, [cartao], '2026-09-19')).toEqual([])
   })
 })

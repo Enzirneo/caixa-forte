@@ -4,18 +4,21 @@ import { obterMesDaData } from '../../../shared/datas/mes'
 import { converterTextoEmCentavos } from '../../../shared/dinheiro/converterTextoEmCentavos'
 import { formatarCentavosParaCampo } from '../../../shared/dinheiro/formatarCentavosParaCampo'
 import { TIPOS_DE_RECORRENCIA, type TipoDeRecorrencia } from '../../../shared/lancamentos/tipos'
+import type { Cartao } from '../../../shared/cartoes/tipos'
 import { validarNovaRecorrencia } from '../../../shared/recorrencias/regras'
 import type { NovaRecorrencia, Recorrencia } from '../../../shared/recorrencias/tipos'
 import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
 import { CampoDeMes } from '../componentes/CampoDeMes'
 import { Selecao } from '../componentes/Selecao'
 import { CampoDeValor } from '../componentes/CampoDeValor'
+import { OpcaoDeCartao } from '../componentes/OpcaoDeCartao'
 
 const ROTULO_DO_TIPO: Record<TipoDeRecorrencia, string> = { receita: 'Receita', despesa: 'Despesa' }
 const DIA_PADRAO_DO_MES = '5'
 
 interface Props {
   recorrenciaEmEdicao: Recorrencia | null
+  cartoes: Cartao[]
   categoriasSugeridas: string[]
   aoSalvar: (novaRecorrencia: NovaRecorrencia) => Promise<void>
   aoCancelarEdicao: () => void
@@ -23,6 +26,7 @@ interface Props {
 
 export function FormularioRecorrencia({
   recorrenciaEmEdicao,
+  cartoes,
   categoriasSugeridas,
   aoSalvar,
   aoCancelarEdicao
@@ -40,7 +44,17 @@ export function FormularioRecorrencia({
     recorrenciaEmEdicao?.mesDeInicio ?? obterMesDaData(obterDataIsoDeHoje())
   )
   const [mesDeFim, setMesDeFim] = useState(recorrenciaEmEdicao?.mesDeFim ?? '')
+  const [ehDeCartao, setEhDeCartao] = useState(recorrenciaEmEdicao?.cartaoId != null)
+  const [cartaoEscolhidoId, setCartaoEscolhidoId] = useState(
+    recorrenciaEmEdicao?.cartaoId != null ? String(recorrenciaEmEdicao.cartaoId) : ''
+  )
   const [erros, setErros] = useState<string[]>([])
+
+  const podeUsarCartao = tipo === 'despesa' && cartoes.length > 0
+  const cartao =
+    podeUsarCartao && ehDeCartao
+      ? (cartoes.find((candidato) => String(candidato.id) === cartaoEscolhidoId) ?? cartoes[0])
+      : undefined
 
   const enviar = async (evento: FormEvent): Promise<void> => {
     evento.preventDefault()
@@ -51,7 +65,8 @@ export function FormularioRecorrencia({
       categoria,
       diaDoMes: Number(diaTexto),
       mesDeInicio,
-      mesDeFim: mesDeFim === '' ? null : mesDeFim
+      mesDeFim: mesDeFim === '' ? null : mesDeFim,
+      cartaoId: cartao?.id ?? null
     }
 
     const errosEncontrados = validarNovaRecorrencia(novaRecorrencia)
@@ -134,6 +149,16 @@ export function FormularioRecorrencia({
           podeLimpar
         />
       </div>
+      {podeUsarCartao && (
+        <OpcaoDeCartao
+          cartoes={cartoes}
+          ehDeCartao={ehDeCartao}
+          aoMudarEhDeCartao={setEhDeCartao}
+          cartaoEscolhido={cartao}
+          aoEscolherCartao={setCartaoEscolhidoId}
+          textoDaCaixa="Esta cobrança é de um cartão de crédito"
+        />
+      )}
       <div className="acoes-formulario">
         <button type="submit">{recorrenciaEmEdicao ? 'Salvar' : 'Adicionar'}</button>
         {recorrenciaEmEdicao && (

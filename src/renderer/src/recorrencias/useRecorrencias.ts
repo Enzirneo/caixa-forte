@@ -11,6 +11,7 @@ interface UsoDeRecorrencias {
   atualizar: (recorrencia: RecorrenciaEditada) => Promise<void>
   definirAtiva: (id: number, ativa: boolean) => Promise<void>
   excluir: (id: number) => Promise<void>
+  definirDoLancamento: (lancamentoId: number, recorrente: boolean) => Promise<void>
 }
 
 // Ao abrir e sempre que a janela volta ao foco, cria o que já venceu (ex.: o aluguel do dia 5
@@ -61,5 +62,10 @@ export function useRecorrencias(aoGerarLancamentos: () => Promise<void>): UsoDeR
     await recarregarTudo()
   }
 
-  return { recorrencias, criar, atualizar, definirAtiva, excluir }
+  const definirDoLancamento = async (lancamentoId: number, recorrente: boolean): Promise<void> => {
+    await window.api.recorrencias.definirDoLancamento(lancamentoId, recorrente)
+    await recarregarTudo()
+  }
+
+  return { recorrencias, criar, atualizar, definirAtiva, excluir, definirDoLancamento }
 }

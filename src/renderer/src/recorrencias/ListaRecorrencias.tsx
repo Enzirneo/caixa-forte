@@ -2,11 +2,13 @@ import { formatarDataIsoComoBrasileira, obterDataIsoDeHoje } from '../../../shar
 import { formatarMesAbreviado } from '../../../shared/datas/mes'
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
 import { calcularProximaOcorrencia } from '../../../shared/recorrencias/regras'
+import type { Cartao } from '../../../shared/cartoes/tipos'
 import type { Recorrencia } from '../../../shared/recorrencias/tipos'
 import { BotaoExcluirComConfirmacao } from '../compartilhado/BotaoExcluirComConfirmacao'
 
 interface Props {
   recorrencias: Recorrencia[]
+  cartoes: Cartao[]
   aoEditar: (recorrencia: Recorrencia) => void
   aoDefinirAtiva: (id: number, ativa: boolean) => Promise<void>
   aoExcluir: (id: number) => Promise<void>
@@ -21,6 +23,7 @@ function descreverPeriodo(recorrencia: Recorrencia): string {
 
 export function ListaRecorrencias({
   recorrencias,
+  cartoes,
   aoEditar,
   aoDefinirAtiva,
   aoExcluir
@@ -35,6 +38,7 @@ export function ListaRecorrencias({
   }
 
   const hoje = obterDataIsoDeHoje()
+  const nomePorCartao = new Map(cartoes.map((cartao) => [cartao.id, cartao.nome]))
 
   return (
     <table className="lista">
@@ -57,6 +61,11 @@ export function ListaRecorrencias({
               <td>
                 {recorrencia.descricao}
                 {!recorrencia.ativa && <span className="ressalva"> · pausada</span>}
+                {recorrencia.cartaoId != null && (
+                  <span className="rotulo-de-compra">
+                    {nomePorCartao.get(recorrencia.cartaoId) ?? 'Cartão'}
+                  </span>
+                )}
               </td>
               <td>{recorrencia.categoria}</td>
               <td className={`numero ${recorrencia.tipo}`}>

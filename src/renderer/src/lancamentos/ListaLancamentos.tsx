@@ -107,6 +107,9 @@ export function ListaLancamentos({
               {foiAlteradoAposFechamento(lancamento, fechamentos) && (
                 <span className="ressalva"> · lançado após o fechamento</span>
               )}
+              {lancamento.recorrenciaId != null && (
+                <span className="rotulo-de-compra">Recorrente</span>
+              )}
               {rotulosDeReembolso.has(lancamento.id) && (
                 <span className="rotulo-de-compra">{rotulosDeReembolso.get(lancamento.id)}</span>
               )}

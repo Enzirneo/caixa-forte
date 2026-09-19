@@ -93,6 +93,12 @@ export function excluirCartao(banco: Database, id: number): void {
   if (contarComprasDoCartao(banco, id) > 0) {
     throw new Error('Este cartão tem compras registradas. Exclua as compras antes.')
   }
+  const { total } = banco
+    .prepare('SELECT COUNT(*) AS total FROM recorrencias WHERE cartao_id = ?')
+    .get(id) as { total: number }
+  if (total > 0) {
+    throw new Error('Este cartão é usado em recorrências. Tire o cartão delas antes.')
+  }
   banco.prepare('DELETE FROM cartoes WHERE id = ?').run(id)
 }
 
@@ -135,7 +141,8 @@ export function removerAjuste(banco: Database, cartaoId: number, mesDoVencimento
 }
 
 // Cria uma despesa por parcela e liga todas à mesma compra; ou entra tudo, ou nada.
-export function registrarCompraNoCartao(banco: Database, compra: NovaCompraNoCartao): number {
+// Devolve os ids dos lançamentos criados, um por parcela, na ordem das parcelas.
+export function criarCompraNoCartao(banco: Database, compra: NovaCompraNoCartao): number[] {
   const cartao = buscarCartaoPorId(banco, compra.cartaoId)
   if (!cartao) throw new Error('Cartão não encontrado.')
 
@@ -147,10 +154,12 @@ export function registrarCompraNoCartao(banco: Database, compra: NovaCompraNoCar
     )
 
     let grupoId = 0
+    const lancamentoIds: number[] = []
     const ajustes = indexarAjustesDoCartao(listarAjustes(banco), cartao.id)
     for (const parcela of montarParcelasDaCompra(compra, cartao, ajustes)) {
       const lancamento = inserirLancamento(banco, parcela.lancamento)
       if (grupoId === 0) grupoId = lancamento.id
+      lancamentoIds.push(lancamento.id)
       inserirVinculo.run({
         lancamentoId: lancamento.id,
         cartaoId: cartao.id,
@@ -160,9 +169,13 @@ export function registrarCompraNoCartao(banco: Database, compra: NovaCompraNoCar
         parcelasTotal: parcela.parcelasTotal
       })
     }
-    return compra.parcelas
+    return lancamentoIds
   })
   return registrarEmTransacao()
+}
+
+export function registrarCompraNoCartao(banco: Database, compra: NovaCompraNoCartao): number {
+  return criarCompraNoCartao(banco, compra).length
 }
 
 // Apagar os lançamentos leva junto os vínculos (ON DELETE CASCADE).

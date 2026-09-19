@@ -139,5 +139,14 @@ export const listaDeMigracoes: Migracao[] = [
       ALTER TABLE lancamentos ADD COLUMN reembolso_de_id INTEGER
         REFERENCES lancamentos (id) ON DELETE SET NULL;
     `
+  },
+  {
+    versao: 11,
+    descricao: 'recorrências ligadas a cartão e lançamentos que sabem de qual recorrência vieram',
+    sql: `
+      ALTER TABLE recorrencias ADD COLUMN cartao_id INTEGER REFERENCES cartoes (id);
+      ALTER TABLE lancamentos ADD COLUMN recorrencia_id INTEGER
+        REFERENCES recorrencias (id) ON DELETE SET NULL;
+    `
   }
 ]

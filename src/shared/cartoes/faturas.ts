@@ -74,6 +74,54 @@ export function calcularComprometidoNoCartao(
     .reduce((total, { lancamento }) => total + lancamento.valorCentavos, 0)
 }
 
+export interface CompraParcelada {
+  grupoId: number
+  descricao: string
+  cartaoNome: string
+  parcelasTotal: number
+  parcelasPagas: number
+  valorDaParcelaCentavos: number
+  proximoVencimento: string | null
+  restanteCentavos: number
+}
+
+// Compras parceladas que ainda têm parcela a vencer, da que vence antes para a que vence depois.
+export function resumirComprasParceladas(
+  lancamentos: Lancamento[],
+  vinculos: VinculoDeCompra[],
+  cartoes: Cartao[],
+  hojeIso: string
+): CompraParcelada[] {
+  const nomePorCartao = new Map(cartoes.map((cartao) => [cartao.id, cartao.nome]))
+
+  return agruparComprasPorGrupo(lancamentos, vinculos)
+    .filter((compra) => compra.parcelasTotal > 1)
+    .flatMap((compra) => {
+      const parcelas = juntarLancamentosEVinculos(
+        lancamentos,
+        vinculos.filter((vinculo) => vinculo.grupoId === compra.grupoId)
+      )
+        .map(({ lancamento }) => lancamento)
+        .sort((a, b) => a.data.localeCompare(b.data))
+      const aVencer = parcelas.filter((parcela) => parcela.data > hojeIso)
+      if (aVencer.length === 0) return []
+
+      return [
+        {
+          grupoId: compra.grupoId,
+          descricao: compra.descricao,
+          cartaoNome: nomePorCartao.get(compra.cartaoId) ?? 'Cartão',
+          parcelasTotal: compra.parcelasTotal,
+          parcelasPagas: parcelas.length - aVencer.length,
+          valorDaParcelaCentavos: parcelas[parcelas.length - 1].valorCentavos,
+          proximoVencimento: aVencer[0].data,
+          restanteCentavos: aVencer.reduce((soma, parcela) => soma + parcela.valorCentavos, 0)
+        }
+      ]
+    })
+    .sort((a, b) => (a.proximoVencimento ?? '').localeCompare(b.proximoVencimento ?? ''))
+}
+
 export function agruparComprasPorGrupo(
   lancamentos: Lancamento[],
   vinculos: VinculoDeCompra[]

@@ -17,6 +17,8 @@ export interface NovoLancamento {
   categoria: string
   // Só para reembolso: a despesa que está sendo devolvida, no todo ou em parte.
   reembolsoDeId?: number | null
+  // Preenchido só pelo sistema: a recorrência que gerou este lançamento.
+  recorrenciaId?: number | null
 }
 
 export interface LancamentoEditado extends NovoLancamento {

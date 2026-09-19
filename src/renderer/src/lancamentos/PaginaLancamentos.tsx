@@ -22,6 +22,7 @@ import type {
   LancamentoEditado,
   NovoLancamento
 } from '../../../shared/lancamentos/tipos'
+import type { Recorrencia } from '../../../shared/recorrencias/tipos'
 import { FiltrosDeLancamentos } from './FiltrosDeLancamentos'
 import { FormularioLancamento } from './FormularioLancamento'
 import { ListaLancamentos } from './ListaLancamentos'
@@ -35,12 +36,14 @@ interface Props {
   rotulosDeCompra: Map<number, string>
   cartoes: Cartao[]
   ajustesDeFechamento: AjusteDeFechamento[]
+  recorrencias: Recorrencia[]
   mesSelecionado: string
   aoMudarMes: (mes: string) => void
   aoCriar: (novoLancamento: NovoLancamento) => Promise<void>
   aoAtualizar: (lancamento: LancamentoEditado) => Promise<void>
   aoExcluir: (id: number) => Promise<void>
   aoRegistrarCompraNoCartao: (compra: NovaCompraNoCartao) => Promise<void>
+  aoDefinirRecorrente: (lancamentoId: number, recorrente: boolean) => Promise<void>
 }
 
 export function PaginaLancamentos({
@@ -50,12 +53,14 @@ export function PaginaLancamentos({
   rotulosDeCompra,
   cartoes,
   ajustesDeFechamento,
+  recorrencias,
   mesSelecionado,
   aoMudarMes,
   aoCriar,
   aoAtualizar,
   aoExcluir,
-  aoRegistrarCompraNoCartao
+  aoRegistrarCompraNoCartao,
+  aoDefinirRecorrente
 }: Props): React.JSX.Element {
   const [lancamentoEmEdicao, setLancamentoEmEdicao] = useState<Lancamento | null>(null)
   const [filtro, setFiltro] = useState<FiltroDeLancamentos>(FILTRO_PADRAO_DE_LANCAMENTOS)
@@ -65,9 +70,22 @@ export function PaginaLancamentos({
   const lancamentosExibidos = aplicarFiltroDeLancamentos(lancamentosDoMes, filtro)
   const fechamentoDoMes = fechamentos.find((fechamento) => fechamento.mes === mesSelecionado)
 
-  const salvar = async (novoLancamento: NovoLancamento): Promise<void> => {
-    if (lancamentoEmEdicao) await aoAtualizar({ ...novoLancamento, id: lancamentoEmEdicao.id })
-    else await aoCriar(novoLancamento)
+  // Reembolso e parcela de cartão não se repetem como um lançamento comum.
+  const podeSerRecorrente =
+    lancamentoEmEdicao !== null &&
+    lancamentoEmEdicao.tipo !== 'reembolso' &&
+    !rotulosDeCompra.has(lancamentoEmEdicao.id)
+  const recorrenteInicial =
+    recorrencias.find((recorrencia) => recorrencia.id === lancamentoEmEdicao?.recorrenciaId)
+      ?.ativa ?? false
+
+  const salvar = async (novoLancamento: NovoLancamento, recorrente?: boolean): Promise<void> => {
+    if (lancamentoEmEdicao) {
+      await aoAtualizar({ ...novoLancamento, id: lancamentoEmEdicao.id })
+      if (recorrente !== undefined) await aoDefinirRecorrente(lancamentoEmEdicao.id, recorrente)
+    } else {
+      await aoCriar(novoLancamento)
+    }
     setLancamentoEmEdicao(null)
     aoMudarMes(obterMesDaData(novoLancamento.data))
   }
@@ -79,6 +97,8 @@ export function PaginaLancamentos({
           key={lancamentoEmEdicao?.id ?? 'novo'}
           lancamentoEmEdicao={lancamentoEmEdicao}
           todosOsLancamentos={lancamentos}
+          podeSerRecorrente={podeSerRecorrente}
+          recorrenteInicial={recorrenteInicial}
           categoriasSugeridas={categoriasSugeridas}
           cartoes={cartoes}
           ajustesDeFechamento={ajustesDeFechamento}

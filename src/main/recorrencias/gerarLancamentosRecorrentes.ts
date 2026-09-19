@@ -5,12 +5,39 @@ import {
   listarCompetenciasVencidas
 } from '../../shared/recorrencias/regras'
 import type { Recorrencia } from '../../shared/recorrencias/tipos'
-import { inserirLancamento } from '../lancamentos/repositorioLancamentos'
+import { criarCompraNoCartao } from '../cartoes/repositorioCartoes'
+import {
+  definirRecorrenciaDoLancamento,
+  inserirLancamento
+} from '../lancamentos/repositorioLancamentos'
 import {
   listarCompetenciasGeradas,
   listarRecorrencias,
   registrarCompetenciaGerada
 } from './repositorioRecorrencias'
+
+// Numa recorrência de cartão, cada ocorrência é uma compra: cai na fatura certa pela data.
+function criarOcorrencia(banco: Database, recorrencia: Recorrencia, competencia: string): void {
+  const data = calcularDataDaOcorrencia(competencia, recorrencia.diaDoMes)
+  const lancamentoId =
+    recorrencia.cartaoId != null
+      ? criarCompraNoCartao(banco, {
+          cartaoId: recorrencia.cartaoId,
+          descricao: recorrencia.descricao,
+          valorTotalCentavos: recorrencia.valorCentavos,
+          parcelas: 1,
+          dataDaCompra: data,
+          categoria: recorrencia.categoria
+        })[0]
+      : inserirLancamento(banco, {
+          descricao: recorrencia.descricao,
+          valorCentavos: recorrencia.valorCentavos,
+          data,
+          tipo: recorrencia.tipo,
+          categoria: recorrencia.categoria
+        }).id
+  definirRecorrenciaDoLancamento(banco, lancamentoId, recorrencia.id)
+}
 
 function gerarPendentesDaRecorrencia(
   banco: Database,
@@ -23,13 +50,7 @@ function gerarPendentesDaRecorrencia(
   )
 
   for (const competencia of pendentes) {
-    inserirLancamento(banco, {
-      descricao: recorrencia.descricao,
-      valorCentavos: recorrencia.valorCentavos,
-      data: calcularDataDaOcorrencia(competencia, recorrencia.diaDoMes),
-      tipo: recorrencia.tipo,
-      categoria: recorrencia.categoria
-    })
+    criarOcorrencia(banco, recorrencia, competencia)
     // Fica registrado mesmo se o lançamento for apagado depois, para não voltar sozinho.
     registrarCompetenciaGerada(banco, recorrencia.id, competencia)
   }

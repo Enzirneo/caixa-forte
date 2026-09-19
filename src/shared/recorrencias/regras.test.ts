@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   calcularDataDaOcorrencia,
+  calcularMesDeInicioAPartirDoLancamento,
   calcularProximaOcorrencia,
   listarCompetenciasVencidas,
   validarNovaRecorrencia
@@ -114,5 +115,23 @@ describe('validarNovaRecorrencia', () => {
   it('o término não pode ser antes do início', () => {
     expect(validarNovaRecorrencia({ ...aluguel, mesDeFim: '2026-06' })).toHaveLength(1)
     expect(validarNovaRecorrencia({ ...aluguel, mesDeFim: '2026-07' })).toEqual([])
+  })
+})
+
+describe('calcularMesDeInicioAPartirDoLancamento', () => {
+  it('começa no mês seguinte ao do lançamento', () => {
+    expect(calcularMesDeInicioAPartirDoLancamento('2026-09-05', '2026-09-19')).toBe('2026-10')
+  })
+
+  it('lançamento de meses passados não gera recorrência retroativa', () => {
+    expect(calcularMesDeInicioAPartirDoLancamento('2026-06-05', '2026-09-19')).toBe('2026-10')
+  })
+
+  it('lançamento de mês futuro começa depois dele', () => {
+    expect(calcularMesDeInicioAPartirDoLancamento('2026-11-05', '2026-09-19')).toBe('2026-12')
+  })
+
+  it('atravessa a virada do ano', () => {
+    expect(calcularMesDeInicioAPartirDoLancamento('2026-12-05', '2026-12-10')).toBe('2027-01')
   })
 })

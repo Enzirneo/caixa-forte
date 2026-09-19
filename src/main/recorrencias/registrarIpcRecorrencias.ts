@@ -4,6 +4,7 @@ import { obterDataIsoDeHoje } from '../../shared/datas/dataIso'
 import { CANAIS_RECORRENCIAS } from '../../shared/recorrencias/canais'
 import { validarNovaRecorrencia } from '../../shared/recorrencias/regras'
 import type { NovaRecorrencia, RecorrenciaEditada } from '../../shared/recorrencias/tipos'
+import { definirLancamentoRecorrente } from './definirLancamentoRecorrente'
 import { gerarLancamentosRecorrentes } from './gerarLancamentosRecorrentes'
 import {
   atualizarRecorrencia,
@@ -41,6 +42,14 @@ export function registrarIpcRecorrencias(banco: Database): void {
 
   ipcMain.handle(CANAIS_RECORRENCIAS.excluir, (_evento, id: number) =>
     excluirRecorrencia(banco, id)
+  )
+
+  ipcMain.handle(
+    CANAIS_RECORRENCIAS.definirDoLancamento,
+    (_evento, lancamentoId: number, recorrente: boolean) => {
+      definirLancamentoRecorrente(banco, lancamentoId, recorrente, obterDataIsoDeHoje())
+      gerarLancamentosRecorrentes(banco, obterDataIsoDeHoje())
+    }
   )
 
   ipcMain.handle(CANAIS_RECORRENCIAS.gerarPendentes, () =>

@@ -53,6 +53,18 @@ export function calcularProximaOcorrencia(
   return null
 }
 
+// Ao transformar um lançamento em recorrente, o próprio lançamento já vale como a ocorrência do
+// mês dele. A regra começa no mês seguinte e nunca em meses passados, para não duplicar o que a
+// pessoa já lançou à mão.
+export function calcularMesDeInicioAPartirDoLancamento(
+  dataDoLancamento: string,
+  hojeIso: string
+): string {
+  const mesDepoisDoLancamento = somarMeses(obterMesDaData(dataDoLancamento), 1)
+  const mesDepoisDeHoje = somarMeses(obterMesDaData(hojeIso), 1)
+  return mesDepoisDoLancamento > mesDepoisDeHoje ? mesDepoisDoLancamento : mesDepoisDeHoje
+}
+
 export function validarNovaRecorrencia(recorrencia: NovaRecorrencia): string[] {
   const erros: string[] = []
 
@@ -62,6 +74,9 @@ export function validarNovaRecorrencia(recorrencia: NovaRecorrencia): string[] {
   }
   if (!TIPOS_DE_RECORRENCIA.includes(recorrencia.tipo)) erros.push('Escolha receita ou despesa.')
   if (!recorrencia.categoria.trim()) erros.push('Informe a categoria.')
+  if (recorrencia.cartaoId != null && recorrencia.tipo !== 'despesa') {
+    erros.push('Só uma despesa pode ser de um cartão de crédito.')
+  }
   if (
     !Number.isInteger(recorrencia.diaDoMes) ||
     recorrencia.diaDoMes < PRIMEIRO_DIA_DO_MES ||

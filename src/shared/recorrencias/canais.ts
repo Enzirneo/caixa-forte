@@ -4,5 +4,6 @@ export const CANAIS_RECORRENCIAS = {
   atualizar: 'recorrencias:atualizar',
   definirAtiva: 'recorrencias:definir-ativa',
   excluir: 'recorrencias:excluir',
-  gerarPendentes: 'recorrencias:gerar-pendentes'
+  gerarPendentes: 'recorrencias:gerar-pendentes',
+  definirDoLancamento: 'recorrencias:definir-do-lancamento'
 } as const

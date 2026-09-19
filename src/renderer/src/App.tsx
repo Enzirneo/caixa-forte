@@ -132,6 +132,8 @@ function App(): React.JSX.Element {
               rotulosDeCompra={rotulosDeCompra}
               cartoes={cartoes.cartoes}
               ajustesDeFechamento={cartoes.ajustes}
+              recorrencias={recorrencias.recorrencias}
+              aoDefinirRecorrente={recorrencias.definirDoLancamento}
               aoRegistrarCompraNoCartao={cartoes.registrarCompra}
               mesSelecionado={mesSelecionado}
               aoMudarMes={setMesSelecionado}
@@ -144,6 +146,8 @@ function App(): React.JSX.Element {
             <PaginaRecorrencias
               lancamentos={lancamentos}
               recorrencias={recorrencias.recorrencias}
+              cartoes={cartoes.cartoes}
+              vinculos={cartoes.vinculos}
               aoCriar={recorrencias.criar}
               aoAtualizar={recorrencias.atualizar}
               aoDefinirAtiva={recorrencias.definirAtiva}

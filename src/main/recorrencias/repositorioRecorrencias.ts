@@ -16,12 +16,13 @@ interface LinhaRecorrencia {
   dia_do_mes: number
   mes_de_inicio: string
   mes_de_fim: string | null
+  cartao_id: number | null
   ativa: number
 }
 
 const SELECIONAR_RECORRENCIAS = `
   SELECT r.id, r.descricao, r.valor_centavos, r.tipo, c.nome AS categoria,
-         r.dia_do_mes, r.mes_de_inicio, r.mes_de_fim, r.ativa
+         r.dia_do_mes, r.mes_de_inicio, r.mes_de_fim, r.cartao_id, r.ativa
   FROM recorrencias r
   JOIN categorias c ON c.id = r.categoria_id
 `
@@ -36,6 +37,7 @@ function converterLinhaEmRecorrencia(linha: LinhaRecorrencia): Recorrencia {
     diaDoMes: linha.dia_do_mes,
     mesDeInicio: linha.mes_de_inicio,
     mesDeFim: linha.mes_de_fim,
+    cartaoId: linha.cartao_id,
     ativa: linha.ativa === 1
   }
 }
@@ -53,10 +55,12 @@ export function inserirRecorrencia(banco: Database, nova: NovaRecorrencia): Reco
     const { lastInsertRowid } = banco
       .prepare(
         `INSERT INTO recorrencias
-           (descricao, valor_centavos, tipo, categoria_id, dia_do_mes, mes_de_inicio, mes_de_fim)
-         VALUES (@descricao, @valorCentavos, @tipo, @categoriaId, @diaDoMes, @mesDeInicio, @mesDeFim)`
+           (descricao, valor_centavos, tipo, categoria_id, dia_do_mes, mes_de_inicio, mes_de_fim,
+            cartao_id)
+         VALUES (@descricao, @valorCentavos, @tipo, @categoriaId, @diaDoMes, @mesDeInicio,
+                 @mesDeFim, @cartaoId)`
       )
-      .run({ ...nova, categoriaId })
+      .run({ ...nova, cartaoId: nova.cartaoId ?? null, categoriaId })
     return Number(lastInsertRowid)
   })
   const id = inserirEmTransacao()
@@ -74,10 +78,10 @@ export function atualizarRecorrencia(banco: Database, recorrencia: RecorrenciaEd
         `UPDATE recorrencias
          SET descricao = @descricao, valor_centavos = @valorCentavos, tipo = @tipo,
              categoria_id = @categoriaId, dia_do_mes = @diaDoMes,
-             mes_de_inicio = @mesDeInicio, mes_de_fim = @mesDeFim
+             mes_de_inicio = @mesDeInicio, mes_de_fim = @mesDeFim, cartao_id = @cartaoId
          WHERE id = @id`
       )
-      .run({ ...recorrencia, categoriaId }).changes
+      .run({ ...recorrencia, cartaoId: recorrencia.cartaoId ?? null, categoriaId }).changes
   })
   if (atualizarEmTransacao() === 0) throw new Error(`Recorrência ${recorrencia.id} não encontrada`)
 }

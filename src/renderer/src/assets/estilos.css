@@ -536,7 +536,9 @@ label {
   min-width: 136px;
 }
 
-.formulario-lancamento .opcao-de-cartao {
+.opcao-de-cartao,
+.opcao-de-recorrencia {
+  grid-column: 1 / -1;
   display: flex;
   flex: 1 1 100%;
   flex-wrap: wrap;

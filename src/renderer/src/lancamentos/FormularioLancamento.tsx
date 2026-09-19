@@ -19,6 +19,7 @@ import {
 } from '../../../shared/lancamentos/reembolsos'
 import { validarNovoLancamento } from '../../../shared/lancamentos/validarNovoLancamento'
 import { CampoDeEscolhaComBusca } from '../componentes/CampoDeEscolhaComBusca'
+import { OpcaoDeCartao } from '../componentes/OpcaoDeCartao'
 import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
 import { CampoDeData } from '../componentes/CampoDeData'
 import { Selecao } from '../componentes/Selecao'
@@ -26,6 +27,13 @@ import { CampoDeValor } from '../componentes/CampoDeValor'
 
 const PARCELAS_PADRAO = '1'
 const MAXIMO_DE_PARCELAS_NO_CAMPO = 60
+
+function descreverEfeitoDaRecorrencia(recorrente: boolean, recorrenteInicial: boolean): string {
+  if (recorrente && recorrenteInicial) return 'Continua sendo lançado todo mês.'
+  if (recorrente) return 'Os próximos meses serão lançados sozinhos, a partir do mês seguinte.'
+  if (recorrenteInicial) return 'Ao salvar, deixa de ser lançado nos próximos meses.'
+  return ''
+}
 
 const ROTULO_DO_TIPO: Record<TipoLancamento, string> = {
   receita: 'Receita',
@@ -36,10 +44,12 @@ const ROTULO_DO_TIPO: Record<TipoLancamento, string> = {
 interface Props {
   lancamentoEmEdicao: Lancamento | null
   todosOsLancamentos: Lancamento[]
+  podeSerRecorrente: boolean
+  recorrenteInicial: boolean
   categoriasSugeridas: string[]
   cartoes: Cartao[]
   ajustesDeFechamento: AjusteDeFechamento[]
-  aoSalvar: (novoLancamento: NovoLancamento) => Promise<void>
+  aoSalvar: (novoLancamento: NovoLancamento, recorrente?: boolean) => Promise<void>
   aoRegistrarNoCartao: (compra: NovaCompraNoCartao) => Promise<void>
   aoCancelarEdicao: () => void
 }
@@ -47,6 +57,8 @@ interface Props {
 export function FormularioLancamento({
   lancamentoEmEdicao,
   todosOsLancamentos,
+  podeSerRecorrente,
+  recorrenteInicial,
   categoriasSugeridas,
   cartoes,
   ajustesDeFechamento,
@@ -64,12 +76,14 @@ export function FormularioLancamento({
   const [despesaReembolsadaId, setDespesaReembolsadaId] = useState(
     lancamentoEmEdicao?.reembolsoDeId ? String(lancamentoEmEdicao.reembolsoDeId) : ''
   )
+  const [recorrente, setRecorrente] = useState(recorrenteInicial)
   const [ehDeCartao, setEhDeCartao] = useState(false)
   const [cartaoEscolhido, setCartaoEscolhido] = useState('')
   const [parcelasTexto, setParcelasTexto] = useState(PARCELAS_PADRAO)
   const [erros, setErros] = useState<string[]>([])
 
   const ehReembolso = tipo === 'reembolso'
+  const mostrarRecorrente = Boolean(lancamentoEmEdicao) && podeSerRecorrente && !ehReembolso
   const despesasReembolsaveis = ehReembolso
     ? listarDespesasReembolsaveis(todosOsLancamentos, lancamentoEmEdicao?.id)
     : []
@@ -154,7 +168,8 @@ export function FormularioLancamento({
     setErros(errosEncontrados)
     if (errosEncontrados.length > 0) return
 
-    await aoSalvar(novoLancamento)
+    const mudouRecorrencia = mostrarRecorrente && recorrente !== recorrenteInicial
+    await aoSalvar(novoLancamento, mudouRecorrencia ? recorrente : undefined)
     limparCamposDigitados()
   }
 
@@ -230,38 +245,39 @@ export function FormularioLancamento({
         </div>
       )}
       {podeUsarCartao && (
-        <div className="opcao-de-cartao">
+        <OpcaoDeCartao
+          cartoes={cartoes}
+          ehDeCartao={ehDeCartao}
+          aoMudarEhDeCartao={setEhDeCartao}
+          cartaoEscolhido={cartao}
+          aoEscolherCartao={setCartaoEscolhido}
+          textoDaCaixa="Esta despesa é de um cartão de crédito"
+        >
+          <label className="campo-de-parcelas">
+            Parcelas
+            <input
+              type="number"
+              min={1}
+              max={MAXIMO_DE_PARCELAS_NO_CAMPO}
+              value={parcelasTexto}
+              onChange={(e) => setParcelasTexto(e.target.value)}
+            />
+          </label>
+        </OpcaoDeCartao>
+      )}
+      {mostrarRecorrente && (
+        <div className="opcao-de-recorrencia">
           <label className="caixa-de-selecao">
             <input
               type="checkbox"
-              checked={ehDeCartao}
-              onChange={(e) => setEhDeCartao(e.target.checked)}
+              checked={recorrente}
+              onChange={(e) => setRecorrente(e.target.checked)}
             />
-            Esta despesa é de um cartão de crédito
+            Este lançamento se repete todo mês
           </label>
-          {cartao && (
-            <>
-              <div className="campo">
-                <span className="rotulo-do-campo">Cartão</span>
-                <Selecao
-                  valor={String(cartao.id)}
-                  opcoes={cartoes.map((opcao) => ({ valor: String(opcao.id), rotulo: opcao.nome }))}
-                  aoMudar={setCartaoEscolhido}
-                  rotuloDeAcessibilidade="Cartão"
-                />
-              </div>
-              <label className="campo-de-parcelas">
-                Parcelas
-                <input
-                  type="number"
-                  min={1}
-                  max={MAXIMO_DE_PARCELAS_NO_CAMPO}
-                  value={parcelasTexto}
-                  onChange={(e) => setParcelasTexto(e.target.value)}
-                />
-              </label>
-            </>
-          )}
+          <p className="dica-do-reembolso">
+            {descreverEfeitoDaRecorrencia(recorrente, recorrenteInicial)}
+          </p>
         </div>
       )}
       {parcelasDaCompra.length > 0 && (

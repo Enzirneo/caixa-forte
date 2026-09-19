@@ -8,6 +8,8 @@ export interface NovaRecorrencia {
   diaDoMes: number
   mesDeInicio: string
   mesDeFim: string | null
+  // Só para despesa: cada ocorrência vira uma compra neste cartão.
+  cartaoId?: number | null
 }
 
 export interface RecorrenciaEditada extends NovaRecorrencia {
@@ -25,4 +27,5 @@ export interface ApiRecorrencias {
   definirAtiva: (id: number, ativa: boolean) => Promise<void>
   excluir: (id: number) => Promise<void>
   gerarPendentes: () => Promise<number>
+  definirDoLancamento: (lancamentoId: number, recorrente: boolean) => Promise<void>
 }

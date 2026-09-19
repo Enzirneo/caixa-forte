@@ -1,13 +1,17 @@
 import { useState } from 'react'
 import { listarCategoriasEmUso } from '../../../shared/categorias/nomeDaCategoria'
+import type { Cartao, VinculoDeCompra } from '../../../shared/cartoes/tipos'
 import type { Lancamento } from '../../../shared/lancamentos/tipos'
 import type { NovaRecorrencia, Recorrencia } from '../../../shared/recorrencias/tipos'
+import { ListaDeComprasParceladas } from './ListaDeComprasParceladas'
 import { FormularioRecorrencia } from './FormularioRecorrencia'
 import { ListaRecorrencias } from './ListaRecorrencias'
 
 interface Props {
   lancamentos: Lancamento[]
   recorrencias: Recorrencia[]
+  cartoes: Cartao[]
+  vinculos: VinculoDeCompra[]
   aoCriar: (novaRecorrencia: NovaRecorrencia) => Promise<void>
   aoAtualizar: (recorrencia: Recorrencia) => Promise<void>
   aoDefinirAtiva: (id: number, ativa: boolean) => Promise<void>
@@ -17,6 +21,8 @@ interface Props {
 export function PaginaRecorrencias({
   lancamentos,
   recorrencias,
+  cartoes,
+  vinculos,
   aoCriar,
   aoAtualizar,
   aoDefinirAtiva,
@@ -46,16 +52,19 @@ export function PaginaRecorrencias({
       <FormularioRecorrencia
         key={recorrenciaEmEdicao?.id ?? 'nova'}
         recorrenciaEmEdicao={recorrenciaEmEdicao}
+        cartoes={cartoes}
         categoriasSugeridas={listarCategoriasEmUso(lancamentos)}
         aoSalvar={salvar}
         aoCancelarEdicao={() => setRecorrenciaEmEdicao(null)}
       />
       <ListaRecorrencias
         recorrencias={recorrencias}
+        cartoes={cartoes}
         aoEditar={setRecorrenciaEmEdicao}
         aoDefinirAtiva={aoDefinirAtiva}
         aoExcluir={aoExcluir}
       />
+      <ListaDeComprasParceladas lancamentos={lancamentos} vinculos={vinculos} cartoes={cartoes} />
     </>
   )
 }
