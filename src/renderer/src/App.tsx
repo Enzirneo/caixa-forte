@@ -1,4 +1,12 @@
-import { DatabaseBackup, FileUp, History, PiggyBank, ReceiptText, Vault } from 'lucide-react'
+import {
+  DatabaseBackup,
+  FileUp,
+  History,
+  LayoutDashboard,
+  PiggyBank,
+  ReceiptText,
+  Vault
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { obterDataIsoDeHoje } from '../../shared/datas/dataIso'
@@ -14,8 +22,9 @@ import { HistoricoMensal } from './lancamentos/HistoricoMensal'
 import { PaginaLancamentos } from './lancamentos/PaginaLancamentos'
 import { useFechamentos } from './lancamentos/useFechamentos'
 import { useLancamentos } from './lancamentos/useLancamentos'
+import { PaginaPainel } from './painel/PaginaPainel'
 
-type Aba = 'lancamentos' | 'historico' | 'investimentos' | 'importar' | 'dados'
+type Aba = 'painel' | 'lancamentos' | 'historico' | 'investimentos' | 'importar' | 'dados'
 
 interface OpcaoDeNavegacao {
   id: Aba
@@ -26,6 +35,7 @@ interface OpcaoDeNavegacao {
 const TAMANHO_DO_ICONE_DE_NAVEGACAO = 18
 
 const OPCOES_DE_NAVEGACAO: OpcaoDeNavegacao[] = [
+  { id: 'painel', rotulo: 'Painel', icone: LayoutDashboard },
   { id: 'lancamentos', rotulo: 'Lançamentos', icone: ReceiptText },
   { id: 'historico', rotulo: 'Histórico', icone: History },
   { id: 'investimentos', rotulo: 'Investimentos', icone: PiggyBank },
@@ -37,7 +47,7 @@ function App(): React.JSX.Element {
   const { lancamentos, criar, criarVarios, atualizar, excluir } = useLancamentos()
   const { fechamentos, refazerFechamento } = useFechamentos()
   const investimentos = useInvestimentos()
-  const [aba, setAba] = useState<Aba>('lancamentos')
+  const [aba, setAba] = useState<Aba>('painel')
   const [mesSelecionado, setMesSelecionado] = useState(obterMesDaData(obterDataIsoDeHoje()))
 
   const saldoDaContaCorrente = calcularSaldoDaContaCorrente(
@@ -88,6 +98,15 @@ function App(): React.JSX.Element {
         </header>
 
         <main className="pagina">
+          {aba === 'painel' && (
+            <PaginaPainel
+              lancamentos={lancamentos}
+              destinos={investimentos.destinos}
+              movimentacoes={investimentos.movimentacoes}
+              mesSelecionado={mesSelecionado}
+              aoMudarMes={setMesSelecionado}
+            />
+          )}
           {aba === 'lancamentos' && (
             <PaginaLancamentos
               lancamentos={lancamentos}

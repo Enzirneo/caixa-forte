@@ -633,3 +633,267 @@ select {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
 }
+
+/* --- Painel (gráficos) ---------------------------------------------------------- */
+
+.painel-indicadores {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.indicador {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-suave);
+}
+
+.indicador-titulo {
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.indicador strong {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.indicador-variacao,
+.indicador-detalhe {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.indicador-detalhe {
+  color: var(--texto-suave);
+}
+
+.indicador-variacao.favoravel {
+  color: var(--receita);
+}
+
+.indicador-variacao.desfavoravel {
+  color: var(--despesa);
+}
+
+.painel-graficos {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.cartao-de-grafico {
+  min-width: 0;
+  padding: 18px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-suave);
+}
+
+.cartao-de-grafico header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.cartao-de-grafico h2 {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.subtitulo-do-grafico {
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.legenda-em-linha {
+  display: flex;
+  gap: 14px;
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.legenda-em-linha span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legenda-cor {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.legenda-receita {
+  background: var(--grafico-receita);
+}
+
+.legenda-despesa {
+  background: var(--grafico-despesa);
+}
+
+.grafico-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.grafico-grade {
+  stroke: var(--borda);
+  stroke-dasharray: 3 3;
+}
+
+.grafico-rotulo {
+  fill: var(--texto-suave);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.barra-receita {
+  fill: var(--grafico-receita);
+}
+
+.barra-despesa {
+  fill: var(--grafico-despesa);
+}
+
+.barra-receita:hover,
+.barra-despesa:hover,
+.fatia-da-rosca:hover {
+  opacity: 0.8;
+}
+
+.grafico-linha {
+  fill: none;
+  stroke: var(--grafico-1);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.grafico-ponto {
+  fill: var(--superficie);
+  stroke: var(--grafico-1);
+  stroke-width: 2.5;
+}
+
+.rosca {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.rosca-svg {
+  width: 190px;
+  height: 190px;
+}
+
+.rosca-rotulo {
+  fill: var(--texto-suave);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.rosca-total {
+  fill: var(--texto);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.legenda {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legenda li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 13px;
+}
+
+.legenda-nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legenda-valor {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.legenda-percentual {
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.lista-de-destinos-do-painel {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista-de-destinos-do-painel li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.lista-de-destinos-do-painel li:last-child {
+  border-bottom: none;
+}
+
+.lista-de-destinos-do-painel li div {
+  display: flex;
+  flex-direction: column;
+}
+
+.lista-de-destinos-do-painel li span {
+  color: var(--texto-suave);
+  font-size: 12px;
+}
+
+@media (max-width: 1180px) {
+  .painel-indicadores {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .painel-graficos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.cartao-de-grafico header {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
