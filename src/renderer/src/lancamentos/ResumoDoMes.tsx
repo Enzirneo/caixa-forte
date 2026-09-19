@@ -1,11 +1,15 @@
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
+import { calcularSaldoDaContaNoMes } from '../../../shared/investimentos/calculos'
 import type { Resumo } from '../../../shared/lancamentos/resumo'
 
 interface Props {
   resumo: Resumo
+  guardadoNoMesCentavos: number
 }
 
-export function ResumoDoMes({ resumo }: Props): React.JSX.Element {
+export function ResumoDoMes({ resumo, guardadoNoMesCentavos }: Props): React.JSX.Element {
+  const saldoDaContaNoMes = calcularSaldoDaContaNoMes(resumo, guardadoNoMesCentavos)
+
   return (
     <div className="resumo-do-mes">
       <div>
@@ -17,9 +21,13 @@ export function ResumoDoMes({ resumo }: Props): React.JSX.Element {
         <strong className="despesa">{formatarCentavosComoReal(resumo.despesasCentavos)}</strong>
       </div>
       <div>
-        <span>Saldo do mês</span>
-        <strong className={resumo.saldoCentavos < 0 ? 'despesa' : 'receita'}>
-          {formatarCentavosComoReal(resumo.saldoCentavos)}
+        <span>Guardado</span>
+        <strong>{formatarCentavosComoReal(guardadoNoMesCentavos)}</strong>
+      </div>
+      <div>
+        <span>Saldo do mês na conta</span>
+        <strong className={saldoDaContaNoMes < 0 ? 'despesa' : 'receita'}>
+          {formatarCentavosComoReal(saldoDaContaNoMes)}
         </strong>
       </div>
     </div>

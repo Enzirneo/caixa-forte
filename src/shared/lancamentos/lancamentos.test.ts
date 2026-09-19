@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { calcularSaldoEmCentavos } from './calcularSaldo'
-import type { Lancamento, NovoLancamento } from './tipos'
+import type { NovoLancamento } from './tipos'
 import { validarNovoLancamento } from './validarNovoLancamento'
-
-const DATA_DE_ALTERACAO = '2026-09-18 00:00:00.000'
 
 const lancamentoValido: NovoLancamento = {
   descricao: 'Mercado',
@@ -31,38 +28,5 @@ describe('validarNovoLancamento', () => {
 
   it('rejeita data inexistente', () => {
     expect(validarNovoLancamento({ ...lancamentoValido, data: '2026-02-30' })).toHaveLength(1)
-  })
-})
-
-describe('calcularSaldoEmCentavos', () => {
-  it('soma receitas e subtrai despesas', () => {
-    const lancamentos: Lancamento[] = [
-      {
-        ...lancamentoValido,
-        id: 1,
-        alteradoEm: DATA_DE_ALTERACAO,
-        tipo: 'receita',
-        valorCentavos: 500000
-      },
-      {
-        ...lancamentoValido,
-        id: 2,
-        alteradoEm: DATA_DE_ALTERACAO,
-        tipo: 'despesa',
-        valorCentavos: 15000
-      },
-      {
-        ...lancamentoValido,
-        id: 3,
-        alteradoEm: DATA_DE_ALTERACAO,
-        tipo: 'despesa',
-        valorCentavos: 4990
-      }
-    ]
-    expect(calcularSaldoEmCentavos(lancamentos)).toBe(480010)
-  })
-
-  it('retorna zero sem lançamentos', () => {
-    expect(calcularSaldoEmCentavos([])).toBe(0)
   })
 })

@@ -257,3 +257,25 @@ button {
 .lista .acoes-linha .perigo {
   padding: 4px 10px;
 }
+
+.resumo-do-mes {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.resumo-do-mes.resumo-unico {
+  grid-template-columns: 1fr;
+}
+
+.formulario-destino {
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+}
+
+.formulario-movimentacao {
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+}
+
+.erro-de-exclusao {
+  margin: 0 0 12px;
+  color: var(--despesa);
+  font-size: 13px;
+}

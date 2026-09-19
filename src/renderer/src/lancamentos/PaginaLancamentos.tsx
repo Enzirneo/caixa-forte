@@ -1,111 +1,84 @@
 import { useState } from 'react'
 import {
   converterTimestampDoBancoEmDataIsoLocal,
-  formatarDataIsoComoBrasileira,
-  obterDataIsoDeHoje
+  formatarDataIsoComoBrasileira
 } from '../../../shared/datas/dataIso'
 import { obterMesDaData } from '../../../shared/datas/mes'
-import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
-import { calcularSaldoEmCentavos } from '../../../shared/lancamentos/calcularSaldo'
-import { calcularResumo, filtrarPorMes, resumirPorMes } from '../../../shared/lancamentos/resumo'
-import type { Lancamento, NovoLancamento } from '../../../shared/lancamentos/tipos'
+import type { FechamentoMes } from '../../../shared/fechamentos/tipos'
+import { calcularGuardadoNoMes } from '../../../shared/investimentos/calculos'
+import type { Movimentacao } from '../../../shared/investimentos/tipos'
+import { calcularResumo, filtrarPorMes } from '../../../shared/lancamentos/resumo'
+import type {
+  Lancamento,
+  LancamentoEditado,
+  NovoLancamento
+} from '../../../shared/lancamentos/tipos'
 import { FormularioLancamento } from './FormularioLancamento'
-import { HistoricoMensal } from './HistoricoMensal'
 import { ListaLancamentos } from './ListaLancamentos'
 import { ResumoDoMes } from './ResumoDoMes'
 import { SeletorDeMes } from './SeletorDeMes'
-import { useFechamentos } from './useFechamentos'
-import { useLancamentos } from './useLancamentos'
 
-type Aba = 'lancamentos' | 'historico'
+interface Props {
+  lancamentos: Lancamento[]
+  movimentacoes: Movimentacao[]
+  fechamentos: FechamentoMes[]
+  mesSelecionado: string
+  aoMudarMes: (mes: string) => void
+  aoCriar: (novoLancamento: NovoLancamento) => Promise<void>
+  aoAtualizar: (lancamento: LancamentoEditado) => Promise<void>
+  aoExcluir: (id: number) => Promise<void>
+}
 
-const MES_ATUAL = obterMesDaData(obterDataIsoDeHoje())
-
-export function PaginaLancamentos(): React.JSX.Element {
-  const { lancamentos, criar, atualizar, excluir } = useLancamentos()
-  const { fechamentos, refazerFechamento } = useFechamentos()
-  const [aba, setAba] = useState<Aba>('lancamentos')
-  const [mesSelecionado, setMesSelecionado] = useState(MES_ATUAL)
+export function PaginaLancamentos({
+  lancamentos,
+  movimentacoes,
+  fechamentos,
+  mesSelecionado,
+  aoMudarMes,
+  aoCriar,
+  aoAtualizar,
+  aoExcluir
+}: Props): React.JSX.Element {
   const [lancamentoEmEdicao, setLancamentoEmEdicao] = useState<Lancamento | null>(null)
 
   const lancamentosDoMes = filtrarPorMes(lancamentos, mesSelecionado)
-  const saldoGeralEmCentavos = calcularSaldoEmCentavos(lancamentos)
   const fechamentoDoMes = fechamentos.find((fechamento) => fechamento.mes === mesSelecionado)
 
   const salvar = async (novoLancamento: NovoLancamento): Promise<void> => {
-    if (lancamentoEmEdicao) await atualizar({ ...novoLancamento, id: lancamentoEmEdicao.id })
-    else await criar(novoLancamento)
+    if (lancamentoEmEdicao) await aoAtualizar({ ...novoLancamento, id: lancamentoEmEdicao.id })
+    else await aoCriar(novoLancamento)
     setLancamentoEmEdicao(null)
-    setMesSelecionado(obterMesDaData(novoLancamento.data))
-  }
-
-  const abrirMesNosLancamentos = (mes: string): void => {
-    setMesSelecionado(mes)
-    setAba('lancamentos')
+    aoMudarMes(obterMesDaData(novoLancamento.data))
   }
 
   return (
-    <main className="pagina">
-      <header className="cabecalho">
-        <h1>Caixa Forte</h1>
-        <div className="saldo">
-          <span>Saldo geral</span>
-          <strong className={saldoGeralEmCentavos < 0 ? 'despesa' : 'receita'}>
-            {formatarCentavosComoReal(saldoGeralEmCentavos)}
-          </strong>
-        </div>
-      </header>
-
-      <nav className="abas">
-        <button
-          className={aba === 'lancamentos' ? 'aba ativa' : 'aba'}
-          onClick={() => setAba('lancamentos')}
-        >
-          Lançamentos
-        </button>
-        <button
-          className={aba === 'historico' ? 'aba ativa' : 'aba'}
-          onClick={() => setAba('historico')}
-        >
-          Histórico
-        </button>
-      </nav>
-
-      {aba === 'historico' ? (
-        <HistoricoMensal
-          resumos={resumirPorMes(lancamentos)}
-          lancamentos={lancamentos}
-          fechamentos={fechamentos}
-          aoSelecionarMes={abrirMesNosLancamentos}
-          aoRefazerFechamento={refazerFechamento}
-        />
-      ) : (
-        <>
-          <FormularioLancamento
-            key={lancamentoEmEdicao?.id ?? 'novo'}
-            lancamentoEmEdicao={lancamentoEmEdicao}
-            aoSalvar={salvar}
-            aoCancelarEdicao={() => setLancamentoEmEdicao(null)}
-          />
-          <SeletorDeMes mes={mesSelecionado} aoMudar={setMesSelecionado} />
-          {fechamentoDoMes && (
-            <p className="aviso-de-fechamento">
-              Mês fechado em{' '}
-              {formatarDataIsoComoBrasileira(
-                converterTimestampDoBancoEmDataIsoLocal(fechamentoDoMes.fechadoEm)
-              )}
-              . Lançamentos feitos depois aparecem com a ressalva de que vieram após o fechamento.
-            </p>
+    <>
+      <FormularioLancamento
+        key={lancamentoEmEdicao?.id ?? 'novo'}
+        lancamentoEmEdicao={lancamentoEmEdicao}
+        aoSalvar={salvar}
+        aoCancelarEdicao={() => setLancamentoEmEdicao(null)}
+      />
+      <SeletorDeMes mes={mesSelecionado} aoMudar={aoMudarMes} />
+      {fechamentoDoMes && (
+        <p className="aviso-de-fechamento">
+          Mês fechado em{' '}
+          {formatarDataIsoComoBrasileira(
+            converterTimestampDoBancoEmDataIsoLocal(fechamentoDoMes.fechadoEm)
           )}
-          <ResumoDoMes resumo={calcularResumo(lancamentosDoMes)} />
-          <ListaLancamentos
-            lancamentos={lancamentosDoMes}
-            fechamentos={fechamentos}
-            aoEditar={setLancamentoEmEdicao}
-            aoExcluir={excluir}
-          />
-        </>
+          . Lançamentos feitos depois aparecem com a ressalva de que vieram após o fechamento.
+        </p>
       )}
-    </main>
+      <ResumoDoMes
+        resumo={calcularResumo(lancamentosDoMes)}
+        guardadoNoMesCentavos={calcularGuardadoNoMes(movimentacoes, mesSelecionado)}
+      />
+      <ListaLancamentos
+        lancamentos={lancamentosDoMes}
+        fechamentos={fechamentos}
+        aoEditar={setLancamentoEmEdicao}
+        aoExcluir={aoExcluir}
+      />
+    </>
   )
 }

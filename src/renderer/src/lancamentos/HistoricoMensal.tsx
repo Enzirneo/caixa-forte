@@ -6,12 +6,18 @@ import { formatarMesPorExtenso, obterMesDaData } from '../../../shared/datas/mes
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
 import { foiAlteradoAposFechamento } from '../../../shared/fechamentos/regrasDeFechamento'
 import type { FechamentoMes } from '../../../shared/fechamentos/tipos'
+import {
+  calcularGuardadoNoMes,
+  calcularSaldoDaContaNoMes
+} from '../../../shared/investimentos/calculos'
+import type { Movimentacao } from '../../../shared/investimentos/tipos'
 import type { ResumoMensal } from '../../../shared/lancamentos/resumo'
 import type { Lancamento } from '../../../shared/lancamentos/tipos'
 
 interface Props {
   resumos: ResumoMensal[]
   lancamentos: Lancamento[]
+  movimentacoes: Movimentacao[]
   fechamentos: FechamentoMes[]
   aoSelecionarMes: (mes: string) => void
   aoRefazerFechamento: (mes: string) => Promise<void>
@@ -20,6 +26,7 @@ interface Props {
 export function HistoricoMensal({
   resumos,
   lancamentos,
+  movimentacoes,
   fechamentos,
   aoSelecionarMes,
   aoRefazerFechamento
@@ -65,28 +72,38 @@ export function HistoricoMensal({
           <th>Mês</th>
           <th className="numero">Receitas</th>
           <th className="numero">Despesas</th>
-          <th className="numero">Saldo</th>
+          <th className="numero">Guardado</th>
+          <th className="numero">Saldo na conta</th>
           <th>Situação</th>
           <th />
         </tr>
       </thead>
       <tbody>
-        {resumos.map((resumo) => (
-          <tr key={resumo.mes}>
-            <td>{formatarMesPorExtenso(resumo.mes)}</td>
-            <td className="numero receita">{formatarCentavosComoReal(resumo.receitasCentavos)}</td>
-            <td className="numero despesa">{formatarCentavosComoReal(resumo.despesasCentavos)}</td>
-            <td className={`numero ${resumo.saldoCentavos < 0 ? 'despesa' : 'receita'}`}>
-              {formatarCentavosComoReal(resumo.saldoCentavos)}
-            </td>
-            <td>{renderizarSituacao(resumo.mes)}</td>
-            <td className="acoes-linha">
-              <button className="secundario" onClick={() => aoSelecionarMes(resumo.mes)}>
-                Ver lançamentos
-              </button>
-            </td>
-          </tr>
-        ))}
+        {resumos.map((resumo) => {
+          const guardadoNoMes = calcularGuardadoNoMes(movimentacoes, resumo.mes)
+          const saldoDaContaNoMes = calcularSaldoDaContaNoMes(resumo, guardadoNoMes)
+          return (
+            <tr key={resumo.mes}>
+              <td>{formatarMesPorExtenso(resumo.mes)}</td>
+              <td className="numero receita">
+                {formatarCentavosComoReal(resumo.receitasCentavos)}
+              </td>
+              <td className="numero despesa">
+                {formatarCentavosComoReal(resumo.despesasCentavos)}
+              </td>
+              <td className="numero">{formatarCentavosComoReal(guardadoNoMes)}</td>
+              <td className={`numero ${saldoDaContaNoMes < 0 ? 'despesa' : 'receita'}`}>
+                {formatarCentavosComoReal(saldoDaContaNoMes)}
+              </td>
+              <td>{renderizarSituacao(resumo.mes)}</td>
+              <td className="acoes-linha">
+                <button className="secundario" onClick={() => aoSelecionarMes(resumo.mes)}>
+                  Ver lançamentos
+                </button>
+              </td>
+            </tr>
+          )
+        })}
       </tbody>
     </table>
   )
