@@ -63,6 +63,28 @@ export function PaginaDados({ lancamentos }: Props): React.JSX.Element {
       return caminho ? { tipo: 'sucesso', texto: `Lançamentos exportados em ${caminho}` } : null
     })
 
+  const escolherPastaExterna = (): Promise<void> =>
+    executar(async () => {
+      const dados = await window.api.backup.escolherPastaExterna()
+      setInformacoes(dados)
+      return dados.pastaExterna
+        ? { tipo: 'sucesso', texto: `Cópias também serão gravadas em ${dados.pastaExterna}` }
+        : null
+    })
+
+  const removerPastaExterna = (): Promise<void> =>
+    executar(async () => {
+      setInformacoes(await window.api.backup.removerPastaExterna())
+      return { tipo: 'sucesso', texto: 'A cópia em outra pasta foi desativada.' }
+    })
+
+  const copiarParaPastaExterna = (): Promise<void> =>
+    executar(async () => {
+      const caminho = await window.api.backup.copiarParaPastaExterna()
+      setInformacoes(await window.api.backup.informacoes())
+      return { tipo: 'sucesso', texto: `Cópia criada em ${caminho}` }
+    })
+
   const ultimoAutomatico = informacoes?.automaticos[0]
 
   return (
@@ -111,6 +133,44 @@ export function PaginaDados({ lancamentos }: Props): React.JSX.Element {
               </button>
             </div>
           </div>
+        )}
+      </section>
+
+      <section className="cartao-de-dados">
+        <h2>Cópia em outra pasta</h2>
+        {informacoes?.pastaExterna ? (
+          <>
+            <p>
+              As cópias automáticas semanais também são gravadas em{' '}
+              <code>{informacoes.pastaExterna}</code>.{' '}
+              {informacoes.ultimoBackupExterno
+                ? `A última foi em ${new Date(informacoes.ultimoBackupExterno).toLocaleString('pt-BR')}.`
+                : 'Ainda não há nenhuma lá.'}
+            </p>
+            <p className="aviso-de-dados">
+              Se a pasta estiver sincronizada com a nuvem (OneDrive, por exemplo), a cópia também
+              sobrevive a um defeito neste computador. O app guarda as 8 mais recentes.
+            </p>
+            <div className="acoes-de-dados">
+              <button onClick={copiarParaPastaExterna}>Copiar agora</button>
+              <button className="secundario" onClick={escolherPastaExterna}>
+                Trocar a pasta…
+              </button>
+              <button className="secundario" onClick={removerPastaExterna}>
+                Desativar
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p>
+              Nenhuma pasta escolhida. Escolha uma pasta do OneDrive, do Google Drive ou de um
+              pendrive, e as cópias automáticas passam a ser gravadas lá também.
+            </p>
+            <div className="acoes-de-dados">
+              <button onClick={escolherPastaExterna}>Escolher a pasta…</button>
+            </div>
+          </>
         )}
       </section>
 

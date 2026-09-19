@@ -42,7 +42,10 @@ const backup: ApiBackup = {
   informacoes: () => ipcRenderer.invoke(CANAIS_BACKUP.informacoes),
   criar: () => ipcRenderer.invoke(CANAIS_BACKUP.criar),
   restaurar: () => ipcRenderer.invoke(CANAIS_BACKUP.restaurar),
-  abrirPasta: () => ipcRenderer.invoke(CANAIS_BACKUP.abrirPasta)
+  abrirPasta: () => ipcRenderer.invoke(CANAIS_BACKUP.abrirPasta),
+  escolherPastaExterna: () => ipcRenderer.invoke(CANAIS_BACKUP.escolherPastaExterna),
+  removerPastaExterna: () => ipcRenderer.invoke(CANAIS_BACKUP.removerPastaExterna),
+  copiarParaPastaExterna: () => ipcRenderer.invoke(CANAIS_BACKUP.copiarParaPastaExterna)
 }
 
 const arquivos: ApiArquivos = {
