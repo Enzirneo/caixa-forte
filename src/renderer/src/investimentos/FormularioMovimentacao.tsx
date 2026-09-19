@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
 import { converterTextoEmCentavos } from '../../../shared/dinheiro/converterTextoEmCentavos'
-import { calcularSaldoDoDestino } from '../../../shared/investimentos/calculos'
 import {
   TIPOS_MOVIMENTACAO,
   type Destino,
@@ -33,7 +32,8 @@ export function FormularioMovimentacao({
     return <p className="vazio">Cadastre um destino para começar a guardar dinheiro.</p>
   }
 
-  const destinoId = destinoEscolhido ?? destinos[0].id
+  const destino = destinos.find((candidato) => candidato.id === destinoEscolhido) ?? destinos[0]
+  const destinoId = destino.id
 
   const enviar = async (evento: FormEvent): Promise<void> => {
     evento.preventDefault()
@@ -44,10 +44,7 @@ export function FormularioMovimentacao({
       data
     }
 
-    const errosEncontrados = validarNovaMovimentacao(
-      novaMovimentacao,
-      calcularSaldoDoDestino(movimentacoes, destinoId)
-    )
+    const errosEncontrados = validarNovaMovimentacao(novaMovimentacao, destino, movimentacoes)
     setErros(errosEncontrados)
     if (errosEncontrados.length > 0) return
 

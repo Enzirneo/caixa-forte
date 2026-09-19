@@ -262,8 +262,8 @@ button {
   grid-template-columns: repeat(4, 1fr);
 }
 
-.resumo-do-mes.resumo-unico {
-  grid-template-columns: 1fr;
+.resumo-do-mes.resumo-duplo {
+  grid-template-columns: 1fr 1fr;
 }
 
 .formulario-destino {

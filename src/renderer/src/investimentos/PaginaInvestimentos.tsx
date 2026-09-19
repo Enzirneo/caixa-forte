@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
-import { calcularTotalGuardado } from '../../../shared/investimentos/calculos'
+import { calcularPatrimonio } from '../../../shared/investimentos/rendimento'
 import type {
   Destino,
   Movimentacao,
@@ -39,14 +40,26 @@ export function PaginaInvestimentos({
     }
   }
 
+  const patrimonio = calcularPatrimonio(destinos, movimentacoes, obterDataIsoDeHoje())
+
   return (
     <>
-      <div className="resumo-do-mes resumo-unico">
+      <div className="resumo-do-mes resumo-duplo">
         <div>
-          <span>Total guardado (fora do saldo da conta)</span>
-          <strong>{formatarCentavosComoReal(calcularTotalGuardado(movimentacoes))}</strong>
+          <span>Guardado (estimado, fora do saldo da conta)</span>
+          <strong>{formatarCentavosComoReal(patrimonio.saldoEstimadoCentavos)}</strong>
+        </div>
+        <div>
+          <span>Rendeu até hoje (estimado)</span>
+          <strong className="receita">
+            {formatarCentavosComoReal(patrimonio.rendimentoEstimadoCentavos)}
+          </strong>
         </div>
       </div>
+      <p className="aviso-de-fechamento">
+        O rendimento é uma estimativa com juros compostos pela taxa informada. Não considera imposto
+        de renda nem IOF.
+      </p>
       <FormularioDestino aoCriar={aoCriarDestino} />
       <ListaDestinos destinos={destinos} movimentacoes={movimentacoes} />
       <FormularioMovimentacao
