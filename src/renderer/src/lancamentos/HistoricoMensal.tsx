@@ -1,15 +1,71 @@
-import { formatarMesPorExtenso } from '../../../shared/datas/mes'
+import {
+  converterTimestampDoBancoEmDataIsoLocal,
+  formatarDataIsoComoBrasileira
+} from '../../../shared/datas/dataIso'
+import { formatarMesPorExtenso, obterMesDaData } from '../../../shared/datas/mes'
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
+import { foiAlteradoAposFechamento } from '../../../shared/fechamentos/regrasDeFechamento'
+import type { FechamentoMes } from '../../../shared/fechamentos/tipos'
 import type { ResumoMensal } from '../../../shared/lancamentos/resumo'
+import type { Lancamento } from '../../../shared/lancamentos/tipos'
 
 interface Props {
   resumos: ResumoMensal[]
+  lancamentos: Lancamento[]
+  fechamentos: FechamentoMes[]
+  mesAtual: string
   aoSelecionarMes: (mes: string) => void
+  aoFecharMes: (mes: string) => Promise<void>
+  aoReabrirMes: (mes: string) => Promise<void>
 }
 
-export function HistoricoMensal({ resumos, aoSelecionarMes }: Props): React.JSX.Element {
+export function HistoricoMensal({
+  resumos,
+  lancamentos,
+  fechamentos,
+  mesAtual,
+  aoSelecionarMes,
+  aoFecharMes,
+  aoReabrirMes
+}: Props): React.JSX.Element {
   if (resumos.length === 0) {
     return <p className="vazio">O histórico aparece quando houver lançamentos.</p>
+  }
+
+  const contarPosteriores = (mes: string): number =>
+    lancamentos.filter(
+      (lancamento) =>
+        obterMesDaData(lancamento.data) === mes &&
+        foiAlteradoAposFechamento(lancamento, fechamentos)
+    ).length
+
+  const renderizarSituacao = (mes: string): React.JSX.Element => {
+    const fechamento = fechamentos.find((candidato) => candidato.mes === mes)
+    if (!fechamento) {
+      return mes < mesAtual ? (
+        <button className="secundario" onClick={() => aoFecharMes(mes)}>
+          Fechar mês
+        </button>
+      ) : (
+        <span className="situacao">Em andamento</span>
+      )
+    }
+
+    const posteriores = contarPosteriores(mes)
+    return (
+      <span className="situacao">
+        Fechado em{' '}
+        {formatarDataIsoComoBrasileira(
+          converterTimestampDoBancoEmDataIsoLocal(fechamento.fechadoEm)
+        )}
+        {posteriores > 0 && (
+          <span className="ressalva"> · {posteriores} lançado(s) após o fechamento</span>
+        )}
+        <button className="secundario" onClick={() => aoReabrirMes(mes)}>
+          Reabrir
+        </button>
+      </span>
+    )
   }
 
   return (
@@ -20,6 +76,7 @@ export function HistoricoMensal({ resumos, aoSelecionarMes }: Props): React.JSX.
           <th className="numero">Receitas</th>
           <th className="numero">Despesas</th>
           <th className="numero">Saldo</th>
+          <th>Situação</th>
           <th />
         </tr>
       </thead>
@@ -32,6 +89,7 @@ export function HistoricoMensal({ resumos, aoSelecionarMes }: Props): React.JSX.
             <td className={`numero ${resumo.saldoCentavos < 0 ? 'despesa' : 'receita'}`}>
               {formatarCentavosComoReal(resumo.saldoCentavos)}
             </td>
+            <td>{renderizarSituacao(resumo.mes)}</td>
             <td className="acoes-linha">
               <button className="secundario" onClick={() => aoSelecionarMes(resumo.mes)}>
                 Ver lançamentos

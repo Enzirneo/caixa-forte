@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
-import type { Lancamento, NovoLancamento } from '../../../shared/lancamentos/tipos'
+import type {
+  Lancamento,
+  LancamentoEditado,
+  NovoLancamento
+} from '../../../shared/lancamentos/tipos'
 
 interface UsoDeLancamentos {
   lancamentos: Lancamento[]
   criar: (novoLancamento: NovoLancamento) => Promise<void>
-  atualizar: (lancamento: Lancamento) => Promise<void>
+  atualizar: (lancamento: LancamentoEditado) => Promise<void>
   excluir: (id: number) => Promise<void>
 }
 
@@ -30,7 +34,7 @@ export function useLancamentos(): UsoDeLancamentos {
     await recarregar()
   }
 
-  const atualizar = async (lancamento: Lancamento): Promise<void> => {
+  const atualizar = async (lancamento: LancamentoEditado): Promise<void> => {
     await window.api.lancamentos.atualizar(lancamento)
     await recarregar()
   }

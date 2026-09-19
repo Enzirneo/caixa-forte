@@ -1,5 +1,9 @@
 import { useState } from 'react'
-import { obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
+import {
+  converterTimestampDoBancoEmDataIsoLocal,
+  formatarDataIsoComoBrasileira,
+  obterDataIsoDeHoje
+} from '../../../shared/datas/dataIso'
 import { obterMesDaData } from '../../../shared/datas/mes'
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
 import { calcularSaldoEmCentavos } from '../../../shared/lancamentos/calcularSaldo'
@@ -10,18 +14,23 @@ import { HistoricoMensal } from './HistoricoMensal'
 import { ListaLancamentos } from './ListaLancamentos'
 import { ResumoDoMes } from './ResumoDoMes'
 import { SeletorDeMes } from './SeletorDeMes'
+import { useFechamentos } from './useFechamentos'
 import { useLancamentos } from './useLancamentos'
 
 type Aba = 'lancamentos' | 'historico'
 
+const MES_ATUAL = obterMesDaData(obterDataIsoDeHoje())
+
 export function PaginaLancamentos(): React.JSX.Element {
   const { lancamentos, criar, atualizar, excluir } = useLancamentos()
+  const { fechamentos, fecharMes, reabrirMes } = useFechamentos()
   const [aba, setAba] = useState<Aba>('lancamentos')
-  const [mesSelecionado, setMesSelecionado] = useState(obterMesDaData(obterDataIsoDeHoje()))
+  const [mesSelecionado, setMesSelecionado] = useState(MES_ATUAL)
   const [lancamentoEmEdicao, setLancamentoEmEdicao] = useState<Lancamento | null>(null)
 
   const lancamentosDoMes = filtrarPorMes(lancamentos, mesSelecionado)
   const saldoGeralEmCentavos = calcularSaldoEmCentavos(lancamentos)
+  const fechamentoDoMes = fechamentos.find((fechamento) => fechamento.mes === mesSelecionado)
 
   const salvar = async (novoLancamento: NovoLancamento): Promise<void> => {
     if (lancamentoEmEdicao) await atualizar({ ...novoLancamento, id: lancamentoEmEdicao.id })
@@ -65,7 +74,12 @@ export function PaginaLancamentos(): React.JSX.Element {
       {aba === 'historico' ? (
         <HistoricoMensal
           resumos={resumirPorMes(lancamentos)}
+          lancamentos={lancamentos}
+          fechamentos={fechamentos}
+          mesAtual={MES_ATUAL}
           aoSelecionarMes={abrirMesNosLancamentos}
+          aoFecharMes={fecharMes}
+          aoReabrirMes={reabrirMes}
         />
       ) : (
         <>
@@ -76,9 +90,19 @@ export function PaginaLancamentos(): React.JSX.Element {
             aoCancelarEdicao={() => setLancamentoEmEdicao(null)}
           />
           <SeletorDeMes mes={mesSelecionado} aoMudar={setMesSelecionado} />
+          {fechamentoDoMes && (
+            <p className="aviso-de-fechamento">
+              Mês fechado em{' '}
+              {formatarDataIsoComoBrasileira(
+                converterTimestampDoBancoEmDataIsoLocal(fechamentoDoMes.fechadoEm)
+              )}
+              . Lançamentos feitos depois aparecem com a ressalva de que vieram após o fechamento.
+            </p>
+          )}
           <ResumoDoMes resumo={calcularResumo(lancamentosDoMes)} />
           <ListaLancamentos
             lancamentos={lancamentosDoMes}
+            fechamentos={fechamentos}
             aoEditar={setLancamentoEmEdicao}
             aoExcluir={excluir}
           />

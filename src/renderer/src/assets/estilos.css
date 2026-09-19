@@ -225,3 +225,27 @@ button {
 .seletor-de-mes strong::first-letter {
   text-transform: uppercase;
 }
+
+.situacao {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.situacao button {
+  padding: 2px 8px;
+}
+
+.ressalva {
+  color: var(--despesa);
+  font-size: 12px;
+}
+
+.aviso-de-fechamento {
+  margin: 0 0 12px;
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
