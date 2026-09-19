@@ -122,7 +122,7 @@ describe('interpretarPlanilha', () => {
 
   it('aceita valor numérico e data como objeto Date', () => {
     const [linha] = interpretarPlanilha(
-      [[new Date(2026, 8, 10), 'Cinema', 45.9, 'despesa', 'Lazer']],
+      [[new Date(Date.UTC(2026, 8, 10)), 'Cinema', 45.9, 'despesa', 'Lazer']],
       DATA_DO_LOTE
     )
 

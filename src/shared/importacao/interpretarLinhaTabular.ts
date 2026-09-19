@@ -1,4 +1,4 @@
-import { obterDataIsoDeHoje } from '../datas/dataIso'
+import { obterDataIsoEmUtc } from '../datas/dataIso'
 import { converterTextoEmCentavos } from '../dinheiro/converterTextoEmCentavos'
 import type { NovoLancamento, TipoLancamento } from '../lancamentos/tipos'
 import { validarNovoLancamento } from '../lancamentos/validarNovoLancamento'
@@ -31,7 +31,7 @@ function ehCabecalho(celulas: CelulaDaPlanilha[]): boolean {
 
 function converterCelulaEmData(celula: CelulaDaPlanilha, dataDoLote: string): string | null {
   if (celula === null || celula === '') return dataDoLote
-  if (celula instanceof Date) return obterDataIsoDeHoje(celula)
+  if (celula instanceof Date) return obterDataIsoEmUtc(celula)
   const anoDoLote = Number(dataDoLote.slice(PRIMEIRO_CARACTERE_DO_ANO, TAMANHO_DO_ANO))
   return converterTextoEmDataIso(String(celula), anoDoLote)
 }

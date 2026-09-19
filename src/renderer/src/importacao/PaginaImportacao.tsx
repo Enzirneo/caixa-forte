@@ -15,6 +15,7 @@ import type { Lancamento, NovoLancamento } from '../../../shared/lancamentos/tip
 import { baixarArquivoDeTexto } from '../compartilhado/baixarArquivoDeTexto'
 import { extrairMensagemDeErro } from '../compartilhado/extrairMensagemDeErro'
 import { lerArquivoDeTexto } from '../compartilhado/lerArquivoDeTexto'
+import { lerPlanilhaXlsx } from '../compartilhado/lerPlanilhaXlsx'
 import { PreviaDaImportacao } from './PreviaDaImportacao'
 
 interface Props {
@@ -31,6 +32,8 @@ interface Mensagem {
   tipo: 'sucesso' | 'erro'
   texto: string
 }
+
+const EXTENSAO_DO_EXCEL = '.xlsx'
 
 const EXEMPLO_DE_TEXTO = `Mercado 150,00
 Uber 23,90
@@ -69,13 +72,25 @@ export function PaginaImportacao({ lancamentosExistentes, aoImportar }: Props): 
     setMensagem(null)
   }
 
+  const lerLinhasDoArquivo = async (arquivoEscolhido: File): Promise<CelulaDaPlanilha[][]> =>
+    arquivoEscolhido.name.toLowerCase().endsWith(EXTENSAO_DO_EXCEL)
+      ? lerPlanilhaXlsx(arquivoEscolhido)
+      : lerCsv(await lerArquivoDeTexto(arquivoEscolhido))
+
   const escolherArquivo = async (arquivoEscolhido: File | undefined): Promise<void> => {
     if (!arquivoEscolhido) return
-    const texto = await lerArquivoDeTexto(arquivoEscolhido)
-    setArquivo({ nome: arquivoEscolhido.name, linhas: lerCsv(texto) })
-    setTextoColado('')
-    setEscolhas({})
-    setMensagem(null)
+    try {
+      const linhas = await lerLinhasDoArquivo(arquivoEscolhido)
+      setArquivo({ nome: arquivoEscolhido.name, linhas })
+      setTextoColado('')
+      setEscolhas({})
+      setMensagem(null)
+    } catch {
+      setMensagem({
+        tipo: 'erro',
+        texto: 'Não consegui ler este arquivo. Ele é mesmo .xlsx ou .csv?'
+      })
+    }
   }
 
   const alternarInclusao = (numeroDaLinha: number): void => {
@@ -114,10 +129,10 @@ export function PaginaImportacao({ lancamentosExistentes, aoImportar }: Props): 
           <input type="date" value={dataDoLote} onChange={(e) => setDataDoLote(e.target.value)} />
         </label>
         <label>
-          Ou escolha um arquivo CSV
+          Ou escolha um arquivo (Excel .xlsx ou CSV)
           <input
             type="file"
-            accept=".csv,.txt"
+            accept=".xlsx,.csv,.txt"
             onChange={(e) => escolherArquivo(e.target.files?.[0])}
           />
         </label>

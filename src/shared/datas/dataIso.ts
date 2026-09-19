@@ -26,3 +26,12 @@ export function obterDataIsoDeHoje(agora: Date = new Date()): string {
 export function converterTimestampDoBancoEmDataIsoLocal(timestampUtc: string): string {
   return obterDataIsoDeHoje(new Date(`${timestampUtc.replace(' ', 'T')}Z`))
 }
+
+// Datas lidas de planilhas não têm fuso: o Excel guarda só o dia, e a leitura devolve a
+// meia-noite em UTC. Ler no horário local mostraria o dia anterior em fusos a oeste de Greenwich.
+export function obterDataIsoEmUtc(data: Date): string {
+  const ano = data.getUTCFullYear()
+  const mes = String(data.getUTCMonth() + 1).padStart(2, '0')
+  const dia = String(data.getUTCDate()).padStart(2, '0')
+  return `${ano}-${mes}-${dia}`
+}
