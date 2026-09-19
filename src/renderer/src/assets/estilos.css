@@ -544,6 +544,32 @@ label {
   align-items: flex-end;
 }
 
+.formulario-lancamento .opcao-de-reembolso {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: flex-end;
+}
+
+.opcao-de-reembolso .campo-da-despesa-reembolsada {
+  flex: 1 1 360px;
+}
+
+.dica-do-reembolso {
+  flex: 1 1 260px;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lista-com-busca {
+  min-width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
 .opcao-de-cartao .campo {
   width: 220px;
 }

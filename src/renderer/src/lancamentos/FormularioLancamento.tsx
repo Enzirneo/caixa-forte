@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { indexarAjustesDoCartao } from '../../../shared/cartoes/cicloDaFatura'
+import { aplicarMascaraDeValor } from '../../../shared/dinheiro/aplicarMascaraDeValor'
 import { montarParcelasDaCompra, validarNovaCompra } from '../../../shared/cartoes/regras'
 import type { AjusteDeFechamento, Cartao, NovaCompraNoCartao } from '../../../shared/cartoes/tipos'
 import { formatarDataIsoComoBrasileira, obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
@@ -12,10 +13,16 @@ import {
   type NovoLancamento,
   type TipoLancamento
 } from '../../../shared/lancamentos/tipos'
+import {
+  listarDespesasReembolsaveis,
+  validarReembolso
+} from '../../../shared/lancamentos/reembolsos'
 import { validarNovoLancamento } from '../../../shared/lancamentos/validarNovoLancamento'
+import { CampoDeEscolhaComBusca } from '../componentes/CampoDeEscolhaComBusca'
 import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
 import { CampoDeData } from '../componentes/CampoDeData'
 import { Selecao } from '../componentes/Selecao'
+import { CampoDeValor } from '../componentes/CampoDeValor'
 
 const PARCELAS_PADRAO = '1'
 const MAXIMO_DE_PARCELAS_NO_CAMPO = 60
@@ -28,6 +35,7 @@ const ROTULO_DO_TIPO: Record<TipoLancamento, string> = {
 
 interface Props {
   lancamentoEmEdicao: Lancamento | null
+  todosOsLancamentos: Lancamento[]
   categoriasSugeridas: string[]
   cartoes: Cartao[]
   ajustesDeFechamento: AjusteDeFechamento[]
@@ -38,6 +46,7 @@ interface Props {
 
 export function FormularioLancamento({
   lancamentoEmEdicao,
+  todosOsLancamentos,
   categoriasSugeridas,
   cartoes,
   ajustesDeFechamento,
@@ -52,10 +61,30 @@ export function FormularioLancamento({
   const [data, setData] = useState(lancamentoEmEdicao?.data ?? obterDataIsoDeHoje())
   const [tipo, setTipo] = useState<TipoLancamento>(lancamentoEmEdicao?.tipo ?? 'despesa')
   const [categoria, setCategoria] = useState(lancamentoEmEdicao?.categoria ?? '')
+  const [despesaReembolsadaId, setDespesaReembolsadaId] = useState(
+    lancamentoEmEdicao?.reembolsoDeId ? String(lancamentoEmEdicao.reembolsoDeId) : ''
+  )
   const [ehDeCartao, setEhDeCartao] = useState(false)
   const [cartaoEscolhido, setCartaoEscolhido] = useState('')
   const [parcelasTexto, setParcelasTexto] = useState(PARCELAS_PADRAO)
   const [erros, setErros] = useState<string[]>([])
+
+  const ehReembolso = tipo === 'reembolso'
+  const despesasReembolsaveis = ehReembolso
+    ? listarDespesasReembolsaveis(todosOsLancamentos, lancamentoEmEdicao?.id)
+    : []
+  const despesaEscolhida = despesasReembolsaveis.find(
+    ({ despesa }) => String(despesa.id) === despesaReembolsadaId
+  )
+
+  const escolherDespesaReembolsada = (id: string): void => {
+    setDespesaReembolsadaId(id)
+    const escolhida = despesasReembolsaveis.find(({ despesa }) => String(despesa.id) === id)
+    if (!escolhida) return
+    setCategoria(escolhida.despesa.categoria)
+    if (!valorTexto) setValorTexto(aplicarMascaraDeValor(String(escolhida.reembolsavelCentavos)))
+    if (!descricao) setDescricao(`Reembolso: ${escolhida.despesa.descricao}`)
+  }
 
   const podeUsarCartao = !lancamentoEmEdicao && tipo === 'despesa' && cartoes.length > 0
   // Cartão de crédito só tem despesa: não existe devolução que entre como dinheiro na conta.
@@ -87,6 +116,7 @@ export function FormularioLancamento({
     setValorTexto('')
     setCategoria('')
     setParcelasTexto(PARCELAS_PADRAO)
+    setDespesaReembolsadaId('')
   }
 
   const registrarNoCartao = async (cartaoDaCompra: Cartao): Promise<void> => {
@@ -111,10 +141,16 @@ export function FormularioLancamento({
       valorCentavos: converterTextoEmCentavos(valorTexto) ?? 0,
       data,
       tipo,
-      categoria
+      categoria,
+      reembolsoDeId: ehReembolso && despesaReembolsadaId ? Number(despesaReembolsadaId) : null
     }
 
-    const errosEncontrados = validarNovoLancamento(novoLancamento)
+    const errosEncontrados = [
+      ...validarNovoLancamento(novoLancamento),
+      ...(ehReembolso && !despesaReembolsadaId
+        ? ['Escolha a despesa que foi reembolsada.']
+        : validarReembolso(novoLancamento, todosOsLancamentos, lancamentoEmEdicao?.id))
+    ]
     setErros(errosEncontrados)
     if (errosEncontrados.length > 0) return
 
@@ -137,12 +173,7 @@ export function FormularioLancamento({
       </label>
       <label>
         Valor (R$)
-        <input
-          inputMode="decimal"
-          placeholder="0,00"
-          value={valorTexto}
-          onChange={(e) => setValorTexto(e.target.value)}
-        />
+        <CampoDeValor valor={valorTexto} aoMudar={setValorTexto} placeholder="0,00" />
       </label>
       <div className="campo campo-de-data">
         <span className="rotulo-do-campo">Data</span>
@@ -176,6 +207,28 @@ export function FormularioLancamento({
           </button>
         )}
       </div>
+      {ehReembolso && (
+        <div className="opcao-de-reembolso">
+          <div className="campo campo-da-despesa-reembolsada">
+            <span className="rotulo-do-campo">Despesa reembolsada</span>
+            <CampoDeEscolhaComBusca
+              valor={despesaReembolsadaId}
+              opcoes={despesasReembolsaveis.map(({ despesa, reembolsavelCentavos }) => ({
+                valor: String(despesa.id),
+                rotulo: `${despesa.descricao} · ${formatarDataIsoComoBrasileira(despesa.data)} · falta devolver ${formatarCentavosComoReal(reembolsavelCentavos)}`
+              }))}
+              aoEscolher={escolherDespesaReembolsada}
+              placeholder="Busque pela descrição da despesa"
+              rotuloDeAcessibilidade="Despesa reembolsada"
+            />
+          </div>
+          <p className="dica-do-reembolso">
+            {despesaEscolhida
+              ? `Pode devolver até ${formatarCentavosComoReal(despesaEscolhida.reembolsavelCentavos)}. Para devolução parcial, digite um valor menor.`
+              : 'O reembolso abate a despesa escolhida, no todo ou em parte, e fica datado neste dia.'}
+          </p>
+        </div>
+      )}
       {podeUsarCartao && (
         <div className="opcao-de-cartao">
           <label className="caixa-de-selecao">

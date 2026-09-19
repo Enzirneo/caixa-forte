@@ -15,6 +15,7 @@ import {
   filtroEstaAtivo,
   type FiltroDeLancamentos
 } from '../../../shared/lancamentos/filtrarLancamentos'
+import { montarRotulosDeReembolso } from '../../../shared/lancamentos/reembolsos'
 import { calcularResumo, filtrarPorMes } from '../../../shared/lancamentos/resumo'
 import type {
   Lancamento,
@@ -77,6 +78,7 @@ export function PaginaLancamentos({
         <FormularioLancamento
           key={lancamentoEmEdicao?.id ?? 'novo'}
           lancamentoEmEdicao={lancamentoEmEdicao}
+          todosOsLancamentos={lancamentos}
           categoriasSugeridas={categoriasSugeridas}
           cartoes={cartoes}
           ajustesDeFechamento={ajustesDeFechamento}
@@ -109,6 +111,7 @@ export function PaginaLancamentos({
           aoOrdenar={(ordenacao) => setFiltro({ ...filtro, ordenacao })}
           fechamentos={fechamentos}
           rotulosDeCompra={rotulosDeCompra}
+          rotulosDeReembolso={montarRotulosDeReembolso(lancamentos)}
           aoEditar={setLancamentoEmEdicao}
           aoExcluir={aoExcluir}
         />

@@ -12,6 +12,7 @@ import { validarNovaMovimentacao } from '../../../shared/investimentos/validacoe
 import { ROTULO_DO_TIPO_DE_MOVIMENTACAO } from './rotulos'
 import { CampoDeData } from '../componentes/CampoDeData'
 import { Selecao } from '../componentes/Selecao'
+import { CampoDeValor } from '../componentes/CampoDeValor'
 
 interface Props {
   destinos: Destino[]
@@ -79,12 +80,7 @@ export function FormularioMovimentacao({
       </div>
       <label>
         Valor (R$)
-        <input
-          inputMode="decimal"
-          placeholder="0,00"
-          value={valorTexto}
-          onChange={(e) => setValorTexto(e.target.value)}
-        />
+        <CampoDeValor valor={valorTexto} aoMudar={setValorTexto} placeholder="0,00" />
       </label>
       <div className="campo">
         <span className="rotulo-do-campo">Data</span>

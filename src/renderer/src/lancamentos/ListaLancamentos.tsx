@@ -13,6 +13,7 @@ interface Props {
   aoOrdenar: (ordenacao: OrdenacaoDeLancamentos) => void
   fechamentos: FechamentoMes[]
   rotulosDeCompra: Map<number, string>
+  rotulosDeReembolso: Map<number, string>
   aoEditar: (lancamento: Lancamento) => void
   aoExcluir: (id: number) => Promise<void>
 }
@@ -56,6 +57,7 @@ export function ListaLancamentos({
   aoOrdenar,
   fechamentos,
   rotulosDeCompra,
+  rotulosDeReembolso,
   aoEditar,
   aoExcluir
 }: Props): React.JSX.Element {
@@ -105,8 +107,8 @@ export function ListaLancamentos({
               {foiAlteradoAposFechamento(lancamento, fechamentos) && (
                 <span className="ressalva"> · lançado após o fechamento</span>
               )}
-              {lancamento.tipo === 'reembolso' && (
-                <span className="rotulo-de-compra">Reembolso</span>
+              {rotulosDeReembolso.has(lancamento.id) && (
+                <span className="rotulo-de-compra">{rotulosDeReembolso.get(lancamento.id)}</span>
               )}
               {rotulosDeCompra.has(lancamento.id) && (
                 <span className="rotulo-de-compra">{rotulosDeCompra.get(lancamento.id)}</span>

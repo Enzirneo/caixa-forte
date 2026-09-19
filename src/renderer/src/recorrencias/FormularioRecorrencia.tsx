@@ -9,6 +9,7 @@ import type { NovaRecorrencia, Recorrencia } from '../../../shared/recorrencias/
 import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
 import { CampoDeMes } from '../componentes/CampoDeMes'
 import { Selecao } from '../componentes/Selecao'
+import { CampoDeValor } from '../componentes/CampoDeValor'
 
 const ROTULO_DO_TIPO: Record<TipoDeRecorrencia, string> = { receita: 'Receita', despesa: 'Despesa' }
 const DIA_PADRAO_DO_MES = '5'
@@ -83,12 +84,7 @@ export function FormularioRecorrencia({
       </label>
       <label>
         Valor (R$)
-        <input
-          inputMode="decimal"
-          placeholder="0,00"
-          value={valorTexto}
-          onChange={(e) => setValorTexto(e.target.value)}
-        />
+        <CampoDeValor valor={valorTexto} aoMudar={setValorTexto} placeholder="0,00" />
       </label>
       <div className="campo">
         <span className="rotulo-do-campo">Tipo</span>

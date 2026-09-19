@@ -131,5 +131,13 @@ export const listaDeMigracoes: Migracao[] = [
       ALTER TABLE lancamentos ADD COLUMN reembolso INTEGER NOT NULL DEFAULT 0
         CHECK (reembolso IN (0, 1));
     `
+  },
+  {
+    versao: 10,
+    descricao: 'liga o reembolso à despesa que ele devolve',
+    sql: `
+      ALTER TABLE lancamentos ADD COLUMN reembolso_de_id INTEGER
+        REFERENCES lancamentos (id) ON DELETE SET NULL;
+    `
   }
 ]

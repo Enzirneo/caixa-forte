@@ -140,6 +140,36 @@ describe('inserirVariosLancamentos', () => {
       reembolso: 0
     })
   })
+
+  it('liga o reembolso à despesa devolvida e só guarda o vínculo em reembolsos', () => {
+    const despesa = inserirLancamento(banco, mercado)
+    const reembolso = inserirLancamento(banco, {
+      ...mercado,
+      descricao: 'Devolução',
+      valorCentavos: 5000,
+      tipo: 'reembolso',
+      reembolsoDeId: despesa.id
+    })
+    const comVinculoIndevido = inserirLancamento(banco, { ...mercado, reembolsoDeId: despesa.id })
+
+    expect(reembolso.reembolsoDeId).toBe(despesa.id)
+    expect(despesa.reembolsoDeId).toBeNull()
+    expect(comVinculoIndevido.reembolsoDeId).toBeNull()
+  })
+
+  it('apagar a despesa mantém o reembolso, só sem o vínculo', () => {
+    const despesa = inserirLancamento(banco, mercado)
+    inserirLancamento(banco, {
+      ...mercado,
+      valorCentavos: 5000,
+      tipo: 'reembolso',
+      reembolsoDeId: despesa.id
+    })
+
+    excluirLancamento(banco, despesa.id)
+
+    expect(listarLancamentos(banco)).toMatchObject([{ tipo: 'reembolso', reembolsoDeId: null }])
+  })
 })
 
 describe('categorias padronizadas', () => {

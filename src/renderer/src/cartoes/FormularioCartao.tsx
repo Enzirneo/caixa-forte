@@ -12,6 +12,7 @@ import { validarNovoCartao } from '../../../shared/cartoes/regras'
 import type { Cartao, NovoCartao } from '../../../shared/cartoes/tipos'
 import { CampoDeData } from '../componentes/CampoDeData'
 import { Selecao } from '../componentes/Selecao'
+import { CampoDeValor } from '../componentes/CampoDeValor'
 
 const OPCOES_DE_MODO = [
   { valor: 'dias-antes-do-vencimento', rotulo: 'Fecha X dias antes do vencimento' },
@@ -120,12 +121,7 @@ export function FormularioCartao({
       </div>
       <label>
         Limite (R$)
-        <input
-          inputMode="decimal"
-          placeholder="Opcional"
-          value={limiteTexto}
-          onChange={(e) => setLimiteTexto(e.target.value)}
-        />
+        <CampoDeValor valor={limiteTexto} aoMudar={setLimiteTexto} placeholder="Opcional" />
       </label>
       <p className="dica-de-importacao">
         Copie da fatura aberta no app do banco: o vencimento e a melhor data de compra. O app

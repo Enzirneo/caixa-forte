@@ -15,6 +15,8 @@ export interface NovoLancamento {
   data: string
   tipo: TipoLancamento
   categoria: string
+  // Só para reembolso: a despesa que está sendo devolvida, no todo ou em parte.
+  reembolsoDeId?: number | null
 }
 
 export interface LancamentoEditado extends NovoLancamento {
