@@ -11,7 +11,8 @@ import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
 import { CampoDeMes } from '../componentes/CampoDeMes'
 import { Selecao } from '../componentes/Selecao'
 import { CampoDeValor } from '../componentes/CampoDeValor'
-import { OpcaoDeCartao } from '../componentes/OpcaoDeCartao'
+import { CaixaDeSelecao } from '../componentes/CaixaDeSelecao'
+import { CamposDoCartao } from '../componentes/CamposDoCartao'
 
 const ROTULO_DO_TIPO: Record<TipoDeRecorrencia, string> = { receita: 'Receita', despesa: 'Despesa' }
 const DIA_PADRAO_DO_MES = '5'
@@ -89,86 +90,95 @@ export function FormularioRecorrencia({
       }
       onSubmit={enviar}
     >
-      <label>
-        Descrição
-        <input
-          placeholder="Ex.: Aluguel, Netflix, Salário"
-          value={descricao}
-          onChange={(e) => setDescricao(e.target.value)}
-        />
-      </label>
-      <label>
-        Valor (R$)
-        <CampoDeValor valor={valorTexto} aoMudar={setValorTexto} placeholder="0,00" />
-      </label>
-      <div className="campo">
-        <span className="rotulo-do-campo">Tipo</span>
-        <Selecao
-          valor={tipo}
-          opcoes={TIPOS_DE_RECORRENCIA.map((opcao) => ({
-            valor: opcao,
-            rotulo: ROTULO_DO_TIPO[opcao]
-          }))}
-          aoMudar={(valor) => setTipo(valor as TipoDeRecorrencia)}
-          rotuloDeAcessibilidade="Tipo"
-        />
-      </div>
-      <div className="campo">
-        <span className="rotulo-do-campo">Categoria</span>
-        <CampoDeCategoria
-          valor={categoria}
-          aoMudar={setCategoria}
-          sugestoes={categoriasSugeridas}
-        />
-      </div>
-      <label>
-        Todo dia
-        <input
-          type="number"
-          min={1}
-          max={31}
-          value={diaTexto}
-          onChange={(e) => setDiaTexto(e.target.value)}
-        />
-      </label>
-      <div className="campo">
-        <span className="rotulo-do-campo">Começa em</span>
-        <CampoDeMes
-          valor={mesDeInicio}
-          aoMudar={setMesDeInicio}
-          rotuloDeAcessibilidade="Começa em"
-        />
-      </div>
-      <div className="campo">
-        <span className="rotulo-do-campo">Termina em (opcional)</span>
-        <CampoDeMes
-          valor={mesDeFim}
-          aoMudar={setMesDeFim}
-          rotuloDeAcessibilidade="Termina em"
-          textoQuandoVazio="Sem término"
-          podeLimpar
-        />
-      </div>
-      {podeUsarCartao && (
-        <div className="opcoes-extras">
-          <OpcaoDeCartao
-            cartoes={cartoes}
-            ehDeCartao={ehDeCartao}
-            aoMudarEhDeCartao={setEhDeCartao}
-            cartaoEscolhido={cartao}
-            aoEscolherCartao={setCartaoEscolhidoId}
-            textoDaCaixa="Esta cobrança é de um cartão de crédito"
+      <div className="linha-em-colunas">
+        <label>
+          Descrição
+          <input
+            placeholder="Ex.: Aluguel, Netflix, Salário"
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+          />
+        </label>
+        <label>
+          Valor (R$)
+          <CampoDeValor valor={valorTexto} aoMudar={setValorTexto} placeholder="0,00" />
+        </label>
+        <div className="campo">
+          <span className="rotulo-do-campo">Tipo</span>
+          <Selecao
+            valor={tipo}
+            opcoes={TIPOS_DE_RECORRENCIA.map((opcao) => ({
+              valor: opcao,
+              rotulo: ROTULO_DO_TIPO[opcao]
+            }))}
+            aoMudar={(valor) => setTipo(valor as TipoDeRecorrencia)}
+            rotuloDeAcessibilidade="Tipo"
           />
         </div>
-      )}
-      <div className="acoes-formulario">
-        <button type="submit">{recorrenciaEmEdicao ? 'Salvar' : 'Adicionar'}</button>
-        {recorrenciaEmEdicao && (
-          <button type="button" className="secundario" onClick={aoCancelarEdicao}>
-            Cancelar
-          </button>
-        )}
+        <div className="campo">
+          <span className="rotulo-do-campo">Categoria</span>
+          <CampoDeCategoria
+            valor={categoria}
+            aoMudar={setCategoria}
+            sugestoes={categoriasSugeridas}
+          />
+        </div>
+        <label>
+          Todo dia
+          <input
+            type="number"
+            min={1}
+            max={31}
+            value={diaTexto}
+            onChange={(e) => setDiaTexto(e.target.value)}
+          />
+        </label>
       </div>
+
+      <div className="linha-em-colunas">
+        <div className="campo">
+          <span className="rotulo-do-campo">Começa em</span>
+          <CampoDeMes
+            valor={mesDeInicio}
+            aoMudar={setMesDeInicio}
+            rotuloDeAcessibilidade="Começa em"
+          />
+        </div>
+        <div className="campo">
+          <span className="rotulo-do-campo">Termina em (opcional)</span>
+          <CampoDeMes
+            valor={mesDeFim}
+            aoMudar={setMesDeFim}
+            rotuloDeAcessibilidade="Termina em"
+            textoQuandoVazio="Sem término"
+            podeLimpar
+          />
+        </div>
+        {cartao && (
+          <CamposDoCartao
+            cartoes={cartoes}
+            cartaoEscolhido={cartao}
+            aoEscolherCartao={setCartaoEscolhidoId}
+          />
+        )}
+        <div className="acoes-formulario">
+          <button type="submit">{recorrenciaEmEdicao ? 'Salvar' : 'Adicionar'}</button>
+          {recorrenciaEmEdicao && (
+            <button type="button" className="secundario" onClick={aoCancelarEdicao}>
+              Cancelar
+            </button>
+          )}
+        </div>
+      </div>
+
+      {podeUsarCartao && (
+        <CaixaDeSelecao
+          marcada={ehDeCartao}
+          aoMudar={setEhDeCartao}
+          texto="Esta cobrança é de um cartão de crédito"
+        />
+      )}
+
       {erros.length > 0 && (
         <ul className="erros">
           {erros.map((erro) => (

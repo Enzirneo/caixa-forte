@@ -22,7 +22,8 @@ import {
 import { validarNovoLancamento } from '../../../shared/lancamentos/validarNovoLancamento'
 import { CampoDeMes } from '../componentes/CampoDeMes'
 import { CampoDeEscolhaComBusca } from '../componentes/CampoDeEscolhaComBusca'
-import { OpcaoDeCartao } from '../componentes/OpcaoDeCartao'
+import { CaixaDeSelecao } from '../componentes/CaixaDeSelecao'
+import { CamposDoCartao } from '../componentes/CamposDoCartao'
 import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
 import { CampoDeData } from '../componentes/CampoDeData'
 import { Selecao } from '../componentes/Selecao'
@@ -121,8 +122,6 @@ export function FormularioLancamento({
       ? (cartoes.find((candidato) => String(candidato.id) === cartaoEscolhido) ?? cartoes[0])
       : undefined
 
-  const temOpcoesExtras = ehReembolso || podeUsarCartao || mostrarRecorrente
-
   const montarCompra = (cartaoDaCompra: Cartao): NovaCompraNoCartao => ({
     cartaoId: cartaoDaCompra.id,
     descricao,
@@ -199,6 +198,35 @@ export function FormularioLancamento({
     limparCamposDigitados()
   }
 
+  const acoes = (
+    <div className="acoes-formulario">
+      <button type="submit">{lancamentoEmEdicao ? 'Salvar' : 'Adicionar'}</button>
+      {lancamentoEmEdicao && (
+        <button type="button" className="secundario" onClick={aoCancelarEdicao}>
+          Cancelar
+        </button>
+      )}
+    </div>
+  )
+
+  // Os botões ficam sempre no canto de baixo à direita: na última linha do formulário.
+  const caixaDeOpcao = podeUsarCartao ? (
+    <CaixaDeSelecao
+      marcada={ehDeCartao}
+      aoMudar={setEhDeCartao}
+      texto="Esta despesa é de um cartão de crédito"
+    />
+  ) : mostrarRecorrente ? (
+    <CaixaDeSelecao
+      marcada={recorrente}
+      aoMudar={setRecorrente}
+      texto="Este lançamento se repete todo mês"
+    />
+  ) : null
+  const dicaDaRecorrencia = mostrarRecorrente
+    ? descreverEfeitoDaRecorrencia(recorrente, recorrenteInicial)
+    : ''
+
   return (
     <form
       className={
@@ -208,137 +236,123 @@ export function FormularioLancamento({
       }
       onSubmit={enviar}
     >
-      <label>
-        Descrição
-        <input value={descricao} onChange={(e) => setDescricao(e.target.value)} />
-      </label>
-      <label>
-        Valor (R$)
-        <CampoDeValor valor={valorTexto} aoMudar={setValorTexto} placeholder="0,00" />
-      </label>
-      <div className="campo campo-de-data">
-        <span className="rotulo-do-campo">Data</span>
-        <CampoDeData valor={data} aoMudar={setData} rotuloDeAcessibilidade="Data" />
+      <div className="linha-de-campos linha-principal">
+        <label>
+          Descrição
+          <input value={descricao} onChange={(e) => setDescricao(e.target.value)} />
+        </label>
+        <label>
+          Valor (R$)
+          <CampoDeValor valor={valorTexto} aoMudar={setValorTexto} placeholder="0,00" />
+        </label>
+        <div className="campo campo-de-data">
+          <span className="rotulo-do-campo">Data</span>
+          <CampoDeData valor={data} aoMudar={setData} rotuloDeAcessibilidade="Data" />
+        </div>
+        <div className="campo">
+          <span className="rotulo-do-campo">Tipo</span>
+          <Selecao
+            valor={tipo}
+            opcoes={TIPOS_LANCAMENTO.map((opcao) => ({
+              valor: opcao,
+              rotulo: ROTULO_DO_TIPO[opcao]
+            }))}
+            aoMudar={(valor) => setTipo(valor as TipoLancamento)}
+            rotuloDeAcessibilidade="Tipo"
+          />
+        </div>
+        <div className="campo">
+          <span className="rotulo-do-campo">Categoria</span>
+          <CampoDeCategoria
+            valor={categoria}
+            aoMudar={setCategoria}
+            sugestoes={categoriasSugeridas}
+          />
+        </div>
+        {!caixaDeOpcao && !ehReembolso && acoes}
       </div>
-      <div className="campo">
-        <span className="rotulo-do-campo">Tipo</span>
-        <Selecao
-          valor={tipo}
-          opcoes={TIPOS_LANCAMENTO.map((opcao) => ({
-            valor: opcao,
-            rotulo: ROTULO_DO_TIPO[opcao]
-          }))}
-          aoMudar={(valor) => setTipo(valor as TipoLancamento)}
-          rotuloDeAcessibilidade="Tipo"
-        />
-      </div>
-      <div className="campo">
-        <span className="rotulo-do-campo">Categoria</span>
-        <CampoDeCategoria
-          valor={categoria}
-          aoMudar={setCategoria}
-          sugestoes={categoriasSugeridas}
-        />
-      </div>
-      {temOpcoesExtras && (
-        <div className="opcoes-extras">
-          {ehReembolso && (
-            <div className="opcao-extra">
-              <span className="titulo-da-opcao">Reembolso de uma despesa</span>
-              <div className="campos-da-opcao">
-                <div className="campo campo-da-despesa-reembolsada">
-                  <span className="rotulo-do-campo">Despesa reembolsada</span>
-                  <CampoDeEscolhaComBusca
-                    valor={despesaReembolsadaId}
-                    opcoes={despesasReembolsaveis.map(({ despesa, reembolsavelCentavos }) => ({
-                      valor: String(despesa.id),
-                      rotulo: `${despesa.descricao} · ${formatarDataIsoComoBrasileira(despesa.data)} · falta devolver ${formatarCentavosComoReal(reembolsavelCentavos)}`
-                    }))}
-                    aoEscolher={escolherDespesaReembolsada}
-                    placeholder="Busque pela descrição da despesa"
-                    rotuloDeAcessibilidade="Despesa reembolsada"
-                  />
-                </div>
-                <p className="dica-da-opcao">
-                  {despesaEscolhida
-                    ? `Pode devolver até ${formatarCentavosComoReal(despesaEscolhida.reembolsavelCentavos)}. Para devolução parcial, digite um valor menor.`
-                    : 'O reembolso abate a despesa escolhida, no todo ou em parte, e fica datado neste dia.'}
-                </p>
-              </div>
-            </div>
-          )}
-          {podeUsarCartao && (
-            <OpcaoDeCartao
-              cartoes={cartoes}
-              ehDeCartao={ehDeCartao}
-              aoMudarEhDeCartao={setEhDeCartao}
-              cartaoEscolhido={cartao}
-              aoEscolherCartao={setCartaoEscolhido}
-              textoDaCaixa="Esta despesa é de um cartão de crédito"
-            >
-              <label className="campo-de-parcelas">
-                Parcelas
-                <input
-                  type="number"
-                  min={1}
-                  max={MAXIMO_DE_PARCELAS_NO_CAMPO}
-                  value={parcelasTexto}
-                  onChange={(e) => setParcelasTexto(e.target.value)}
-                />
-              </label>
-              {parcelasDaCompra.length > 0 && (
-                <p className="dica-da-opcao">
-                  {parcelasDaCompra.length}× de{' '}
-                  {formatarCentavosComoReal(parcelasDaCompra[0].lancamento.valorCentavos)} · a
-                  primeira parcela vence em{' '}
-                  {formatarDataIsoComoBrasileira(parcelasDaCompra[0].lancamento.data)}
-                  {parcelasDaCompra.length > 1 &&
-                    ` e a última em ${formatarDataIsoComoBrasileira(parcelasDaCompra[parcelasDaCompra.length - 1].lancamento.data)}`}
-                </p>
-              )}
-            </OpcaoDeCartao>
-          )}
-          {mostrarRecorrente && (
-            <div className="opcao-extra">
-              <label className="caixa-de-selecao">
-                <input
-                  type="checkbox"
-                  checked={recorrente}
-                  onChange={(e) => setRecorrente(e.target.checked)}
-                />
-                Este lançamento se repete todo mês
-              </label>
-              {(recorrente || recorrenteInicial) && (
-                <div className="campos-da-opcao">
-                  {recorrente && (
-                    <div className="campo">
-                      <span className="rotulo-do-campo">Repete até</span>
-                      <CampoDeMes
-                        valor={mesDeFim}
-                        aoMudar={setMesDeFim}
-                        rotuloDeAcessibilidade="Repete até"
-                        textoQuandoVazio="Até eu parar"
-                        podeLimpar
-                      />
-                    </div>
-                  )}
-                  <p className="dica-da-opcao">
-                    {descreverEfeitoDaRecorrencia(recorrente, recorrenteInicial)}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+
+      {ehReembolso && (
+        <div className="linha-de-campos linha-extra">
+          <div className="campo campo-da-despesa-reembolsada">
+            <span className="rotulo-do-campo">Despesa reembolsada</span>
+            <CampoDeEscolhaComBusca
+              valor={despesaReembolsadaId}
+              opcoes={despesasReembolsaveis.map(({ despesa, reembolsavelCentavos }) => ({
+                valor: String(despesa.id),
+                rotulo: `${despesa.descricao} · ${formatarDataIsoComoBrasileira(despesa.data)} · falta devolver ${formatarCentavosComoReal(reembolsavelCentavos)}`
+              }))}
+              aoEscolher={escolherDespesaReembolsada}
+              placeholder="Busque pela descrição da despesa"
+              rotuloDeAcessibilidade="Despesa reembolsada"
+            />
+            <p className="dica-da-opcao">
+              {despesaEscolhida
+                ? `Pode devolver até ${formatarCentavosComoReal(despesaEscolhida.reembolsavelCentavos)}. Para devolução parcial, digite um valor menor.`
+                : 'O reembolso abate a despesa escolhida, no todo ou em parte, e fica datado neste dia.'}
+            </p>
+          </div>
+          {acoes}
         </div>
       )}
-      <div className="acoes-formulario">
-        <button type="submit">{lancamentoEmEdicao ? 'Salvar' : 'Adicionar'}</button>
-        {lancamentoEmEdicao && (
-          <button type="button" className="secundario" onClick={aoCancelarEdicao}>
-            Cancelar
-          </button>
-        )}
-      </div>
+
+      {cartao && (
+        <div className="linha-de-campos linha-extra">
+          <CamposDoCartao
+            cartoes={cartoes}
+            cartaoEscolhido={cartao}
+            aoEscolherCartao={setCartaoEscolhido}
+          >
+            <label className="campo-de-parcelas">
+              Parcelas
+              <input
+                type="number"
+                min={1}
+                max={MAXIMO_DE_PARCELAS_NO_CAMPO}
+                value={parcelasTexto}
+                onChange={(e) => setParcelasTexto(e.target.value)}
+              />
+            </label>
+            {parcelasDaCompra.length > 0 && (
+              <p className="dica-da-opcao">
+                {parcelasDaCompra.length}× de{' '}
+                {formatarCentavosComoReal(parcelasDaCompra[0].lancamento.valorCentavos)} · a
+                primeira parcela vence em{' '}
+                {formatarDataIsoComoBrasileira(parcelasDaCompra[0].lancamento.data)}
+                {parcelasDaCompra.length > 1 &&
+                  ` e a última em ${formatarDataIsoComoBrasileira(parcelasDaCompra[parcelasDaCompra.length - 1].lancamento.data)}`}
+              </p>
+            )}
+          </CamposDoCartao>
+        </div>
+      )}
+
+      {mostrarRecorrente && recorrente && (
+        <div className="linha-de-campos linha-extra">
+          <div className="campo">
+            <span className="rotulo-do-campo">Repete até</span>
+            <CampoDeMes
+              valor={mesDeFim}
+              aoMudar={setMesDeFim}
+              rotuloDeAcessibilidade="Repete até"
+              textoQuandoVazio="Até eu parar"
+              podeLimpar
+            />
+          </div>
+          <p className="dica-da-opcao">{dicaDaRecorrencia}</p>
+        </div>
+      )}
+
+      {caixaDeOpcao && (
+        <div className="linha-final">
+          {caixaDeOpcao}
+          {mostrarRecorrente && !recorrente && dicaDaRecorrencia && (
+            <p className="dica-da-opcao">{dicaDaRecorrencia}</p>
+          )}
+          {acoes}
+        </div>
+      )}
+
       {erros.length > 0 && (
         <ul className="erros">
           {erros.map((erro) => (
