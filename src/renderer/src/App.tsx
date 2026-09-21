@@ -8,7 +8,7 @@ import {
   ReceiptText,
   Repeat
 } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { obterDataIsoDeHoje } from '../../shared/datas/dataIso'
 import { obterMesDaData } from '../../shared/datas/mes'
 import { formatarCentavosComoReal } from '../../shared/dinheiro/formatarCentavos'
@@ -61,8 +61,13 @@ const OPCOES_DE_NAVEGACAO: OpcaoDeNavegacao<Aba>[] = [
 
 function App(): React.JSX.Element {
   const { lancamentos, recarregar, criar, criarVarios, atualizar, excluir } = useLancamentos()
-  const recorrencias = useRecorrencias(recarregar)
   const cartoes = useCartoes(recarregar)
+  const { recarregarVinculos } = cartoes
+  const recarregarLancamentosECompras = useCallback(async (): Promise<void> => {
+    await recarregar()
+    await recarregarVinculos()
+  }, [recarregar, recarregarVinculos])
+  const recorrencias = useRecorrencias(recarregarLancamentosECompras)
   const { fechamentos, refazerFechamento } = useFechamentos()
   const investimentos = useInvestimentos()
   const tema = useTema()
@@ -161,6 +166,7 @@ function App(): React.JSX.Element {
               cartoes={cartoes.cartoes}
               vinculos={cartoes.vinculos}
               ajustes={cartoes.ajustes}
+              recorrencias={recorrencias.recorrencias}
               aoCriarCartao={cartoes.criarCartao}
               aoAtualizarCartao={cartoes.atualizarCartao}
               aoExcluirCartao={cartoes.excluirCartao}

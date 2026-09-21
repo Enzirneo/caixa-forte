@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   calcularDataDaOcorrencia,
+  calcularMesDeInicioAPartirDaData,
+  calcularPrimeiraOcorrencia,
   calcularMesDeInicioAPartirDoLancamento,
   calcularProximaOcorrencia,
   listarCompetenciasVencidas,
@@ -133,5 +135,26 @@ describe('calcularMesDeInicioAPartirDoLancamento', () => {
 
   it('atravessa a virada do ano', () => {
     expect(calcularMesDeInicioAPartirDoLancamento('2026-12-05', '2026-12-10')).toBe('2027-01')
+  })
+})
+
+describe('início por data', () => {
+  it('cobrança que ainda vai acontecer neste mês começa neste mês', () => {
+    expect(calcularMesDeInicioAPartirDaData('2026-09-20', 25)).toBe('2026-09')
+    expect(calcularPrimeiraOcorrencia('2026-09-20', 25)).toBe('2026-09-25')
+  })
+
+  it('cobrança de um dia que já passou começa no mês seguinte', () => {
+    expect(calcularMesDeInicioAPartirDaData('2026-09-20', 5)).toBe('2026-10')
+    expect(calcularPrimeiraOcorrencia('2026-09-20', 5)).toBe('2026-10-05')
+  })
+
+  it('começar exatamente no dia da cobrança conta o próprio dia', () => {
+    expect(calcularPrimeiraOcorrencia('2026-09-20', 20)).toBe('2026-09-20')
+  })
+
+  it('atravessa a virada do ano e respeita meses curtos', () => {
+    expect(calcularPrimeiraOcorrencia('2026-12-20', 5)).toBe('2027-01-05')
+    expect(calcularPrimeiraOcorrencia('2027-02-10', 31)).toBe('2027-02-28')
   })
 })

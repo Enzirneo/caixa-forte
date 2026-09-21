@@ -53,6 +53,22 @@ export function calcularProximaOcorrencia(
   return null
 }
 
+// A primeira cobrança é a primeira vez que o "todo dia" acontece a partir da data de início:
+// começar dia 20 com cobrança no dia 25 gera já no mês; com cobrança no dia 5, só no mês seguinte.
+export function calcularMesDeInicioAPartirDaData(dataDeInicio: string, diaDoMes: number): string {
+  const mesDaData = obterMesDaData(dataDeInicio)
+  return calcularDataDaOcorrencia(mesDaData, diaDoMes) >= dataDeInicio
+    ? mesDaData
+    : somarMeses(mesDaData, 1)
+}
+
+export function calcularPrimeiraOcorrencia(dataDeInicio: string, diaDoMes: number): string {
+  return calcularDataDaOcorrencia(
+    calcularMesDeInicioAPartirDaData(dataDeInicio, diaDoMes),
+    diaDoMes
+  )
+}
+
 // Ao transformar um lançamento em recorrente, o próprio lançamento já vale como a ocorrência do
 // mês dele. A regra começa no mês seguinte e nunca em meses passados, para não duplicar o que a
 // pessoa já lançou à mão.

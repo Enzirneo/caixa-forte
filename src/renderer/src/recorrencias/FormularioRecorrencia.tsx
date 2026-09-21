@@ -1,13 +1,18 @@
 import { useState, type FormEvent } from 'react'
-import { obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
-import { obterMesDaData } from '../../../shared/datas/mes'
+import { formatarDataIsoComoBrasileira, obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
 import { converterTextoEmCentavos } from '../../../shared/dinheiro/converterTextoEmCentavos'
 import { formatarCentavosParaCampo } from '../../../shared/dinheiro/formatarCentavosParaCampo'
 import { TIPOS_DE_RECORRENCIA, type TipoDeRecorrencia } from '../../../shared/lancamentos/tipos'
 import type { Cartao } from '../../../shared/cartoes/tipos'
-import { validarNovaRecorrencia } from '../../../shared/recorrencias/regras'
+import {
+  calcularDataDaOcorrencia,
+  calcularMesDeInicioAPartirDaData,
+  calcularPrimeiraOcorrencia,
+  validarNovaRecorrencia
+} from '../../../shared/recorrencias/regras'
 import type { NovaRecorrencia, Recorrencia } from '../../../shared/recorrencias/tipos'
 import { CampoDeCategoria } from '../componentes/CampoDeCategoria'
+import { CampoDeData } from '../componentes/CampoDeData'
 import { CampoDeMes } from '../componentes/CampoDeMes'
 import { Selecao } from '../componentes/Selecao'
 import { CampoDeValor } from '../componentes/CampoDeValor'
@@ -41,8 +46,10 @@ export function FormularioRecorrencia({
   const [diaTexto, setDiaTexto] = useState(
     recorrenciaEmEdicao ? String(recorrenciaEmEdicao.diaDoMes) : DIA_PADRAO_DO_MES
   )
-  const [mesDeInicio, setMesDeInicio] = useState(
-    recorrenciaEmEdicao?.mesDeInicio ?? obterMesDaData(obterDataIsoDeHoje())
+  const [dataDeInicio, setDataDeInicio] = useState(
+    recorrenciaEmEdicao
+      ? calcularDataDaOcorrencia(recorrenciaEmEdicao.mesDeInicio, recorrenciaEmEdicao.diaDoMes)
+      : obterDataIsoDeHoje()
   )
   const [mesDeFim, setMesDeFim] = useState(recorrenciaEmEdicao?.mesDeFim ?? '')
   const [ehDeCartao, setEhDeCartao] = useState(recorrenciaEmEdicao?.cartaoId != null)
@@ -50,6 +57,11 @@ export function FormularioRecorrencia({
     recorrenciaEmEdicao?.cartaoId != null ? String(recorrenciaEmEdicao.cartaoId) : ''
   )
   const [erros, setErros] = useState<string[]>([])
+
+  const primeiraCobranca =
+    dataDeInicio && Number.isInteger(Number(diaTexto)) && Number(diaTexto) >= 1
+      ? calcularPrimeiraOcorrencia(dataDeInicio, Number(diaTexto))
+      : null
 
   const podeUsarCartao = tipo === 'despesa' && cartoes.length > 0
   const cartao =
@@ -59,13 +71,14 @@ export function FormularioRecorrencia({
 
   const enviar = async (evento: FormEvent): Promise<void> => {
     evento.preventDefault()
+    const diaDoMes = Number(diaTexto)
     const novaRecorrencia: NovaRecorrencia = {
       descricao,
       valorCentavos: converterTextoEmCentavos(valorTexto) ?? 0,
       tipo,
       categoria,
-      diaDoMes: Number(diaTexto),
-      mesDeInicio,
+      diaDoMes,
+      mesDeInicio: dataDeInicio ? calcularMesDeInicioAPartirDaData(dataDeInicio, diaDoMes) : '',
       mesDeFim: mesDeFim === '' ? null : mesDeFim,
       cartaoId: cartao?.id ?? null
     }
@@ -138,9 +151,9 @@ export function FormularioRecorrencia({
       <div className="linha-em-colunas">
         <div className="campo">
           <span className="rotulo-do-campo">Começa em</span>
-          <CampoDeMes
-            valor={mesDeInicio}
-            aoMudar={setMesDeInicio}
+          <CampoDeData
+            valor={dataDeInicio}
+            aoMudar={setDataDeInicio}
             rotuloDeAcessibilidade="Começa em"
           />
         </div>
@@ -171,13 +184,20 @@ export function FormularioRecorrencia({
         </div>
       </div>
 
-      {podeUsarCartao && (
+      {(podeUsarCartao || primeiraCobranca) && (
         <div className="linha-de-caixas">
-          <CaixaDeSelecao
-            marcada={ehDeCartao}
-            aoMudar={setEhDeCartao}
-            texto="Esta cobrança é de um cartão de crédito"
-          />
+          {podeUsarCartao && (
+            <CaixaDeSelecao
+              marcada={ehDeCartao}
+              aoMudar={setEhDeCartao}
+              texto="Esta cobrança é de um cartão de crédito"
+            />
+          )}
+          {primeiraCobranca && (
+            <span className="dica-da-opcao">
+              Primeira cobrança: {formatarDataIsoComoBrasileira(primeiraCobranca)}
+            </span>
+          )}
         </div>
       )}
 

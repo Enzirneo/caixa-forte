@@ -6,6 +6,7 @@ import type {
   VinculoDeCompra
 } from '../../../shared/cartoes/tipos'
 import type { Lancamento } from '../../../shared/lancamentos/tipos'
+import type { Recorrencia } from '../../../shared/recorrencias/tipos'
 import { extrairMensagemDeErro } from '../compartilhado/extrairMensagemDeErro'
 import { FormularioCartao } from './FormularioCartao'
 import { PainelDoCartao } from './PainelDoCartao'
@@ -15,6 +16,7 @@ interface Props {
   cartoes: Cartao[]
   vinculos: VinculoDeCompra[]
   ajustes: AjusteDeFechamento[]
+  recorrencias: Recorrencia[]
   aoCriarCartao: (novoCartao: NovoCartao) => Promise<void>
   aoAtualizarCartao: (cartao: Cartao) => Promise<void>
   aoExcluirCartao: (id: number) => Promise<void>
@@ -28,6 +30,7 @@ export function PaginaCartoes({
   cartoes,
   vinculos,
   ajustes,
+  recorrencias,
   aoCriarCartao,
   aoAtualizarCartao,
   aoExcluirCartao,
@@ -76,6 +79,7 @@ export function PaginaCartoes({
           lancamentos={lancamentos}
           vinculos={vinculos}
           ajustes={ajustes.filter((ajuste) => ajuste.cartaoId === cartao.id)}
+          recorrencias={recorrencias.filter((recorrencia) => recorrencia.cartaoId === cartao.id)}
           aoEditar={setCartaoEmEdicao}
           aoExcluirCartao={excluirCartao}
           aoExcluirCompra={aoExcluirCompra}

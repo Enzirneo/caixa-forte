@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type {
   AjusteDeFechamento,
   Cartao,
@@ -16,6 +16,7 @@ interface UsoDeCartoes {
   excluirCartao: (id: number) => Promise<void>
   registrarCompra: (novaCompra: NovaCompraNoCartao) => Promise<void>
   excluirCompra: (grupoId: number) => Promise<void>
+  recarregarVinculos: () => Promise<void>
   salvarAjuste: (ajuste: AjusteDeFechamento) => Promise<void>
   removerAjuste: (cartaoId: number, mesDoVencimento: string) => Promise<void>
 }
@@ -47,9 +48,14 @@ export function useCartoes(aoAlterarLancamentos: () => Promise<void>): UsoDeCart
     setCartoes(await window.api.cartoes.listarCartoes())
   }
 
+  // Recorrências de cartão criam compras sozinhas: a lista de compras precisa ser relida.
+  const recarregarVinculos = useCallback(async (): Promise<void> => {
+    setVinculos(await window.api.cartoes.listarVinculos())
+  }, [])
+
   const recarregarComprasELancamentos = async (): Promise<void> => {
     await aoAlterarLancamentos()
-    setVinculos(await window.api.cartoes.listarVinculos())
+    await recarregarVinculos()
   }
 
   const criarCartao = async (novoCartao: NovoCartao): Promise<void> => {
@@ -96,6 +102,7 @@ export function useCartoes(aoAlterarLancamentos: () => Promise<void>): UsoDeCart
     excluirCartao,
     registrarCompra,
     excluirCompra,
+    recarregarVinculos,
     salvarAjuste,
     removerAjuste
   }

@@ -14,13 +14,16 @@ import {
 import type { AjusteDeFechamento, Cartao, VinculoDeCompra } from '../../../shared/cartoes/tipos'
 import type { Lancamento } from '../../../shared/lancamentos/tipos'
 import { BotaoExcluirComConfirmacao } from '../compartilhado/BotaoExcluirComConfirmacao'
+import type { Recorrencia } from '../../../shared/recorrencias/tipos'
 import { AjustesDeFechamento } from './AjustesDeFechamento'
+import { RecorrenciasDoCartao } from './RecorrenciasDoCartao'
 
 interface Props {
   cartao: Cartao
   lancamentos: Lancamento[]
   vinculos: VinculoDeCompra[]
   ajustes: AjusteDeFechamento[]
+  recorrencias: Recorrencia[]
   aoEditar: (cartao: Cartao) => void
   aoExcluirCartao: (id: number) => Promise<void>
   aoExcluirCompra: (grupoId: number) => Promise<void>
@@ -33,6 +36,7 @@ export function PainelDoCartao({
   lancamentos,
   vinculos,
   ajustes,
+  recorrencias,
   aoEditar,
   aoExcluirCartao,
   aoExcluirCompra,
@@ -118,6 +122,8 @@ export function PainelDoCartao({
           </tbody>
         </table>
       )}
+
+      <RecorrenciasDoCartao cartao={cartao} recorrencias={recorrencias} ajustes={ajustes} />
 
       <h3 className="titulo-da-secao">Compras</h3>
       {compras.length === 0 ? (
