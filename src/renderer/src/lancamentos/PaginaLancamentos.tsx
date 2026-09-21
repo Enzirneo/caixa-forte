@@ -24,12 +24,18 @@ import type {
   NovoLancamento
 } from '../../../shared/lancamentos/tipos'
 import { calcularMesDeInicioAPartirDoLancamento } from '../../../shared/recorrencias/regras'
-import type { DefinicaoDeRecorrencia, Recorrencia } from '../../../shared/recorrencias/tipos'
+import type {
+  DefinicaoDeRecorrencia,
+  NovaRecorrencia,
+  Recorrencia
+} from '../../../shared/recorrencias/tipos'
 import { FiltrosDeLancamentos } from './FiltrosDeLancamentos'
 import { FormularioLancamento } from './FormularioLancamento'
 import { ListaLancamentos } from './ListaLancamentos'
 import { ResumoDoMes } from './ResumoDoMes'
 import { SeletorDeMes } from './SeletorDeMes'
+
+const POSICAO_DO_DIA_NA_DATA = 8
 
 interface Props {
   lancamentos: Lancamento[]
@@ -41,11 +47,12 @@ interface Props {
   recorrencias: Recorrencia[]
   mesSelecionado: string
   aoMudarMes: (mes: string) => void
-  aoCriar: (novoLancamento: NovoLancamento) => Promise<void>
+  aoCriar: (novoLancamento: NovoLancamento) => Promise<Lancamento>
   aoAtualizar: (lancamento: LancamentoEditado) => Promise<void>
   aoExcluir: (id: number) => Promise<void>
   aoRegistrarCompraNoCartao: (compra: NovaCompraNoCartao) => Promise<void>
   aoDefinirRecorrente: (lancamentoId: number, definicao: DefinicaoDeRecorrencia) => Promise<void>
+  aoCriarRecorrencia: (novaRecorrencia: NovaRecorrencia) => Promise<void>
 }
 
 export function PaginaLancamentos({
@@ -62,7 +69,8 @@ export function PaginaLancamentos({
   aoAtualizar,
   aoExcluir,
   aoRegistrarCompraNoCartao,
-  aoDefinirRecorrente
+  aoDefinirRecorrente,
+  aoCriarRecorrencia
 }: Props): React.JSX.Element {
   const [lancamentoEmEdicao, setLancamentoEmEdicao] = useState<Lancamento | null>(null)
   const [filtro, setFiltro] = useState<FiltroDeLancamentos>(FILTRO_PADRAO_DE_LANCAMENTOS)
@@ -72,21 +80,14 @@ export function PaginaLancamentos({
   const lancamentosExibidos = aplicarFiltroDeLancamentos(lancamentosDoMes, filtro)
   const fechamentoDoMes = fechamentos.find((fechamento) => fechamento.mes === mesSelecionado)
 
-  // Reembolso e parcela de cartão não se repetem como um lançamento comum.
+  // Um lançamento novo pode se repetir; um já existente, só se não for reembolso nem parcela de cartão.
   const podeSerRecorrente =
-    lancamentoEmEdicao !== null &&
-    lancamentoEmEdicao.tipo !== 'reembolso' &&
-    !rotulosDeCompra.has(lancamentoEmEdicao.id)
+    lancamentoEmEdicao === null ||
+    (lancamentoEmEdicao.tipo !== 'reembolso' && !rotulosDeCompra.has(lancamentoEmEdicao.id))
   const recorrenciaDoLancamento = recorrencias.find(
     (recorrencia) => recorrencia.id === lancamentoEmEdicao?.recorrenciaId
   )
   const recorrenteInicial = recorrenciaDoLancamento?.ativa ?? false
-  const mesMinimoDeTermino =
-    recorrenciaDoLancamento?.mesDeInicio ??
-    calcularMesDeInicioAPartirDoLancamento(
-      lancamentoEmEdicao?.data ?? obterDataIsoDeHoje(),
-      obterDataIsoDeHoje()
-    )
 
   const salvar = async (
     novoLancamento: NovoLancamento,
@@ -98,10 +99,34 @@ export function PaginaLancamentos({
         await aoDefinirRecorrente(lancamentoEmEdicao.id, definicaoDeRecorrencia)
       }
     } else {
-      await aoCriar(novoLancamento)
+      const criado = await aoCriar(novoLancamento)
+      if (definicaoDeRecorrencia) await aoDefinirRecorrente(criado.id, definicaoDeRecorrencia)
     }
     setLancamentoEmEdicao(null)
     aoMudarMes(obterMesDaData(novoLancamento.data))
+  }
+
+  // Compra recorrente no cartão: a primeira já é lançada agora e a regra segue a partir do mês seguinte.
+  const registrarCompraNoCartao = async (
+    compra: NovaCompraNoCartao,
+    definicaoDeRecorrencia?: DefinicaoDeRecorrencia
+  ): Promise<void> => {
+    await aoRegistrarCompraNoCartao(compra)
+    if (!definicaoDeRecorrencia?.recorrente) return
+
+    await aoCriarRecorrencia({
+      descricao: compra.descricao.trim(),
+      valorCentavos: compra.valorTotalCentavos,
+      tipo: 'despesa',
+      categoria: compra.categoria,
+      diaDoMes: Number(compra.dataDaCompra.slice(POSICAO_DO_DIA_NA_DATA)),
+      mesDeInicio: calcularMesDeInicioAPartirDoLancamento(
+        compra.dataDaCompra,
+        obterDataIsoDeHoje()
+      ),
+      mesDeFim: definicaoDeRecorrencia.mesDeFim,
+      cartaoId: compra.cartaoId
+    })
   }
 
   return (
@@ -114,12 +139,12 @@ export function PaginaLancamentos({
           podeSerRecorrente={podeSerRecorrente}
           recorrenteInicial={recorrenteInicial}
           mesDeFimInicial={recorrenciaDoLancamento?.mesDeFim ?? ''}
-          mesMinimoDeTermino={mesMinimoDeTermino}
+          mesMinimoDeTermino={recorrenciaDoLancamento?.mesDeInicio ?? null}
           categoriasSugeridas={categoriasSugeridas}
           cartoes={cartoes}
           ajustesDeFechamento={ajustesDeFechamento}
           aoSalvar={salvar}
-          aoRegistrarNoCartao={aoRegistrarCompraNoCartao}
+          aoRegistrarNoCartao={registrarCompraNoCartao}
           aoCancelarEdicao={() => setLancamentoEmEdicao(null)}
         />
         <SeletorDeMes mes={mesSelecionado} aoMudar={aoMudarMes} />

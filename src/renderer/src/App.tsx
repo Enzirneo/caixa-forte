@@ -134,6 +134,7 @@ function App(): React.JSX.Element {
               ajustesDeFechamento={cartoes.ajustes}
               recorrencias={recorrencias.recorrencias}
               aoDefinirRecorrente={recorrencias.definirDoLancamento}
+              aoCriarRecorrencia={recorrencias.criar}
               aoRegistrarCompraNoCartao={cartoes.registrarCompra}
               mesSelecionado={mesSelecionado}
               aoMudarMes={setMesSelecionado}

@@ -172,11 +172,13 @@ export function FormularioRecorrencia({
       </div>
 
       {podeUsarCartao && (
-        <CaixaDeSelecao
-          marcada={ehDeCartao}
-          aoMudar={setEhDeCartao}
-          texto="Esta cobrança é de um cartão de crédito"
-        />
+        <div className="linha-de-caixas">
+          <CaixaDeSelecao
+            marcada={ehDeCartao}
+            aoMudar={setEhDeCartao}
+            texto="Esta cobrança é de um cartão de crédito"
+          />
+        </div>
       )}
 
       {erros.length > 0 && (

@@ -14,6 +14,7 @@ import {
   type TipoLancamento
 } from '../../../shared/lancamentos/tipos'
 import { formatarMesPorExtenso } from '../../../shared/datas/mes'
+import { calcularMesDeInicioAPartirDoLancamento } from '../../../shared/recorrencias/regras'
 import type { DefinicaoDeRecorrencia } from '../../../shared/recorrencias/tipos'
 import {
   listarDespesasReembolsaveis,
@@ -54,7 +55,7 @@ interface Props {
   podeSerRecorrente: boolean
   recorrenteInicial: boolean
   mesDeFimInicial: string
-  mesMinimoDeTermino: string
+  mesMinimoDeTermino: string | null
   categoriasSugeridas: string[]
   cartoes: Cartao[]
   ajustesDeFechamento: AjusteDeFechamento[]
@@ -62,7 +63,10 @@ interface Props {
     novoLancamento: NovoLancamento,
     definicaoDeRecorrencia?: DefinicaoDeRecorrencia
   ) => Promise<void>
-  aoRegistrarNoCartao: (compra: NovaCompraNoCartao) => Promise<void>
+  aoRegistrarNoCartao: (
+    compra: NovaCompraNoCartao,
+    definicaoDeRecorrencia?: DefinicaoDeRecorrencia
+  ) => Promise<void>
   aoCancelarEdicao: () => void
 }
 
@@ -98,7 +102,9 @@ export function FormularioLancamento({
   const [erros, setErros] = useState<string[]>([])
 
   const ehReembolso = tipo === 'reembolso'
-  const mostrarRecorrente = Boolean(lancamentoEmEdicao) && podeSerRecorrente && !ehReembolso
+  const mostrarRecorrente = podeSerRecorrente && !ehReembolso
+  const mesMinimo =
+    mesMinimoDeTermino ?? calcularMesDeInicioAPartirDoLancamento(data, obterDataIsoDeHoje())
   const despesasReembolsaveis = ehReembolso
     ? listarDespesasReembolsaveis(todosOsLancamentos, lancamentoEmEdicao?.id)
     : []
@@ -146,15 +152,28 @@ export function FormularioLancamento({
     setCategoria('')
     setParcelasTexto(PARCELAS_PADRAO)
     setDespesaReembolsadaId('')
+    setRecorrente(false)
+    setMesDeFim('')
   }
+
+  const validarTermino = (): string[] =>
+    mostrarRecorrente && recorrente && mesDeFim !== '' && mesDeFim < mesMinimo
+      ? [`O término não pode ser antes de ${formatarMesPorExtenso(mesMinimo)}.`]
+      : []
 
   const registrarNoCartao = async (cartaoDaCompra: Cartao): Promise<void> => {
     const compra = montarCompra(cartaoDaCompra)
-    const errosEncontrados = validarNovaCompra(compra)
+    const errosEncontrados = [
+      ...validarNovaCompra(compra),
+      ...validarTermino(),
+      ...(recorrente && compra.parcelas > 1
+        ? ['Uma compra parcelada não pode se repetir todo mês.']
+        : [])
+    ]
     setErros(errosEncontrados)
     if (errosEncontrados.length > 0) return
 
-    await aoRegistrarNoCartao(compra)
+    await aoRegistrarNoCartao(compra, montarDefinicaoDeRecorrencia())
     limparCamposDigitados()
   }
 
@@ -183,9 +202,7 @@ export function FormularioLancamento({
 
     const errosEncontrados = [
       ...validarNovoLancamento(novoLancamento),
-      ...(mostrarRecorrente && recorrente && mesDeFim !== '' && mesDeFim < mesMinimoDeTermino
-        ? [`O término não pode ser antes de ${formatarMesPorExtenso(mesMinimoDeTermino)}.`]
-        : []),
+      ...validarTermino(),
       ...(ehReembolso && !despesaReembolsadaId
         ? ['Escolha a despesa que foi reembolsada.']
         : validarReembolso(novoLancamento, todosOsLancamentos, lancamentoEmEdicao?.id))
@@ -209,23 +226,38 @@ export function FormularioLancamento({
     </div>
   )
 
-  // Os botões ficam sempre no canto de baixo à direita: na última linha do formulário.
-  const caixaDeOpcao = podeUsarCartao ? (
-    <CaixaDeSelecao
-      marcada={ehDeCartao}
-      aoMudar={setEhDeCartao}
-      texto="Esta despesa é de um cartão de crédito"
-    />
-  ) : mostrarRecorrente ? (
-    <CaixaDeSelecao
-      marcada={recorrente}
-      aoMudar={setRecorrente}
-      texto="Este lançamento se repete todo mês"
-    />
-  ) : null
-  const dicaDaRecorrencia = mostrarRecorrente
-    ? descreverEfeitoDaRecorrencia(recorrente, recorrenteInicial)
-    : ''
+  const camposDeRecorrencia = mostrarRecorrente && recorrente && (
+    <div className="campo">
+      <span className="rotulo-do-campo">Repete até</span>
+      <CampoDeMes
+        valor={mesDeFim}
+        aoMudar={setMesDeFim}
+        rotuloDeAcessibilidade="Repete até"
+        textoQuandoVazio="Até eu parar"
+        podeLimpar
+      />
+    </div>
+  )
+
+  // Só uma dica por linha, para não apertar: com cartão e repetição juntos, a prévia do cartão vence.
+  const dicaDaLinhaExtra = cartao
+    ? parcelasDaCompra.length > 0 &&
+      `${parcelasDaCompra.length}× de ${formatarCentavosComoReal(parcelasDaCompra[0].lancamento.valorCentavos)} · a primeira parcela vence em ${formatarDataIsoComoBrasileira(parcelasDaCompra[0].lancamento.data)}${
+        parcelasDaCompra.length > 1
+          ? ` e a última em ${formatarDataIsoComoBrasileira(parcelasDaCompra[parcelasDaCompra.length - 1].lancamento.data)}`
+          : ''
+      }`
+    : mostrarRecorrente
+      ? descreverEfeitoDaRecorrencia(recorrente, recorrenteInicial)
+      : ''
+
+  // Os botões ficam sempre na última linha de campos, no canto de baixo à direita.
+  // As caixinhas de opção ficam numa linha própria, abaixo de tudo.
+  const mostrarLinhaExtra = ehReembolso || Boolean(cartao) || (mostrarRecorrente && recorrente)
+  const temCaixas = podeUsarCartao || mostrarRecorrente
+  // Editando são dois botões: sem linha extra, vão para a linha das caixinhas para não apertar os campos.
+  const acoesNaLinhaDasCaixas = !mostrarLinhaExtra && Boolean(lancamentoEmEdicao) && temCaixas
+  const acoesNaLinhaPrincipal = !mostrarLinhaExtra && !acoesNaLinhaDasCaixas
 
   return (
     <form
@@ -236,7 +268,13 @@ export function FormularioLancamento({
       }
       onSubmit={enviar}
     >
-      <div className="linha-de-campos linha-principal">
+      <div
+        className={
+          acoesNaLinhaPrincipal
+            ? 'linha-em-colunas linha-do-lancamento com-acoes'
+            : 'linha-em-colunas linha-do-lancamento'
+        }
+      >
         <label>
           Descrição
           <input value={descricao} onChange={(e) => setDescricao(e.target.value)} />
@@ -245,7 +283,7 @@ export function FormularioLancamento({
           Valor (R$)
           <CampoDeValor valor={valorTexto} aoMudar={setValorTexto} placeholder="0,00" />
         </label>
-        <div className="campo campo-de-data">
+        <div className="campo">
           <span className="rotulo-do-campo">Data</span>
           <CampoDeData valor={data} aoMudar={setData} rotuloDeAcessibilidade="Data" />
         </div>
@@ -269,87 +307,77 @@ export function FormularioLancamento({
             sugestoes={categoriasSugeridas}
           />
         </div>
-        {!caixaDeOpcao && !ehReembolso && acoes}
+        {acoesNaLinhaPrincipal && acoes}
       </div>
 
-      {ehReembolso && (
-        <div className="linha-de-campos linha-extra">
-          <div className="campo campo-da-despesa-reembolsada">
-            <span className="rotulo-do-campo">Despesa reembolsada</span>
-            <CampoDeEscolhaComBusca
-              valor={despesaReembolsadaId}
-              opcoes={despesasReembolsaveis.map(({ despesa, reembolsavelCentavos }) => ({
-                valor: String(despesa.id),
-                rotulo: `${despesa.descricao} · ${formatarDataIsoComoBrasileira(despesa.data)} · falta devolver ${formatarCentavosComoReal(reembolsavelCentavos)}`
-              }))}
-              aoEscolher={escolherDespesaReembolsada}
-              placeholder="Busque pela descrição da despesa"
-              rotuloDeAcessibilidade="Despesa reembolsada"
-            />
-            <p className="dica-da-opcao">
-              {despesaEscolhida
-                ? `Pode devolver até ${formatarCentavosComoReal(despesaEscolhida.reembolsavelCentavos)}. Para devolução parcial, digite um valor menor.`
-                : 'O reembolso abate a despesa escolhida, no todo ou em parte, e fica datado neste dia.'}
-            </p>
-          </div>
-          {acoes}
-        </div>
-      )}
-
-      {cartao && (
-        <div className="linha-de-campos linha-extra">
-          <CamposDoCartao
-            cartoes={cartoes}
-            cartaoEscolhido={cartao}
-            aoEscolherCartao={setCartaoEscolhido}
-          >
-            <label className="campo-de-parcelas">
-              Parcelas
-              <input
-                type="number"
-                min={1}
-                max={MAXIMO_DE_PARCELAS_NO_CAMPO}
-                value={parcelasTexto}
-                onChange={(e) => setParcelasTexto(e.target.value)}
+      {mostrarLinhaExtra && (
+        <div className="linha-em-colunas linha-do-lancamento linha-extra">
+          {ehReembolso && (
+            <div className="campo campo-da-despesa-reembolsada">
+              <span className="rotulo-do-campo">Despesa reembolsada</span>
+              <CampoDeEscolhaComBusca
+                valor={despesaReembolsadaId}
+                opcoes={despesasReembolsaveis.map(({ despesa, reembolsavelCentavos }) => ({
+                  valor: String(despesa.id),
+                  rotulo: `${despesa.descricao} · ${formatarDataIsoComoBrasileira(despesa.data)} · falta devolver ${formatarCentavosComoReal(reembolsavelCentavos)}`
+                }))}
+                aoEscolher={escolherDespesaReembolsada}
+                placeholder="Busque pela descrição da despesa"
+                rotuloDeAcessibilidade="Despesa reembolsada"
               />
-            </label>
-            {parcelasDaCompra.length > 0 && (
               <p className="dica-da-opcao">
-                {parcelasDaCompra.length}× de{' '}
-                {formatarCentavosComoReal(parcelasDaCompra[0].lancamento.valorCentavos)} · a
-                primeira parcela vence em{' '}
-                {formatarDataIsoComoBrasileira(parcelasDaCompra[0].lancamento.data)}
-                {parcelasDaCompra.length > 1 &&
-                  ` e a última em ${formatarDataIsoComoBrasileira(parcelasDaCompra[parcelasDaCompra.length - 1].lancamento.data)}`}
+                {despesaEscolhida
+                  ? `Pode devolver até ${formatarCentavosComoReal(despesaEscolhida.reembolsavelCentavos)}. Para devolução parcial, digite um valor menor.`
+                  : 'O reembolso abate a despesa escolhida, no todo ou em parte, e fica datado neste dia.'}
               </p>
-            )}
-          </CamposDoCartao>
-        </div>
-      )}
-
-      {mostrarRecorrente && recorrente && (
-        <div className="linha-de-campos linha-extra">
-          <div className="campo">
-            <span className="rotulo-do-campo">Repete até</span>
-            <CampoDeMes
-              valor={mesDeFim}
-              aoMudar={setMesDeFim}
-              rotuloDeAcessibilidade="Repete até"
-              textoQuandoVazio="Até eu parar"
-              podeLimpar
-            />
-          </div>
-          <p className="dica-da-opcao">{dicaDaRecorrencia}</p>
-        </div>
-      )}
-
-      {caixaDeOpcao && (
-        <div className="linha-final">
-          {caixaDeOpcao}
-          {mostrarRecorrente && !recorrente && dicaDaRecorrencia && (
-            <p className="dica-da-opcao">{dicaDaRecorrencia}</p>
+            </div>
           )}
+          {cartao && (
+            <CamposDoCartao
+              cartoes={cartoes}
+              cartaoEscolhido={cartao}
+              aoEscolherCartao={setCartaoEscolhido}
+            >
+              <label className="campo-de-parcelas">
+                Parcelas
+                <input
+                  type="number"
+                  min={1}
+                  max={MAXIMO_DE_PARCELAS_NO_CAMPO}
+                  value={parcelasTexto}
+                  onChange={(e) => setParcelasTexto(e.target.value)}
+                />
+              </label>
+            </CamposDoCartao>
+          )}
+          {camposDeRecorrencia}
+          {dicaDaLinhaExtra && <p className="dica-da-opcao">{dicaDaLinhaExtra}</p>}
           {acoes}
+        </div>
+      )}
+
+      {temCaixas && (
+        <div className="linha-de-caixas">
+          {podeUsarCartao && (
+            <CaixaDeSelecao
+              marcada={ehDeCartao}
+              aoMudar={setEhDeCartao}
+              texto="Esta despesa é de um cartão de crédito"
+            />
+          )}
+          {mostrarRecorrente && (
+            <CaixaDeSelecao
+              marcada={recorrente}
+              aoMudar={setRecorrente}
+              texto="Este lançamento se repete todo mês"
+            />
+          )}
+          {mostrarRecorrente && !recorrente && recorrenteInicial && (
+            <span className="dica-da-opcao">
+              {descreverEfeitoDaRecorrencia(recorrente, recorrenteInicial)}
+            </span>
+          )}
+          {acoesNaLinhaDasCaixas && acoes}
         </div>
       )}
 
