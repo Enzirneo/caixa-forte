@@ -1113,6 +1113,23 @@ label {
   box-shadow: none;
 }
 
+.painel-do-cartao > header > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.painel-do-cartao .subtitulo-do-grafico {
+  display: block;
+}
+
+.detalhe-do-card {
+  display: block;
+  margin-top: 4px;
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .titulo-da-secao {
   margin: 4px 0 10px;
   font-size: 18px;

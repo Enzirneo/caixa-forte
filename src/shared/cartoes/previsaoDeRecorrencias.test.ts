@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Recorrencia } from '../recorrencias/tipos'
 import type { Cartao } from './tipos'
-import { juntarFaturasEPrevisoes } from './faturas'
+import { montarQuadroDeFaturas } from './faturas'
 import {
   calcularPrevistoDasRecorrencias,
   projetarFaturasDasRecorrencias
@@ -116,17 +116,69 @@ describe('projetarFaturasDasRecorrencias', () => {
   })
 })
 
-describe('juntarFaturasEPrevisoes', () => {
-  it('junta o já lançado com o previsto e ordena por mês', () => {
-    const faturas = [{ mes: '2026-10', totalCentavos: 6690, quantidadeDeItens: 1 }]
-    const previsoes = [
-      { mesDoVencimento: '2026-11', totalCentavos: 6990 },
-      { mesDoVencimento: '2026-10', totalCentavos: 500 }
-    ]
+describe('montarQuadroDeFaturas', () => {
+  const calcularVencimento = (mes: string): string => `${mes}-01`
+  const faturas = [{ mes: '2026-10', totalCentavos: 6690, quantidadeDeItens: 1 }]
+  const previsoes = [{ mesDoVencimento: '2026-11', totalCentavos: 17870 }]
 
-    expect(juntarFaturasEPrevisoes(faturas, previsoes)).toEqual([
-      { mes: '2026-10', totalCentavos: 6690, quantidadeDeItens: 1, previstoCentavos: 500 },
-      { mes: '2026-11', totalCentavos: 0, quantidadeDeItens: 0, previstoCentavos: 6990 }
+  it('mostra a fatura aberta e as próximas, com o lançado, o previsto e o total', () => {
+    const quadro = montarQuadroDeFaturas({
+      faturas,
+      previsoes,
+      mesDaFaturaAberta: '2026-10',
+      calcularVencimento,
+      hojeIso: '2026-09-20'
+    })
+
+    expect(quadro).toEqual([
+      {
+        mes: '2026-10',
+        vencimento: '2026-10-01',
+        situacao: 'aberta',
+        lancadoCentavos: 6690,
+        previstoCentavos: 0,
+        totalCentavos: 6690
+      },
+      {
+        mes: '2026-11',
+        vencimento: '2026-11-01',
+        situacao: 'futura',
+        lancadoCentavos: 0,
+        previstoCentavos: 17870,
+        totalCentavos: 17870
+      }
+    ])
+  })
+
+  it('a fatura aberta aparece mesmo sem nada', () => {
+    const quadro = montarQuadroDeFaturas({
+      faturas: [],
+      previsoes: [],
+      mesDaFaturaAberta: '2026-10',
+      calcularVencimento,
+      hojeIso: '2026-09-20'
+    })
+
+    expect(quadro.map((linha) => [linha.mes, linha.situacao, linha.totalCentavos])).toEqual([
+      ['2026-10', 'aberta', 0]
+    ])
+  })
+
+  it('a fatura já fechada e ainda não vencida continua aparecendo; a já vencida some', () => {
+    const quadro = montarQuadroDeFaturas({
+      faturas: [
+        { mes: '2026-09', totalCentavos: 1000, quantidadeDeItens: 1 },
+        { mes: '2026-10', totalCentavos: 6690, quantidadeDeItens: 1 }
+      ],
+      previsoes,
+      mesDaFaturaAberta: '2026-11',
+      calcularVencimento,
+      hojeIso: '2026-09-27'
+    })
+
+    expect(quadro.map((linha) => [linha.mes, linha.situacao])).toEqual([
+      ['2026-10', 'fechada'],
+      ['2026-11', 'aberta']
     ])
   })
 })

@@ -9,29 +9,62 @@ export interface Fatura {
   quantidadeDeItens: number
 }
 
-export interface FaturaComPrevisao extends Fatura {
+// Aberta: a que recebe as compras de hoje. Fechada: já não recebe compras, mas ainda não venceu.
+export type SituacaoDaFatura = 'aberta' | 'fechada' | 'futura'
+
+export interface LinhaDaFatura {
+  mes: string
+  vencimento: string
+  situacao: SituacaoDaFatura
+  lancadoCentavos: number
   previstoCentavos: number
+  totalCentavos: number
 }
 
-// Junta o que já foi comprado com o que as recorrências vão cobrar em cada fatura.
-export function juntarFaturasEPrevisoes(
-  faturas: Fatura[],
+interface DadosDoQuadroDeFaturas {
+  faturas: Fatura[]
   previsoes: { mesDoVencimento: string; totalCentavos: number }[]
-): FaturaComPrevisao[] {
+  mesDaFaturaAberta: string
+  calcularVencimento: (mesDoVencimento: string) => string
+  hojeIso: string
+}
+
+function classificarFatura(mes: string, mesDaFaturaAberta: string): SituacaoDaFatura {
+  if (mes === mesDaFaturaAberta) return 'aberta'
+  return mes < mesDaFaturaAberta ? 'fechada' : 'futura'
+}
+
+// As faturas que ainda não venceram: o que já foi lançado somado ao que as recorrências vão
+// cobrar. A aberta aparece sempre, mesmo vazia, para a pessoa saber em que fatura está.
+export function montarQuadroDeFaturas({
+  faturas,
+  previsoes,
+  mesDaFaturaAberta,
+  calcularVencimento,
+  hojeIso
+}: DadosDoQuadroDeFaturas): LinhaDaFatura[] {
   const meses = new Set([
+    mesDaFaturaAberta,
     ...faturas.map((fatura) => fatura.mes),
     ...previsoes.map((previsao) => previsao.mesDoVencimento)
   ])
-  return [...meses].sort().map((mes) => {
-    const fatura = faturas.find((candidata) => candidata.mes === mes)
-    const previsao = previsoes.find((candidata) => candidata.mesDoVencimento === mes)
-    return {
-      mes,
-      totalCentavos: fatura?.totalCentavos ?? 0,
-      quantidadeDeItens: fatura?.quantidadeDeItens ?? 0,
-      previstoCentavos: previsao?.totalCentavos ?? 0
-    }
-  })
+
+  return [...meses]
+    .sort()
+    .filter((mes) => mes === mesDaFaturaAberta || calcularVencimento(mes) >= hojeIso)
+    .map((mes) => {
+      const lancadoCentavos = faturas.find((fatura) => fatura.mes === mes)?.totalCentavos ?? 0
+      const previstoCentavos =
+        previsoes.find((previsao) => previsao.mesDoVencimento === mes)?.totalCentavos ?? 0
+      return {
+        mes,
+        vencimento: calcularVencimento(mes),
+        situacao: classificarFatura(mes, mesDaFaturaAberta),
+        lancadoCentavos,
+        previstoCentavos,
+        totalCentavos: lancadoCentavos + previstoCentavos
+      }
+    })
 }
 
 export interface CompraAgrupada {

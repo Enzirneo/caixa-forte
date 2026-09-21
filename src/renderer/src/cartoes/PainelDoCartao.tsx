@@ -1,13 +1,19 @@
-import { obterDataIsoDeHoje, formatarDataIsoComoBrasileira } from '../../../shared/datas/dataIso'
-import { formatarMesPorExtenso, obterMesDaData } from '../../../shared/datas/mes'
+import {
+  calcularDiferencaEmDias,
+  formatarDataIsoComoBrasileira,
+  obterDataIsoDeHoje
+} from '../../../shared/datas/dataIso'
+import { formatarMesPorExtenso } from '../../../shared/datas/mes'
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
 import {
   agruparComprasPorGrupo,
   calcularComprometidoNoCartao,
-  juntarFaturasEPrevisoes,
-  montarFaturas
+  montarFaturas,
+  montarQuadroDeFaturas,
+  type SituacaoDaFatura
 } from '../../../shared/cartoes/faturas'
 import {
+  calcularDataDoVencimento,
   calcularFaturaAberta,
   descreverRegraDoCiclo,
   indexarAjustesDoCartao
@@ -36,6 +42,17 @@ interface Props {
   aoRemoverAjuste: (cartaoId: number, mesDoVencimento: string) => Promise<void>
 }
 
+const ROTULO_DA_SITUACAO: Record<SituacaoDaFatura, string> = {
+  aberta: 'aberta',
+  fechada: 'fechada, aguarda o vencimento',
+  futura: ''
+}
+
+function descreverPrazo(dias: number): string {
+  if (dias <= 0) return 'hoje'
+  return dias === 1 ? 'amanhã' : `daqui a ${dias} dias`
+}
+
 export function PainelDoCartao({
   cartao,
   lancamentos,
@@ -49,26 +66,27 @@ export function PainelDoCartao({
   aoRemoverAjuste
 }: Props): React.JSX.Element {
   const hoje = obterDataIsoDeHoje()
-  const mesAtual = obterMesDaData(hoje)
-  const faturasAPartirDoMesAtual = juntarFaturasEPrevisoes(
-    montarFaturas(lancamentos, vinculos, cartao.id),
-    projetarFaturasDasRecorrencias(recorrencias, cartao, ajustes, hoje)
-  ).filter((fatura) => fatura.mes >= mesAtual)
+  const ajustesDoCartao = indexarAjustesDoCartao(ajustes, cartao.id)
+  const faturaAberta = calcularFaturaAberta(hoje, cartao, ajustesDoCartao)
+  const quadroDeFaturas = montarQuadroDeFaturas({
+    faturas: montarFaturas(lancamentos, vinculos, cartao.id),
+    previsoes: projetarFaturasDasRecorrencias(recorrencias, cartao, ajustes, hoje),
+    mesDaFaturaAberta: faturaAberta.mesDoVencimento,
+    calcularVencimento: (mes) => calcularDataDoVencimento(mes, cartao),
+    hojeIso: hoje
+  })
+  const totalDaFaturaAberta =
+    quadroDeFaturas.find((linha) => linha.situacao === 'aberta')?.totalCentavos ?? 0
   const compras = agruparComprasPorGrupo(
     lancamentos,
     vinculos.filter((vinculo) => vinculo.cartaoId === cartao.id)
   )
-  const comprometido = calcularComprometidoNoCartao(lancamentos, vinculos, cartao.id, hoje)
+  const comprasAVencer = calcularComprometidoNoCartao(lancamentos, vinculos, cartao.id, hoje)
   const previstoDasRecorrencias = calcularPrevistoDasRecorrencias(recorrencias, cartao.id, hoje)
-  const disponivel =
-    cartao.limiteCentavos === null
-      ? null
-      : cartao.limiteCentavos - comprometido - previstoDasRecorrencias
-  const faturaAberta = calcularFaturaAberta(
-    hoje,
-    cartao,
-    indexarAjustesDoCartao(ajustes, cartao.id)
-  )
+  // Tudo o que já é certo e ainda não foi pago: compras lançadas a vencer e a próxima cobrança
+  // de cada recorrência.
+  const comprometido = comprasAVencer + previstoDasRecorrencias
+  const disponivel = cartao.limiteCentavos === null ? null : cartao.limiteCentavos - comprometido
 
   return (
     <section className="cartao-de-grafico painel-do-cartao">
@@ -76,10 +94,12 @@ export function PainelDoCartao({
         <div>
           <h2>{cartao.nome}</h2>
           <span className="subtitulo-do-grafico">
-            {descreverRegraDoCiclo(cartao)} · fatura aberta vence em{' '}
-            {formatarDataIsoComoBrasileira(faturaAberta.vencimento)}, melhor data de compra{' '}
-            {formatarDataIsoComoBrasileira(faturaAberta.melhorDataDeCompra)}
+            Fatura aberta: {formatarMesPorExtenso(faturaAberta.mesDoVencimento)} · vence em{' '}
+            {formatarDataIsoComoBrasileira(faturaAberta.vencimento)} · a próxima abre em{' '}
+            {formatarDataIsoComoBrasileira(faturaAberta.melhorDataDeCompra)} (
+            {descreverPrazo(calcularDiferencaEmDias(hoje, faturaAberta.melhorDataDeCompra))})
           </span>
+          <span className="subtitulo-do-grafico">{descreverRegraDoCiclo(cartao)}</span>
         </div>
         <div className="acoes-de-dados">
           <button className="secundario" onClick={() => aoEditar(cartao)}>
@@ -91,15 +111,20 @@ export function PainelDoCartao({
 
       <div className="resumo-do-mes resumo-do-cartao">
         <div>
-          <span>Comprometido nas próximas faturas</span>
-          <strong className="despesa">{formatarCentavosComoReal(comprometido)}</strong>
+          <span>Fatura aberta · {formatarMesPorExtenso(faturaAberta.mesDoVencimento)}</span>
+          <strong className="despesa">{formatarCentavosComoReal(totalDaFaturaAberta)}</strong>
+          <small className="detalhe-do-card">
+            vence em {formatarDataIsoComoBrasileira(faturaAberta.vencimento)}
+          </small>
         </div>
-        {previstoDasRecorrencias > 0 && (
-          <div>
-            <span>Recorrências a cobrar</span>
-            <strong className="despesa">{formatarCentavosComoReal(previstoDasRecorrencias)}</strong>
-          </div>
-        )}
+        <div>
+          <span>Comprometido</span>
+          <strong className="despesa">{formatarCentavosComoReal(comprometido)}</strong>
+          <small className="detalhe-do-card">
+            {formatarCentavosComoReal(comprasAVencer)} em compras ·{' '}
+            {formatarCentavosComoReal(previstoDasRecorrencias)} em recorrências
+          </small>
+        </div>
         {cartao.limiteCentavos !== null && disponivel !== null && (
           <>
             <div>
@@ -117,34 +142,39 @@ export function PainelDoCartao({
       </div>
 
       <h3 className="titulo-da-secao">Faturas</h3>
-      {faturasAPartirDoMesAtual.length === 0 ? (
-        <p className="vazio-pequeno">Nenhuma fatura a vencer.</p>
-      ) : (
-        <table className="lista">
-          <thead>
-            <tr>
-              <th>Vencimento em</th>
-              <th className="numero">Itens</th>
-              <th className="numero">Já lançado</th>
-              <th className="numero">Recorrências previstas</th>
+      <table className="lista">
+        <thead>
+          <tr>
+            <th>Fatura</th>
+            <th>Vence em</th>
+            <th className="numero">Compras lançadas</th>
+            <th className="numero">Recorrências previstas</th>
+            <th className="numero">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {quadroDeFaturas.map((linha) => (
+            <tr key={linha.mes}>
+              <td>
+                {formatarMesPorExtenso(linha.mes)}
+                {ROTULO_DA_SITUACAO[linha.situacao] && (
+                  <span className="rotulo-de-compra">{ROTULO_DA_SITUACAO[linha.situacao]}</span>
+                )}
+              </td>
+              <td>{formatarDataIsoComoBrasileira(linha.vencimento)}</td>
+              <td className="numero">
+                {linha.lancadoCentavos > 0 ? formatarCentavosComoReal(linha.lancadoCentavos) : '—'}
+              </td>
+              <td className="numero">
+                {linha.previstoCentavos > 0
+                  ? formatarCentavosComoReal(linha.previstoCentavos)
+                  : '—'}
+              </td>
+              <td className="numero despesa">{formatarCentavosComoReal(linha.totalCentavos)}</td>
             </tr>
-          </thead>
-          <tbody>
-            {faturasAPartirDoMesAtual.map((fatura) => (
-              <tr key={fatura.mes}>
-                <td>{formatarMesPorExtenso(fatura.mes)}</td>
-                <td className="numero">{fatura.quantidadeDeItens}</td>
-                <td className="numero despesa">{formatarCentavosComoReal(fatura.totalCentavos)}</td>
-                <td className="numero">
-                  {fatura.previstoCentavos > 0
-                    ? formatarCentavosComoReal(fatura.previstoCentavos)
-                    : '—'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          ))}
+        </tbody>
+      </table>
 
       <RecorrenciasDoCartao cartao={cartao} recorrencias={recorrencias} ajustes={ajustes} />
 
