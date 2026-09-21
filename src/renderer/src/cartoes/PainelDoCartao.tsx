@@ -3,7 +3,7 @@ import {
   formatarDataIsoComoBrasileira,
   obterDataIsoDeHoje
 } from '../../../shared/datas/dataIso'
-import { formatarMesPorExtenso } from '../../../shared/datas/mes'
+import { formatarMesPorExtenso, somarMeses } from '../../../shared/datas/mes'
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
 import {
   agruparComprasPorGrupo,
@@ -77,6 +77,8 @@ export function PainelDoCartao({
   })
   const totalDaFaturaAberta =
     quadroDeFaturas.find((linha) => linha.situacao === 'aberta')?.totalCentavos ?? 0
+  const mesDaProximaFatura = somarMeses(faturaAberta.mesDoVencimento, 1)
+  const proximaFatura = quadroDeFaturas.find((linha) => linha.mes === mesDaProximaFatura)
   const compras = agruparComprasPorGrupo(
     lancamentos,
     vinculos.filter((vinculo) => vinculo.cartaoId === cartao.id)
@@ -115,6 +117,16 @@ export function PainelDoCartao({
           <strong className="despesa">{formatarCentavosComoReal(totalDaFaturaAberta)}</strong>
           <small className="detalhe-do-card">
             vence em {formatarDataIsoComoBrasileira(faturaAberta.vencimento)}
+          </small>
+        </div>
+        <div>
+          <span>Próxima fatura · {formatarMesPorExtenso(mesDaProximaFatura)}</span>
+          <strong className="despesa">
+            {formatarCentavosComoReal(proximaFatura?.totalCentavos ?? 0)}
+          </strong>
+          <small className="detalhe-do-card">
+            abre em {formatarDataIsoComoBrasileira(faturaAberta.melhorDataDeCompra)} · vence em{' '}
+            {formatarDataIsoComoBrasileira(calcularDataDoVencimento(mesDaProximaFatura, cartao))}
           </small>
         </div>
         <div>
