@@ -1640,3 +1640,32 @@ body {
     grid-column: 1 / -1;
   }
 }
+
+/* --- Tabela que rola por dentro: seis linhas visíveis e o cabeçalho sempre à mostra ---------- */
+
+.tabela-rolavel {
+  --altura-do-cabecalho: 44px;
+  --altura-da-linha: 50px;
+
+  max-height: calc(var(--altura-do-cabecalho) + 6 * var(--altura-da-linha));
+  margin-bottom: 22px;
+  overflow-y: auto;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-suave);
+}
+
+.tabela-rolavel .lista {
+  margin: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.tabela-rolavel .lista th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}

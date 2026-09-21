@@ -23,6 +23,7 @@ import type { Lancamento } from '../../../shared/lancamentos/tipos'
 import { BotaoExcluirComConfirmacao } from '../compartilhado/BotaoExcluirComConfirmacao'
 import { projetarFaturasDasRecorrencias } from '../../../shared/cartoes/previsaoDeRecorrencias'
 import type { Recorrencia } from '../../../shared/recorrencias/tipos'
+import { TabelaRolavel } from '../compartilhado/TabelaRolavel'
 import { AjustesDeFechamento } from './AjustesDeFechamento'
 import { RecorrenciasDoCartao } from './RecorrenciasDoCartao'
 
@@ -117,11 +118,6 @@ export function PainelDoCartao({
             vence em {formatarDataIsoComoBrasileira(faturaAberta.vencimento)}
           </small>
         </div>
-        <div>
-          <span>Comprometido</span>
-          <strong className="despesa">{formatarCentavosComoReal(comprometido)}</strong>
-          <small className="detalhe-do-card">faturas ainda não pagas</small>
-        </div>
         {cartao.limiteCentavos !== null && disponivel !== null && (
           <>
             <div>
@@ -139,39 +135,43 @@ export function PainelDoCartao({
       </div>
 
       <h3 className="titulo-da-secao">Faturas</h3>
-      <table className="lista">
-        <thead>
-          <tr>
-            <th>Fatura</th>
-            <th>Vence em</th>
-            <th className="numero">Compras lançadas</th>
-            <th className="numero">Recorrências a lançar</th>
-            <th className="numero">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {quadroDeFaturas.map((linha) => (
-            <tr key={linha.mes}>
-              <td>
-                {formatarMesPorExtenso(linha.mes)}
-                {ROTULO_DA_SITUACAO[linha.situacao] && (
-                  <span className="rotulo-de-compra">{ROTULO_DA_SITUACAO[linha.situacao]}</span>
-                )}
-              </td>
-              <td>{formatarDataIsoComoBrasileira(linha.vencimento)}</td>
-              <td className="numero">
-                {linha.lancadoCentavos > 0 ? formatarCentavosComoReal(linha.lancadoCentavos) : '—'}
-              </td>
-              <td className="numero">
-                {linha.previstoCentavos > 0
-                  ? formatarCentavosComoReal(linha.previstoCentavos)
-                  : '—'}
-              </td>
-              <td className="numero despesa">{formatarCentavosComoReal(linha.totalCentavos)}</td>
+      <TabelaRolavel>
+        <table className="lista">
+          <thead>
+            <tr>
+              <th>Fatura</th>
+              <th>Vence em</th>
+              <th className="numero">Compras lançadas</th>
+              <th className="numero">Recorrências a lançar</th>
+              <th className="numero">Total</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {quadroDeFaturas.map((linha) => (
+              <tr key={linha.mes}>
+                <td>
+                  {formatarMesPorExtenso(linha.mes)}
+                  {ROTULO_DA_SITUACAO[linha.situacao] && (
+                    <span className="rotulo-de-compra">{ROTULO_DA_SITUACAO[linha.situacao]}</span>
+                  )}
+                </td>
+                <td>{formatarDataIsoComoBrasileira(linha.vencimento)}</td>
+                <td className="numero">
+                  {linha.lancadoCentavos > 0
+                    ? formatarCentavosComoReal(linha.lancadoCentavos)
+                    : '—'}
+                </td>
+                <td className="numero">
+                  {linha.previstoCentavos > 0
+                    ? formatarCentavosComoReal(linha.previstoCentavos)
+                    : '—'}
+                </td>
+                <td className="numero despesa">{formatarCentavosComoReal(linha.totalCentavos)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </TabelaRolavel>
 
       <RecorrenciasDoCartao cartao={cartao} recorrencias={recorrencias} ajustes={ajustes} />
 
@@ -179,36 +179,40 @@ export function PainelDoCartao({
       {compras.length === 0 ? (
         <p className="vazio-pequeno">Nenhuma compra neste cartão.</p>
       ) : (
-        <table className="lista">
-          <thead>
-            <tr>
-              <th>Compra</th>
-              <th>Feita em</th>
-              <th className="numero">Parcelas</th>
-              <th>Vencimentos</th>
-              <th className="numero">Total</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {compras.map((compra) => (
-              <tr key={compra.grupoId}>
-                <td>{compra.descricao}</td>
-                <td>{formatarDataIsoComoBrasileira(compra.dataDaCompra)}</td>
-                <td className="numero">{compra.parcelasTotal}×</td>
-                <td>
-                  {formatarDataIsoComoBrasileira(compra.primeiroVencimento)}
-                  {compra.parcelasTotal > 1 &&
-                    ` a ${formatarDataIsoComoBrasileira(compra.ultimoVencimento)}`}
-                </td>
-                <td className="numero">{formatarCentavosComoReal(compra.totalCentavos)}</td>
-                <td className="acoes-linha">
-                  <BotaoExcluirComConfirmacao aoConfirmar={() => aoExcluirCompra(compra.grupoId)} />
-                </td>
+        <TabelaRolavel>
+          <table className="lista">
+            <thead>
+              <tr>
+                <th>Compra</th>
+                <th>Feita em</th>
+                <th className="numero">Parcelas</th>
+                <th>Vencimentos</th>
+                <th className="numero">Total</th>
+                <th />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {compras.map((compra) => (
+                <tr key={compra.grupoId}>
+                  <td>{compra.descricao}</td>
+                  <td>{formatarDataIsoComoBrasileira(compra.dataDaCompra)}</td>
+                  <td className="numero">{compra.parcelasTotal}×</td>
+                  <td>
+                    {formatarDataIsoComoBrasileira(compra.primeiroVencimento)}
+                    {compra.parcelasTotal > 1 &&
+                      ` a ${formatarDataIsoComoBrasileira(compra.ultimoVencimento)}`}
+                  </td>
+                  <td className="numero">{formatarCentavosComoReal(compra.totalCentavos)}</td>
+                  <td className="acoes-linha">
+                    <BotaoExcluirComConfirmacao
+                      aoConfirmar={() => aoExcluirCompra(compra.grupoId)}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TabelaRolavel>
       )}
 
       <AjustesDeFechamento
