@@ -14,6 +14,7 @@ import {
 import type { AjusteDeFechamento, Cartao, VinculoDeCompra } from '../../../shared/cartoes/tipos'
 import type { Lancamento } from '../../../shared/lancamentos/tipos'
 import { BotaoExcluirComConfirmacao } from '../compartilhado/BotaoExcluirComConfirmacao'
+import { calcularPrevistoDasRecorrencias } from '../../../shared/cartoes/previsaoDeRecorrencias'
 import type { Recorrencia } from '../../../shared/recorrencias/tipos'
 import { AjustesDeFechamento } from './AjustesDeFechamento'
 import { RecorrenciasDoCartao } from './RecorrenciasDoCartao'
@@ -53,6 +54,11 @@ export function PainelDoCartao({
     vinculos.filter((vinculo) => vinculo.cartaoId === cartao.id)
   )
   const comprometido = calcularComprometidoNoCartao(lancamentos, vinculos, cartao.id, hoje)
+  const previstoDasRecorrencias = calcularPrevistoDasRecorrencias(recorrencias, cartao.id, hoje)
+  const disponivel =
+    cartao.limiteCentavos === null
+      ? null
+      : cartao.limiteCentavos - comprometido - previstoDasRecorrencias
   const faturaAberta = calcularFaturaAberta(
     hoje,
     cartao,
@@ -83,7 +89,13 @@ export function PainelDoCartao({
           <span>Comprometido nas próximas faturas</span>
           <strong className="despesa">{formatarCentavosComoReal(comprometido)}</strong>
         </div>
-        {cartao.limiteCentavos !== null && (
+        {previstoDasRecorrencias > 0 && (
+          <div>
+            <span>Recorrências a cobrar</span>
+            <strong className="despesa">{formatarCentavosComoReal(previstoDasRecorrencias)}</strong>
+          </div>
+        )}
+        {cartao.limiteCentavos !== null && disponivel !== null && (
           <>
             <div>
               <span>Limite</span>
@@ -91,8 +103,8 @@ export function PainelDoCartao({
             </div>
             <div>
               <span>Disponível</span>
-              <strong className={cartao.limiteCentavos - comprometido < 0 ? 'despesa' : 'receita'}>
-                {formatarCentavosComoReal(cartao.limiteCentavos - comprometido)}
+              <strong className={disponivel < 0 ? 'despesa' : 'receita'}>
+                {formatarCentavosComoReal(disponivel)}
               </strong>
             </div>
           </>
