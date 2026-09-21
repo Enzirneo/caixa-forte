@@ -3,7 +3,7 @@ import {
   formatarDataIsoComoBrasileira,
   obterDataIsoDeHoje
 } from '../../../shared/datas/dataIso'
-import { formatarMesPorExtenso, somarMeses } from '../../../shared/datas/mes'
+import { formatarMesPorExtenso } from '../../../shared/datas/mes'
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
 import {
   agruparComprasPorGrupo,
@@ -21,10 +21,7 @@ import {
 import type { AjusteDeFechamento, Cartao, VinculoDeCompra } from '../../../shared/cartoes/tipos'
 import type { Lancamento } from '../../../shared/lancamentos/tipos'
 import { BotaoExcluirComConfirmacao } from '../compartilhado/BotaoExcluirComConfirmacao'
-import {
-  calcularPrevistoDasRecorrencias,
-  projetarFaturasDasRecorrencias
-} from '../../../shared/cartoes/previsaoDeRecorrencias'
+import { projetarFaturasDasRecorrencias } from '../../../shared/cartoes/previsaoDeRecorrencias'
 import type { Recorrencia } from '../../../shared/recorrencias/tipos'
 import { AjustesDeFechamento } from './AjustesDeFechamento'
 import { RecorrenciasDoCartao } from './RecorrenciasDoCartao'
@@ -77,17 +74,18 @@ export function PainelDoCartao({
   })
   const totalDaFaturaAberta =
     quadroDeFaturas.find((linha) => linha.situacao === 'aberta')?.totalCentavos ?? 0
-  const mesDaProximaFatura = somarMeses(faturaAberta.mesDoVencimento, 1)
-  const proximaFatura = quadroDeFaturas.find((linha) => linha.mes === mesDaProximaFatura)
   const compras = agruparComprasPorGrupo(
     lancamentos,
     vinculos.filter((vinculo) => vinculo.cartaoId === cartao.id)
   )
   const comprasAVencer = calcularComprometidoNoCartao(lancamentos, vinculos, cartao.id, hoje)
-  const previstoDasRecorrencias = calcularPrevistoDasRecorrencias(recorrencias, cartao.id, hoje)
-  // Tudo o que já é certo e ainda não foi pago: compras lançadas a vencer e a próxima cobrança
-  // de cada recorrência.
-  const comprometido = comprasAVencer + previstoDasRecorrencias
+  // Limite ocupado: compras e parcelas ainda não pagas, mais o que as recorrências ainda vão
+  // cobrar nas faturas abertas ou fechadas. A previsão de faturas futuras não entra.
+  const previstoNasFaturasEmAberto = quadroDeFaturas.reduce(
+    (total, linha) => total + linha.previstoCentavos,
+    0
+  )
+  const comprometido = comprasAVencer + previstoNasFaturasEmAberto
   const disponivel = cartao.limiteCentavos === null ? null : cartao.limiteCentavos - comprometido
 
   return (
@@ -120,22 +118,9 @@ export function PainelDoCartao({
           </small>
         </div>
         <div>
-          <span>Próxima fatura · {formatarMesPorExtenso(mesDaProximaFatura)}</span>
-          <strong className="despesa">
-            {formatarCentavosComoReal(proximaFatura?.totalCentavos ?? 0)}
-          </strong>
-          <small className="detalhe-do-card">
-            abre em {formatarDataIsoComoBrasileira(faturaAberta.melhorDataDeCompra)} · vence em{' '}
-            {formatarDataIsoComoBrasileira(calcularDataDoVencimento(mesDaProximaFatura, cartao))}
-          </small>
-        </div>
-        <div>
           <span>Comprometido</span>
           <strong className="despesa">{formatarCentavosComoReal(comprometido)}</strong>
-          <small className="detalhe-do-card">
-            {formatarCentavosComoReal(comprasAVencer)} em compras ·{' '}
-            {formatarCentavosComoReal(previstoDasRecorrencias)} em recorrências
-          </small>
+          <small className="detalhe-do-card">faturas ainda não pagas</small>
         </div>
         {cartao.limiteCentavos !== null && disponivel !== null && (
           <>
@@ -160,7 +145,7 @@ export function PainelDoCartao({
             <th>Fatura</th>
             <th>Vence em</th>
             <th className="numero">Compras lançadas</th>
-            <th className="numero">Recorrências previstas</th>
+            <th className="numero">Recorrências a lançar</th>
             <th className="numero">Total</th>
           </tr>
         </thead>

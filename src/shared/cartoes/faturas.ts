@@ -34,8 +34,10 @@ function classificarFatura(mes: string, mesDaFaturaAberta: string): SituacaoDaFa
   return mes < mesDaFaturaAberta ? 'fechada' : 'futura'
 }
 
-// As faturas que ainda não venceram: o que já foi lançado somado ao que as recorrências vão
-// cobrar. A aberta aparece sempre, mesmo vazia, para a pessoa saber em que fatura está.
+// As faturas que ainda não venceram: o que já foi lançado somado ao que as recorrências ainda vão
+// cobrar até o fechamento. A aberta aparece sempre, mesmo vazia. Faturas futuras só aparecem se já
+// têm compra de verdade (parcelas): a previsão de recorrência não vale para elas, porque uma
+// fatura que ainda não abriu não é "cobrada" ainda.
 export function montarQuadroDeFaturas({
   faturas,
   previsoes,
@@ -51,19 +53,26 @@ export function montarQuadroDeFaturas({
 
   return [...meses]
     .sort()
-    .filter((mes) => mes === mesDaFaturaAberta || calcularVencimento(mes) >= hojeIso)
     .map((mes) => {
+      const situacao = classificarFatura(mes, mesDaFaturaAberta)
       const lancadoCentavos = faturas.find((fatura) => fatura.mes === mes)?.totalCentavos ?? 0
       const previstoCentavos =
-        previsoes.find((previsao) => previsao.mesDoVencimento === mes)?.totalCentavos ?? 0
+        situacao === 'futura'
+          ? 0
+          : (previsoes.find((previsao) => previsao.mesDoVencimento === mes)?.totalCentavos ?? 0)
       return {
         mes,
         vencimento: calcularVencimento(mes),
-        situacao: classificarFatura(mes, mesDaFaturaAberta),
+        situacao,
         lancadoCentavos,
         previstoCentavos,
         totalCentavos: lancadoCentavos + previstoCentavos
       }
+    })
+    .filter((linha) => {
+      if (linha.situacao === 'aberta') return true
+      if (linha.situacao === 'futura') return linha.lancadoCentavos > 0
+      return calcularVencimento(linha.mes) >= hojeIso
     })
 }
 

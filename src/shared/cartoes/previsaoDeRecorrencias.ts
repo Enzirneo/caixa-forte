@@ -1,5 +1,5 @@
 import { obterMesDaData, somarMeses } from '../datas/mes'
-import { calcularDataDaOcorrencia, calcularProximaOcorrencia } from '../recorrencias/regras'
+import { calcularDataDaOcorrencia } from '../recorrencias/regras'
 import type { Recorrencia } from '../recorrencias/tipos'
 import { calcularMesDoVencimentoDaFatura, indexarAjustesDoCartao } from './cicloDaFatura'
 import type { AjusteDeFechamento, Cartao } from './tipos'
@@ -9,19 +9,6 @@ const MESES_PROJETADOS_A_FRENTE = 4
 export interface PrevisaoDeFatura {
   mesDoVencimento: string
   totalCentavos: number
-}
-
-// O que as recorrências ativas do cartão ainda vão cobrar: a próxima cobrança de cada uma. Ela
-// ainda não virou compra (senão já estaria em Comprometido), mas já é certa e ocupa o limite.
-export function calcularPrevistoDasRecorrencias(
-  recorrencias: Recorrencia[],
-  cartaoId: number,
-  hojeIso: string
-): number {
-  return recorrencias
-    .filter((recorrencia) => recorrencia.cartaoId === cartaoId && recorrencia.ativa)
-    .filter((recorrencia) => calcularProximaOcorrencia(recorrencia, hojeIso) !== null)
-    .reduce((total, recorrencia) => total + recorrencia.valorCentavos, 0)
 }
 
 function estaNoPeriodo(recorrencia: Recorrencia, mes: string): boolean {
