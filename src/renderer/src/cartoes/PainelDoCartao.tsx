@@ -4,6 +4,7 @@ import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCenta
 import {
   agruparComprasPorGrupo,
   calcularComprometidoNoCartao,
+  juntarFaturasEPrevisoes,
   montarFaturas
 } from '../../../shared/cartoes/faturas'
 import {
@@ -14,7 +15,10 @@ import {
 import type { AjusteDeFechamento, Cartao, VinculoDeCompra } from '../../../shared/cartoes/tipos'
 import type { Lancamento } from '../../../shared/lancamentos/tipos'
 import { BotaoExcluirComConfirmacao } from '../compartilhado/BotaoExcluirComConfirmacao'
-import { calcularPrevistoDasRecorrencias } from '../../../shared/cartoes/previsaoDeRecorrencias'
+import {
+  calcularPrevistoDasRecorrencias,
+  projetarFaturasDasRecorrencias
+} from '../../../shared/cartoes/previsaoDeRecorrencias'
 import type { Recorrencia } from '../../../shared/recorrencias/tipos'
 import { AjustesDeFechamento } from './AjustesDeFechamento'
 import { RecorrenciasDoCartao } from './RecorrenciasDoCartao'
@@ -46,9 +50,10 @@ export function PainelDoCartao({
 }: Props): React.JSX.Element {
   const hoje = obterDataIsoDeHoje()
   const mesAtual = obterMesDaData(hoje)
-  const faturasAPartirDoMesAtual = montarFaturas(lancamentos, vinculos, cartao.id).filter(
-    (fatura) => fatura.mes >= mesAtual
-  )
+  const faturasAPartirDoMesAtual = juntarFaturasEPrevisoes(
+    montarFaturas(lancamentos, vinculos, cartao.id),
+    projetarFaturasDasRecorrencias(recorrencias, cartao, ajustes, hoje)
+  ).filter((fatura) => fatura.mes >= mesAtual)
   const compras = agruparComprasPorGrupo(
     lancamentos,
     vinculos.filter((vinculo) => vinculo.cartaoId === cartao.id)
@@ -120,7 +125,8 @@ export function PainelDoCartao({
             <tr>
               <th>Vencimento em</th>
               <th className="numero">Itens</th>
-              <th className="numero">Total da fatura</th>
+              <th className="numero">Já lançado</th>
+              <th className="numero">Recorrências previstas</th>
             </tr>
           </thead>
           <tbody>
@@ -129,6 +135,11 @@ export function PainelDoCartao({
                 <td>{formatarMesPorExtenso(fatura.mes)}</td>
                 <td className="numero">{fatura.quantidadeDeItens}</td>
                 <td className="numero despesa">{formatarCentavosComoReal(fatura.totalCentavos)}</td>
+                <td className="numero">
+                  {fatura.previstoCentavos > 0
+                    ? formatarCentavosComoReal(fatura.previstoCentavos)
+                    : '—'}
+                </td>
               </tr>
             ))}
           </tbody>

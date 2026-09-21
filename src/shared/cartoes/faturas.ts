@@ -9,6 +9,31 @@ export interface Fatura {
   quantidadeDeItens: number
 }
 
+export interface FaturaComPrevisao extends Fatura {
+  previstoCentavos: number
+}
+
+// Junta o que já foi comprado com o que as recorrências vão cobrar em cada fatura.
+export function juntarFaturasEPrevisoes(
+  faturas: Fatura[],
+  previsoes: { mesDoVencimento: string; totalCentavos: number }[]
+): FaturaComPrevisao[] {
+  const meses = new Set([
+    ...faturas.map((fatura) => fatura.mes),
+    ...previsoes.map((previsao) => previsao.mesDoVencimento)
+  ])
+  return [...meses].sort().map((mes) => {
+    const fatura = faturas.find((candidata) => candidata.mes === mes)
+    const previsao = previsoes.find((candidata) => candidata.mesDoVencimento === mes)
+    return {
+      mes,
+      totalCentavos: fatura?.totalCentavos ?? 0,
+      quantidadeDeItens: fatura?.quantidadeDeItens ?? 0,
+      previstoCentavos: previsao?.totalCentavos ?? 0
+    }
+  })
+}
+
 export interface CompraAgrupada {
   grupoId: number
   cartaoId: number
