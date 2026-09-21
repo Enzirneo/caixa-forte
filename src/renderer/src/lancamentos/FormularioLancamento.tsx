@@ -325,11 +325,6 @@ export function FormularioLancamento({
                 placeholder="Busque pela descrição da despesa"
                 rotuloDeAcessibilidade="Despesa reembolsada"
               />
-              <p className="dica-da-opcao">
-                {despesaEscolhida
-                  ? `Pode devolver até ${formatarCentavosComoReal(despesaEscolhida.reembolsavelCentavos)}. Para devolução parcial, digite um valor menor.`
-                  : 'O reembolso abate a despesa escolhida, no todo ou em parte, e fica datado neste dia.'}
-              </p>
             </div>
           )}
           {cartao && (
@@ -353,6 +348,13 @@ export function FormularioLancamento({
           {camposDeRecorrencia}
           {dicaDaLinhaExtra && <p className="dica-da-opcao">{dicaDaLinhaExtra}</p>}
           {acoes}
+          {ehReembolso && (
+            <p className="dica-da-opcao dica-do-reembolso">
+              {despesaEscolhida
+                ? `Pode devolver até ${formatarCentavosComoReal(despesaEscolhida.reembolsavelCentavos)}. Para devolução parcial, digite um valor menor.`
+                : 'O reembolso abate a despesa escolhida, no todo ou em parte, e fica datado neste dia.'}
+            </p>
+          )}
         </div>
       )}
 

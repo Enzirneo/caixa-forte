@@ -1565,6 +1565,12 @@ body {
   grid-column: span 2;
 }
 
+.linha-extra > .dica-do-reembolso {
+  grid-column: 1 / 5;
+  grid-row: 2;
+  margin-top: -4px;
+}
+
 .linha-de-caixas {
   display: flex;
   flex-wrap: wrap;
