@@ -13,11 +13,42 @@ const OPCOES_DE_TEMA: { id: PreferenciaDeTema; rotulo: string; icone: LucideIcon
 interface Props {
   preferencia: PreferenciaDeTema
   aoEscolher: (preferencia: PreferenciaDeTema) => void
+  recolhida: boolean
+  aoExpandir: () => void
 }
 
-export function SeletorDeTema({ preferencia, aoEscolher }: Props): React.JSX.Element {
+export function SeletorDeTema({
+  preferencia,
+  aoEscolher,
+  recolhida,
+  aoExpandir
+}: Props): React.JSX.Element {
+  const opcaoAtual = OPCOES_DE_TEMA.find((opcao) => opcao.id === preferencia) ?? OPCOES_DE_TEMA[2]
+
+  if (recolhida) {
+    const IconeAtual = opcaoAtual.icone
+    return (
+      <button
+        className="botao-de-tema-recolhido"
+        onClick={aoExpandir}
+        title="Tema"
+        aria-label="Abrir opções de tema"
+      >
+        <IconeAtual size={TAMANHO_DO_ICONE} />
+      </button>
+    )
+  }
+
+  const indiceAtivo = OPCOES_DE_TEMA.findIndex((opcao) => opcao.id === preferencia)
+
   return (
-    <div className="seletor-de-tema" role="group" aria-label="Tema">
+    <div
+      className="seletor-de-tema"
+      role="group"
+      aria-label="Tema"
+      style={{ '--indice-ativo': indiceAtivo } as React.CSSProperties}
+    >
+      <div className="seletor-de-tema-indicador" aria-hidden="true" />
       {OPCOES_DE_TEMA.map(({ id, rotulo, icone: Icone }) => (
         <button
           key={id}

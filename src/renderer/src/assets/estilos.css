@@ -49,6 +49,7 @@
 
   /* Conteúdo com no máximo 1168px, centralizado; a barra de rolagem fica na borda da janela. */
   --margem-lateral: max(36px, calc((100% - 1168px) / 2));
+  --altura-barra-de-titulo: 40px;
 
   --raio: 22px;
   --raio-medio: 16px;
@@ -116,6 +117,37 @@ body {
   font-size: 14.5px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease;
+}
+
+/* Troca de tema: as superfícies acompanham a mudança das cores em vez de saltar direto. */
+body,
+.barra-lateral,
+.saldo,
+.marca-icone,
+.botao-de-recolher,
+.seletor-de-tema,
+.formulario,
+.cartao-de-dados,
+.cartao-de-grafico,
+.indicador,
+.resumo-do-mes > div,
+.lista,
+.tabela-rolavel,
+.popover,
+.confirmacao-de-restauracao,
+input,
+select,
+textarea,
+.selecao-botao {
+  transition:
+    background-color 0.35s ease,
+    background-image 0.35s ease,
+    border-color 0.35s ease,
+    color 0.35s ease,
+    box-shadow 0.35s ease;
 }
 
 h1,
@@ -158,16 +190,40 @@ code {
 
 /* --- Estrutura do aplicativo ---------------------------------------------- */
 
+.janela {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* A faixa de título fica no lugar da barra padrão do Windows: some do fluxo
+   de layout normal, mas continua arrastável pra mover/maximizar a janela. */
+.barra-de-titulo {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: var(--altura-barra-de-titulo);
+  padding-left: 12px;
+  color: #f7f4ea;
+  background: #0b3f2a;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  -webkit-app-region: drag;
+}
+
 .aplicativo {
   display: grid;
   grid-template-columns: 264px minmax(0, 1fr);
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
-  transition: grid-template-columns 0.25s ease;
+  transition: grid-template-columns 0.2s ease-out;
 }
 
 .aplicativo.recolhido {
-  grid-template-columns: 100px minmax(0, 1fr);
+  grid-template-columns: 80px minmax(0, 1fr);
 }
 
 .barra-lateral {
@@ -177,15 +233,19 @@ code {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  height: calc(100vh - 32px);
+  height: calc(100vh - var(--altura-barra-de-titulo) - 32px);
   padding: 20px 14px 16px;
   margin: 16px 0 16px 16px;
   overflow: hidden;
   color: var(--barra-texto);
   background: var(--barra-brilho), var(--barra-gradiente);
   border: 1px solid rgb(255 255 255 / 0.08);
+  /* Fixo: a barra colapsada fica estreita o bastante para que este mesmo raio
+     já encoste as duas pontas em cima e embaixo, sem precisar mudar de valor. */
   border-radius: 32px;
   box-shadow: 0 24px 48px -24px rgb(6 40 27 / 0.55);
+  transition: padding 0.2s ease-out;
+  transition: border-radius 0.2s ease-out;
 }
 
 .marca {
@@ -193,6 +253,7 @@ code {
   align-items: center;
   gap: 11px;
   padding: 0 6px;
+  transition: gap 0.2s ease-out;
 }
 
 .marca-icone {
@@ -201,27 +262,44 @@ code {
   place-items: center;
   width: 40px;
   height: 40px;
+  padding: 0;
   color: var(--destaque-texto);
   background: rgb(255 255 255 / 0.13);
   border: 1px solid rgb(255 255 255 / 0.2);
   border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.marca-icone:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.22);
+  filter: none;
 }
 
 .marca-nome {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  max-width: 160px;
+  overflow: hidden visible;
+  opacity: 1;
+  transition:
+    opacity 0.12s ease-out,
+    max-width 0.2s ease-out;
 }
 
 .marca-cursiva {
   color: #f7f4ea;
   font-family: var(--fonte-cursiva);
   font-size: 34px;
-  line-height: 0.85;
+  /* "normal" dá à linha a altura real da fonte, então o floreio do "C" cabe
+     inteiro dentro da própria caixa de texto em vez de estourar por cima. */
+  line-height: normal;
 }
 
 .marca-legenda {
   padding-left: 3px;
+  margin-top: -8px;
   color: rgb(247 244 234 / 0.72);
   font-size: 9.5px;
   font-weight: 700;
@@ -229,29 +307,10 @@ code {
   text-transform: uppercase;
 }
 
-.botao-de-recolher {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  margin-left: auto;
-  color: var(--barra-texto);
-  background: rgb(255 255 255 / 0.1);
-  border: none;
-  border-radius: 50%;
-}
-
-.botao-de-recolher:hover:not(:disabled) {
-  background: rgb(255 255 255 / 0.2);
-  filter: none;
-}
-
 .navegacao {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .item-de-navegacao {
@@ -259,13 +318,31 @@ code {
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 11px 16px;
+  height: 40px;
+  padding: 0 16px;
   color: var(--barra-texto);
   background: transparent;
   border: none;
   border-radius: 999px;
   font-weight: 600;
   text-align: left;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    padding 0.2s ease-out,
+    gap 0.2s ease-out,
+    width 0.2s ease-out,
+    height 0.2s ease-out;
+}
+
+.item-de-navegacao span {
+  overflow: hidden;
+  max-width: 160px;
+  opacity: 1;
+  white-space: nowrap;
+  transition:
+    opacity 0.12s ease-out,
+    max-width 0.2s ease-out;
 }
 
 .item-de-navegacao:hover:not(:disabled) {
@@ -279,8 +356,15 @@ code {
   box-shadow: 0 6px 16px -8px rgb(0 0 0 / 0.5);
 }
 
+.item-de-navegacao.ativo:hover:not(:disabled) {
+  background: var(--barra-ativo-fundo);
+  filter: brightness(0.96);
+}
+
 .seletor-de-tema {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 2px;
   padding: 4px;
   margin-top: auto;
@@ -288,50 +372,92 @@ code {
   border-radius: 999px;
 }
 
+.seletor-de-tema-indicador {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / 3);
+  height: calc(100% - 8px);
+  background: var(--barra-ativo-fundo);
+  border-radius: 999px;
+  transform: translateX(calc(var(--indice-ativo) * 100%));
+  transition: transform 0.28s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
 .opcao-de-tema {
+  position: relative;
+  z-index: 1;
   display: grid;
-  flex: 1;
   place-items: center;
   padding: 8px 0;
   color: var(--barra-texto);
   background: transparent;
   border: none;
   border-radius: 999px;
+  transition: color 0.18s ease;
 }
 
-.opcao-de-tema:hover:not(:disabled) {
-  background: rgb(255 255 255 / 0.1);
+.opcao-de-tema:hover:not(.ativa):not(:disabled) {
+  background: rgb(255 255 255 / 0.08);
+  filter: none;
+}
+
+.opcao-de-tema.ativa:hover:not(:disabled) {
+  background: transparent;
   filter: none;
 }
 
 .opcao-de-tema.ativa {
   color: var(--barra-ativo-texto);
-  background: var(--barra-ativo-fundo);
+  background: transparent;
 }
 
-.recolhido .marca {
-  flex-direction: column;
-  gap: 12px;
+.botao-de-tema-recolhido {
+  display: grid;
+  flex: none;
+  place-items: center;
+  align-self: center;
+  width: 40px;
+  height: 40px;
   padding: 0;
+  margin-top: auto;
+  color: var(--barra-texto);
+  background: rgb(0 0 0 / 0.24);
+  border: none;
+  border-radius: 50%;
+}
+
+.botao-de-tema-recolhido:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.14);
+  filter: none;
 }
 
 .recolhido .marca-nome,
 .recolhido .item-de-navegacao span {
-  display: none;
+  max-width: 0;
+  opacity: 0;
 }
 
-.recolhido .botao-de-recolher {
-  margin-left: 0;
+.recolhido .barra-lateral {
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+.recolhido .marca {
+  gap: 0;
+  justify-content: center;
+}
+
+.recolhido .navegacao {
+  align-items: center;
 }
 
 .recolhido .item-de-navegacao {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  gap: 0;
   justify-content: center;
-  padding: 12px 0;
-}
-
-.recolhido .seletor-de-tema {
-  flex-direction: column;
-  border-radius: 24px;
 }
 
 .conteudo {
@@ -342,11 +468,13 @@ code {
 }
 
 .topo {
+  position: relative;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 28px var(--margem-lateral) 0;
+  padding: 20px var(--margem-lateral) 0;
 }
 
 .topo h1 {
@@ -382,8 +510,10 @@ code {
 .pagina {
   flex: 1;
   min-height: 0;
-  padding: 24px var(--margem-lateral) 40px;
+  padding: 44px var(--margem-lateral) 40px;
   overflow-y: auto;
+  mask-image: linear-gradient(to bottom, transparent, transparent 12px, black 36px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, transparent 12px, black 36px);
 }
 
 /* --- Botões ---------------------------------------------------------------- */
@@ -1453,9 +1583,11 @@ body {
 .area-rolavel {
   flex: 1;
   min-height: 0;
-  padding: 2px 10px 24px 0;
+  padding: 14px 10px 24px 0;
   margin-right: -10px;
   overflow-y: auto;
+  mask-image: linear-gradient(to bottom, transparent, transparent 4px, black 12px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, transparent 4px, black 12px);
 }
 
 /* --- Barra de rolagem fina e verde ------------------------------------------------------- */

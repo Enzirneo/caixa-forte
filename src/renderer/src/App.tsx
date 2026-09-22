@@ -30,6 +30,7 @@ import { HistoricoMensal } from './lancamentos/HistoricoMensal'
 import { PaginaLancamentos } from './lancamentos/PaginaLancamentos'
 import { useFechamentos } from './lancamentos/useFechamentos'
 import { useLancamentos } from './lancamentos/useLancamentos'
+import { BarraDeTitulo } from './compartilhado/BarraDeTitulo'
 import { BarraLateral, type OpcaoDeNavegacao } from './navegacao/BarraLateral'
 import { PaginaPainel } from './painel/PaginaPainel'
 import { PaginaRecorrencias } from './recorrencias/PaginaRecorrencias'
@@ -107,112 +108,115 @@ function App(): React.JSX.Element {
   }
 
   return (
-    <div className={barraRecolhida ? 'aplicativo recolhido' : 'aplicativo'}>
-      <BarraLateral
-        opcoes={OPCOES_DE_NAVEGACAO}
-        opcaoAtiva={aba}
-        aoEscolher={setAba}
-        recolhida={barraRecolhida}
-        aoAlternarRecolhimento={alternarBarra}
-        preferenciaDeTema={tema.preferencia}
-        aoEscolherTema={tema.escolher}
-      />
+    <div className="janela">
+      <BarraDeTitulo />
+      <div className={barraRecolhida ? 'aplicativo recolhido' : 'aplicativo'}>
+        <BarraLateral
+          opcoes={OPCOES_DE_NAVEGACAO}
+          opcaoAtiva={aba}
+          aoEscolher={setAba}
+          recolhida={barraRecolhida}
+          aoAlternarRecolhimento={alternarBarra}
+          preferenciaDeTema={tema.preferencia}
+          aoEscolherTema={tema.escolher}
+        />
 
-      <div className="conteudo">
-        <header className="topo">
-          <h1>{tituloDaPagina}</h1>
-          <div className="saldo">
-            <span>Saldo da conta corrente</span>
-            <strong>{formatarCentavosComoReal(saldoDaContaCorrente)}</strong>
-          </div>
-        </header>
+        <div className="conteudo">
+          <header className="topo">
+            <h1>{tituloDaPagina}</h1>
+            <div className="saldo">
+              <span>Saldo da conta corrente</span>
+              <strong>{formatarCentavosComoReal(saldoDaContaCorrente)}</strong>
+            </div>
+          </header>
 
-        <main className="pagina">
-          {aba === 'painel' && (
-            <PaginaPainel
-              lancamentos={lancamentosDaContaCorrente}
-              todosOsLancamentos={lancamentos}
-              vinculosDeCartao={cartoes.vinculos}
-              destinos={investimentos.destinos}
-              movimentacoes={investimentos.movimentacoes}
-              mesSelecionado={mesSelecionado}
-              aoMudarMes={setMesSelecionado}
-            />
-          )}
-          {aba === 'lancamentos' && (
-            <PaginaLancamentos
-              lancamentos={lancamentos}
-              movimentacoes={investimentos.movimentacoes}
-              fechamentos={fechamentos}
-              rotulosDeCompra={rotulosDeCompra}
-              vinculos={cartoes.vinculos}
-              cartoes={cartoes.cartoes}
-              ajustesDeFechamento={cartoes.ajustes}
-              recorrencias={recorrencias.recorrencias}
-              aoDefinirRecorrente={recorrencias.definirDoLancamento}
-              aoCriarRecorrencia={recorrencias.criar}
-              aoRegistrarCompraNoCartao={cartoes.registrarCompra}
-              mesSelecionado={mesSelecionado}
-              aoMudarMes={setMesSelecionado}
-              aoCriar={criar}
-              aoAtualizar={atualizar}
-              aoExcluir={excluir}
-            />
-          )}
-          {aba === 'recorrentes' && (
-            <PaginaRecorrencias
-              lancamentos={lancamentos}
-              recorrencias={recorrencias.recorrencias}
-              cartoes={cartoes.cartoes}
-              vinculos={cartoes.vinculos}
-              aoCriar={recorrencias.criar}
-              aoAtualizar={recorrencias.atualizar}
-              aoDefinirAtiva={recorrencias.definirAtiva}
-              aoExcluir={recorrencias.excluir}
-            />
-          )}
-          {aba === 'cartoes' && (
-            <PaginaCartoes
-              lancamentos={lancamentos}
-              cartoes={cartoes.cartoes}
-              vinculos={cartoes.vinculos}
-              ajustes={cartoes.ajustes}
-              recorrencias={recorrencias.recorrencias}
-              aoCriarCartao={cartoes.criarCartao}
-              aoAtualizarCartao={cartoes.atualizarCartao}
-              aoExcluirCartao={cartoes.excluirCartao}
-              aoExcluirCompra={cartoes.excluirCompra}
-              aoSalvarAjuste={cartoes.salvarAjuste}
-              aoRemoverAjuste={cartoes.removerAjuste}
-            />
-          )}
-          {aba === 'historico' && (
-            <HistoricoMensal
-              resumos={resumirPorMes(
-                lancamentosDaContaCorrente,
-                obterMesDaData(obterDataIsoDeHoje())
-              )}
-              lancamentos={lancamentosDaContaCorrente}
-              movimentacoes={investimentos.movimentacoes}
-              fechamentos={fechamentos}
-              aoSelecionarMes={abrirMesNosLancamentos}
-              aoRefazerFechamento={refazerFechamento}
-            />
-          )}
-          {aba === 'dados' && <PaginaDados lancamentos={lancamentos} />}
-          {aba === 'importar' && (
-            <PaginaImportacao lancamentosExistentes={lancamentos} aoImportar={criarVarios} />
-          )}
-          {aba === 'investimentos' && (
-            <PaginaInvestimentos
-              destinos={investimentos.destinos}
-              movimentacoes={investimentos.movimentacoes}
-              aoCriarDestino={investimentos.criarDestino}
-              aoCriarMovimentacao={investimentos.criarMovimentacao}
-              aoExcluirMovimentacao={investimentos.excluirMovimentacao}
-            />
-          )}
-        </main>
+          <main className="pagina">
+            {aba === 'painel' && (
+              <PaginaPainel
+                lancamentos={lancamentosDaContaCorrente}
+                todosOsLancamentos={lancamentos}
+                vinculosDeCartao={cartoes.vinculos}
+                destinos={investimentos.destinos}
+                movimentacoes={investimentos.movimentacoes}
+                mesSelecionado={mesSelecionado}
+                aoMudarMes={setMesSelecionado}
+              />
+            )}
+            {aba === 'lancamentos' && (
+              <PaginaLancamentos
+                lancamentos={lancamentos}
+                movimentacoes={investimentos.movimentacoes}
+                fechamentos={fechamentos}
+                rotulosDeCompra={rotulosDeCompra}
+                vinculos={cartoes.vinculos}
+                cartoes={cartoes.cartoes}
+                ajustesDeFechamento={cartoes.ajustes}
+                recorrencias={recorrencias.recorrencias}
+                aoDefinirRecorrente={recorrencias.definirDoLancamento}
+                aoCriarRecorrencia={recorrencias.criar}
+                aoRegistrarCompraNoCartao={cartoes.registrarCompra}
+                mesSelecionado={mesSelecionado}
+                aoMudarMes={setMesSelecionado}
+                aoCriar={criar}
+                aoAtualizar={atualizar}
+                aoExcluir={excluir}
+              />
+            )}
+            {aba === 'recorrentes' && (
+              <PaginaRecorrencias
+                lancamentos={lancamentos}
+                recorrencias={recorrencias.recorrencias}
+                cartoes={cartoes.cartoes}
+                vinculos={cartoes.vinculos}
+                aoCriar={recorrencias.criar}
+                aoAtualizar={recorrencias.atualizar}
+                aoDefinirAtiva={recorrencias.definirAtiva}
+                aoExcluir={recorrencias.excluir}
+              />
+            )}
+            {aba === 'cartoes' && (
+              <PaginaCartoes
+                lancamentos={lancamentos}
+                cartoes={cartoes.cartoes}
+                vinculos={cartoes.vinculos}
+                ajustes={cartoes.ajustes}
+                recorrencias={recorrencias.recorrencias}
+                aoCriarCartao={cartoes.criarCartao}
+                aoAtualizarCartao={cartoes.atualizarCartao}
+                aoExcluirCartao={cartoes.excluirCartao}
+                aoExcluirCompra={cartoes.excluirCompra}
+                aoSalvarAjuste={cartoes.salvarAjuste}
+                aoRemoverAjuste={cartoes.removerAjuste}
+              />
+            )}
+            {aba === 'historico' && (
+              <HistoricoMensal
+                resumos={resumirPorMes(
+                  lancamentosDaContaCorrente,
+                  obterMesDaData(obterDataIsoDeHoje())
+                )}
+                lancamentos={lancamentosDaContaCorrente}
+                movimentacoes={investimentos.movimentacoes}
+                fechamentos={fechamentos}
+                aoSelecionarMes={abrirMesNosLancamentos}
+                aoRefazerFechamento={refazerFechamento}
+              />
+            )}
+            {aba === 'dados' && <PaginaDados lancamentos={lancamentos} />}
+            {aba === 'importar' && (
+              <PaginaImportacao lancamentosExistentes={lancamentos} aoImportar={criarVarios} />
+            )}
+            {aba === 'investimentos' && (
+              <PaginaInvestimentos
+                destinos={investimentos.destinos}
+                movimentacoes={investimentos.movimentacoes}
+                aoCriarDestino={investimentos.criarDestino}
+                aoCriarMovimentacao={investimentos.criarMovimentacao}
+                aoExcluirMovimentacao={investimentos.excluirMovimentacao}
+              />
+            )}
+          </main>
+        </div>
       </div>
     </div>
   )
