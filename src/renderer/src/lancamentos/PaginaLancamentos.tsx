@@ -23,6 +23,7 @@ import type {
   LancamentoEditado,
   NovoLancamento
 } from '../../../shared/lancamentos/tipos'
+import { calcularMesDoVencimentoDaPrimeiraParcela } from '../../../shared/cartoes/regras'
 import { calcularMesDeInicioAPartirDoLancamento } from '../../../shared/recorrencias/regras'
 import type {
   DefinicaoDeRecorrencia,
@@ -112,6 +113,12 @@ export function PaginaLancamentos({
     definicaoDeRecorrencia?: DefinicaoDeRecorrencia
   ): Promise<void> => {
     await aoRegistrarCompraNoCartao(compra)
+    // A compra é lançada na data do vencimento da fatura, não na data da compra: sem isso, a
+    // tela continuaria no mês atual e a compra pareceria não ter sido salva.
+    const cartaoDaCompra = cartoes.find((candidato) => candidato.id === compra.cartaoId)
+    if (cartaoDaCompra) {
+      aoMudarMes(calcularMesDoVencimentoDaPrimeiraParcela(compra.dataDaCompra, cartaoDaCompra))
+    }
     if (!definicaoDeRecorrencia?.recorrente) return
 
     await aoCriarRecorrencia({
