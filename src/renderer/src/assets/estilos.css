@@ -1647,7 +1647,7 @@ body {
   --altura-do-cabecalho: 44px;
   --altura-da-linha: 50px;
 
-  max-height: calc(var(--altura-do-cabecalho) + 6 * var(--altura-da-linha));
+  max-height: calc(var(--altura-do-cabecalho) + 8 * var(--altura-da-linha));
   margin-bottom: 22px;
   overflow-y: auto;
   background: var(--superficie);

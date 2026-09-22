@@ -17,6 +17,7 @@ interface LinhaCartao {
   dia_de_vencimento: number
   dias_antes_do_vencimento: number | null
   limite_centavos: number | null
+  paga_pela_conta_corrente: number
 }
 
 interface LinhaAjuste {
@@ -41,7 +42,8 @@ function converterLinhaEmCartao(linha: LinhaCartao): Cartao {
     diaDeFechamento: linha.dia_de_fechamento,
     diaDeVencimento: linha.dia_de_vencimento,
     diasAntesDoVencimento: linha.dias_antes_do_vencimento,
-    limiteCentavos: linha.limite_centavos
+    limiteCentavos: linha.limite_centavos,
+    pagaPelaContaCorrente: linha.paga_pela_conta_corrente === 1
   }
 }
 
@@ -62,10 +64,12 @@ export function inserirCartao(banco: Database, novo: NovoCartao): Cartao {
   const { lastInsertRowid } = banco
     .prepare(
       `INSERT INTO cartoes
-         (nome, dia_de_fechamento, dia_de_vencimento, dias_antes_do_vencimento, limite_centavos)
-       VALUES (@nome, @diaDeFechamento, @diaDeVencimento, @diasAntesDoVencimento, @limiteCentavos)`
+         (nome, dia_de_fechamento, dia_de_vencimento, dias_antes_do_vencimento, limite_centavos,
+          paga_pela_conta_corrente)
+       VALUES (@nome, @diaDeFechamento, @diaDeVencimento, @diasAntesDoVencimento, @limiteCentavos,
+               @pagaPelaContaCorrente)`
     )
-    .run(novo)
+    .run({ ...novo, pagaPelaContaCorrente: novo.pagaPelaContaCorrente ? 1 : 0 })
   return { id: Number(lastInsertRowid), ...novo }
 }
 
@@ -75,10 +79,11 @@ export function atualizarCartao(banco: Database, cartao: Cartao): void {
       `UPDATE cartoes
        SET nome = @nome, dia_de_fechamento = @diaDeFechamento,
            dia_de_vencimento = @diaDeVencimento,
-           dias_antes_do_vencimento = @diasAntesDoVencimento, limite_centavos = @limiteCentavos
+           dias_antes_do_vencimento = @diasAntesDoVencimento, limite_centavos = @limiteCentavos,
+           paga_pela_conta_corrente = @pagaPelaContaCorrente
        WHERE id = @id`
     )
-    .run(cartao)
+    .run({ ...cartao, pagaPelaContaCorrente: cartao.pagaPelaContaCorrente ? 1 : 0 })
   if (changes === 0) throw new Error(`Cartão ${cartao.id} não encontrado`)
 }
 

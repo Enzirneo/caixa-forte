@@ -13,6 +13,7 @@ import { obterDataIsoDeHoje } from '../../shared/datas/dataIso'
 import { obterMesDaData } from '../../shared/datas/mes'
 import { formatarCentavosComoReal } from '../../shared/dinheiro/formatarCentavos'
 import { calcularSaldoDaContaCorrente } from '../../shared/investimentos/calculos'
+import { filtrarLancamentosDaContaCorrente } from '../../shared/cartoes/contaCorrente'
 import { resumirPorMes } from '../../shared/lancamentos/resumo'
 import {
   lerDoArmazenamentoLocal,
@@ -77,8 +78,15 @@ function App(): React.JSX.Element {
     () => lerDoArmazenamentoLocal(CHAVE_DA_BARRA_RECOLHIDA) === VALOR_DA_BARRA_RECOLHIDA
   )
 
-  const saldoDaContaCorrente = calcularSaldoDaContaCorrente(
+  // Despesa de um cartão que não é pago por esta conta (ex.: cartão de outra pessoa) não entra
+  // no saldo nem nos totais: ela é só um registro informativo na lista e na aba Cartões.
+  const lancamentosDaContaCorrente = filtrarLancamentosDaContaCorrente(
     lancamentos,
+    cartoes.vinculos,
+    cartoes.cartoes
+  )
+  const saldoDaContaCorrente = calcularSaldoDaContaCorrente(
+    lancamentosDaContaCorrente,
     investimentos.movimentacoes,
     obterDataIsoDeHoje()
   )
@@ -122,7 +130,7 @@ function App(): React.JSX.Element {
         <main className="pagina">
           {aba === 'painel' && (
             <PaginaPainel
-              lancamentos={lancamentos}
+              lancamentos={lancamentosDaContaCorrente}
               destinos={investimentos.destinos}
               movimentacoes={investimentos.movimentacoes}
               mesSelecionado={mesSelecionado}
@@ -135,6 +143,7 @@ function App(): React.JSX.Element {
               movimentacoes={investimentos.movimentacoes}
               fechamentos={fechamentos}
               rotulosDeCompra={rotulosDeCompra}
+              vinculos={cartoes.vinculos}
               cartoes={cartoes.cartoes}
               ajustesDeFechamento={cartoes.ajustes}
               recorrencias={recorrencias.recorrencias}
@@ -177,8 +186,11 @@ function App(): React.JSX.Element {
           )}
           {aba === 'historico' && (
             <HistoricoMensal
-              resumos={resumirPorMes(lancamentos, obterMesDaData(obterDataIsoDeHoje()))}
-              lancamentos={lancamentos}
+              resumos={resumirPorMes(
+                lancamentosDaContaCorrente,
+                obterMesDaData(obterDataIsoDeHoje())
+              )}
+              lancamentos={lancamentosDaContaCorrente}
               movimentacoes={investimentos.movimentacoes}
               fechamentos={fechamentos}
               aoSelecionarMes={abrirMesNosLancamentos}

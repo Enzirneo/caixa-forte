@@ -18,12 +18,18 @@ import {
 import type { Cartao, NovaCompraNoCartao, VinculoDeCompra } from './tipos'
 
 // Fecha dia 25 e vence dia 5 do mês seguinte, como muitos cartões.
-const fechaDia25VenceDia5 = { diaDeFechamento: 25, diaDeVencimento: 5, diasAntesDoVencimento: null }
+const fechaDia25VenceDia5 = {
+  diaDeFechamento: 25,
+  diaDeVencimento: 5,
+  diasAntesDoVencimento: null,
+  pagaPelaContaCorrente: true
+}
 // Fecha dia 10 e vence dia 20 do mesmo mês.
 const fechaDia10VenceDia20 = {
   diaDeFechamento: 10,
   diaDeVencimento: 20,
-  diasAntesDoVencimento: null
+  diasAntesDoVencimento: null,
+  pagaPelaContaCorrente: true
 }
 
 const cartao: Cartao = { id: 1, nome: 'Nubank', ...fechaDia25VenceDia5, limiteCentavos: null }
@@ -169,6 +175,7 @@ describe('validações', () => {
         diaDeFechamento: 0,
         diaDeVencimento: 32,
         diasAntesDoVencimento: null,
+        pagaPelaContaCorrente: true,
         limiteCentavos: -1
       })
     ).toHaveLength(4)

@@ -29,6 +29,7 @@ const itau: Cartao = {
   diaDeFechamento: 24,
   diaDeVencimento: 1,
   diasAntesDoVencimento: 6,
+  pagaPelaContaCorrente: true,
   limiteCentavos: null
 }
 

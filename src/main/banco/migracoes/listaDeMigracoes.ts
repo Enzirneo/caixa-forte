@@ -148,5 +148,13 @@ export const listaDeMigracoes: Migracao[] = [
       ALTER TABLE lancamentos ADD COLUMN recorrencia_id INTEGER
         REFERENCES recorrencias (id) ON DELETE SET NULL;
     `
+  },
+  {
+    versao: 12,
+    descricao: 'marca se a fatura do cartão é paga pela conta corrente',
+    sql: `
+      ALTER TABLE cartoes ADD COLUMN paga_pela_conta_corrente INTEGER NOT NULL DEFAULT 1
+        CHECK (paga_pela_conta_corrente IN (0, 1));
+    `
   }
 ]

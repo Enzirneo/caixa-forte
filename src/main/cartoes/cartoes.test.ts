@@ -22,6 +22,7 @@ const nubank: NovoCartao = {
   diaDeFechamento: 25,
   diaDeVencimento: 5,
   diasAntesDoVencimento: null,
+  pagaPelaContaCorrente: true,
   limiteCentavos: 500000
 }
 
@@ -60,6 +61,7 @@ describe('cartões e compras parceladas', () => {
         diaDeFechamento: 25,
         diaDeVencimento: 5,
         diasAntesDoVencimento: null,
+        pagaPelaContaCorrente: true,
         limiteCentavos: null
       }
     ])
@@ -161,6 +163,7 @@ describe('cartões e compras parceladas', () => {
       diaDeFechamento: 24,
       diaDeVencimento: 1,
       diasAntesDoVencimento: 6,
+      pagaPelaContaCorrente: true,
       limiteCentavos: null
     }
 

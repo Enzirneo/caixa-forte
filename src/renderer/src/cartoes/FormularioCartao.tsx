@@ -13,6 +13,7 @@ import type { Cartao, NovoCartao } from '../../../shared/cartoes/tipos'
 import { CampoDeData } from '../componentes/CampoDeData'
 import { Selecao } from '../componentes/Selecao'
 import { CampoDeValor } from '../componentes/CampoDeValor'
+import { CaixaDeSelecao } from '../componentes/CaixaDeSelecao'
 
 const OPCOES_DE_MODO = [
   { valor: 'dias-antes-do-vencimento', rotulo: 'Fecha X dias antes do vencimento' },
@@ -45,6 +46,9 @@ export function FormularioCartao({
   const [limiteTexto, setLimiteTexto] = useState(
     cartaoEmEdicao?.limiteCentavos ? formatarCentavosParaCampo(cartaoEmEdicao.limiteCentavos) : ''
   )
+  const [pagaPelaContaCorrente, setPagaPelaContaCorrente] = useState(
+    cartaoEmEdicao?.pagaPelaContaCorrente ?? true
+  )
   const [erros, setErros] = useState<string[]>([])
 
   const limparCampos = (): void => {
@@ -70,7 +74,12 @@ export function FormularioCartao({
       return
     }
 
-    const novoCartao: NovoCartao = { nome, ...derivarRegraDoCiclo(datas), limiteCentavos }
+    const novoCartao: NovoCartao = {
+      nome,
+      ...derivarRegraDoCiclo(datas),
+      limiteCentavos,
+      pagaPelaContaCorrente
+    }
     const errosEncontrados = validarNovoCartao(novoCartao)
     setErros(errosEncontrados)
     if (errosEncontrados.length > 0) return
@@ -127,6 +136,13 @@ export function FormularioCartao({
         Copie da fatura aberta no app do banco: o vencimento e a melhor data de compra. O app
         calcula sozinho as faturas dos outros meses.
       </p>
+      <div className="linha-de-caixas">
+        <CaixaDeSelecao
+          marcada={pagaPelaContaCorrente}
+          aoMudar={setPagaPelaContaCorrente}
+          texto="A fatura deste cartão é paga pela minha conta corrente"
+        />
+      </div>
       <div className="acoes-formulario">
         <button type="submit">{cartaoEmEdicao ? 'Salvar' : 'Cadastrar cartão'}</button>
         {cartaoEmEdicao && (

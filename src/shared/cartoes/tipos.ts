@@ -9,6 +9,9 @@ export interface RegraDoCiclo {
 export interface NovoCartao extends RegraDoCiclo {
   nome: string
   limiteCentavos: number | null
+  // false para um cartão de outra pessoa: a despesa aparece nos Lançamentos e na aba Cartões,
+  // mas não entra no saldo da conta corrente nem nos totais de despesa.
+  pagaPelaContaCorrente: boolean
 }
 
 // Exceção do mês: quando o banco foge da regra, vale a melhor data de compra informada.

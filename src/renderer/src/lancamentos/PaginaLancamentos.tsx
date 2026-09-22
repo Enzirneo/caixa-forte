@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { listarCategoriasEmUso } from '../../../shared/categorias/nomeDaCategoria'
-import type { AjusteDeFechamento, Cartao, NovaCompraNoCartao } from '../../../shared/cartoes/tipos'
+import { filtrarLancamentosDaContaCorrente } from '../../../shared/cartoes/contaCorrente'
+import type {
+  AjusteDeFechamento,
+  Cartao,
+  NovaCompraNoCartao,
+  VinculoDeCompra
+} from '../../../shared/cartoes/tipos'
 import {
   converterTimestampDoBancoEmDataIsoLocal,
   formatarDataIsoComoBrasileira,
@@ -43,6 +49,7 @@ interface Props {
   movimentacoes: Movimentacao[]
   fechamentos: FechamentoMes[]
   rotulosDeCompra: Map<number, string>
+  vinculos: VinculoDeCompra[]
   cartoes: Cartao[]
   ajustesDeFechamento: AjusteDeFechamento[]
   recorrencias: Recorrencia[]
@@ -61,6 +68,7 @@ export function PaginaLancamentos({
   movimentacoes,
   fechamentos,
   rotulosDeCompra,
+  vinculos,
   cartoes,
   ajustesDeFechamento,
   recorrencias,
@@ -79,6 +87,13 @@ export function PaginaLancamentos({
   const categoriasSugeridas = listarCategoriasEmUso(lancamentos)
   const lancamentosDoMes = filtrarPorMes(lancamentos, mesSelecionado)
   const lancamentosExibidos = aplicarFiltroDeLancamentos(lancamentosDoMes, filtro)
+  // O resumo (Despesas, Saldo do mês) é só da conta corrente: despesa de cartão de outra pessoa
+  // não entra, mas continua aparecendo na lista acima.
+  const lancamentosDoMesNaContaCorrente = filtrarLancamentosDaContaCorrente(
+    lancamentosDoMes,
+    vinculos,
+    cartoes
+  )
   const fechamentoDoMes = fechamentos.find((fechamento) => fechamento.mes === mesSelecionado)
 
   // Um lançamento novo pode se repetir; um já existente, só se não for reembolso nem parcela de cartão.
@@ -168,7 +183,7 @@ export function PaginaLancamentos({
           </p>
         )}
         <ResumoDoMes
-          resumo={calcularResumo(lancamentosDoMes)}
+          resumo={calcularResumo(lancamentosDoMesNaContaCorrente)}
           guardadoNoMesCentavos={calcularGuardadoNoMes(movimentacoes, mesSelecionado)}
         />
         <FiltrosDeLancamentos filtro={filtro} aoMudar={setFiltro} />
