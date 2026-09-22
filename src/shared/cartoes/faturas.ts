@@ -9,6 +9,16 @@ export interface Fatura {
   quantidadeDeItens: number
 }
 
+// Só os lançamentos que são compra de algum cartão (têm vínculo) — para os gráficos do cartão no
+// painel, que mostram o uso do cartão à parte da conta corrente, não importa quem paga a fatura.
+export function filtrarLancamentosDeCartao(
+  lancamentos: Lancamento[],
+  vinculos: VinculoDeCompra[]
+): Lancamento[] {
+  const idsDeCompra = new Set(vinculos.map((vinculo) => vinculo.lancamentoId))
+  return lancamentos.filter((lancamento) => idsDeCompra.has(lancamento.id))
+}
+
 // Aberta: a que recebe as compras de hoje. Fechada: já não recebe compras, mas ainda não venceu.
 export type SituacaoDaFatura = 'aberta' | 'fechada' | 'futura'
 

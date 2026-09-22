@@ -1,3 +1,5 @@
+import { filtrarLancamentosDeCartao } from '../../../shared/cartoes/faturas'
+import type { VinculoDeCompra } from '../../../shared/cartoes/tipos'
 import { obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
 import { formatarMesPorExtenso, somarMeses } from '../../../shared/datas/mes'
 import {
@@ -26,6 +28,10 @@ const QUANTIDADE_DE_MESES_NOS_GRAFICOS = 6
 
 interface Props {
   lancamentos: Lancamento[]
+  // Sem filtrar pela conta corrente: os gráficos do cartão mostram todo uso do cartão, mesmo o
+  // que não é pago pela própria conta.
+  todosOsLancamentos: Lancamento[]
+  vinculosDeCartao: VinculoDeCompra[]
   destinos: Destino[]
   movimentacoes: Movimentacao[]
   mesSelecionado: string
@@ -34,6 +40,8 @@ interface Props {
 
 export function PaginaPainel({
   lancamentos,
+  todosOsLancamentos,
+  vinculosDeCartao,
   destinos,
   movimentacoes,
   mesSelecionado,
@@ -56,6 +64,13 @@ export function PaginaPainel({
     QUANTIDADE_DE_MESES_NOS_GRAFICOS
   )
   const fatiasDeCategoria = agruparDespesasPorCategoria(lancamentos, mesSelecionado)
+  const lancamentosDeCartao = filtrarLancamentosDeCartao(todosOsLancamentos, vinculosDeCartao)
+  const serieMensalDoCartao = montarSerieMensal(
+    lancamentosDeCartao,
+    mesSelecionado,
+    QUANTIDADE_DE_MESES_NOS_GRAFICOS
+  )
+  const fatiasDeCategoriaDoCartao = agruparDespesasPorCategoria(lancamentosDeCartao, mesSelecionado)
   const seriePatrimonio = montarSerieDoPatrimonio(
     destinos,
     movimentacoes,
@@ -139,6 +154,37 @@ export function PaginaPainel({
             <GraficoDeRosca fatias={fatiasDeCategoria} />
           ) : (
             <p className="vazio">Sem despesas neste mês.</p>
+          )}
+        </section>
+      </div>
+
+      <div className="painel-graficos">
+        <section className="cartao-de-grafico painel-largo">
+          <header>
+            <h2>Despesas no cartão</h2>
+            <div className="legenda-em-linha">
+              <span>
+                <i className="legenda-cor legenda-despesa" />
+                Despesas
+              </span>
+            </div>
+          </header>
+          {lancamentosDeCartao.length > 0 ? (
+            <GraficoDeBarrasMensais pontos={serieMensalDoCartao} />
+          ) : (
+            <p className="vazio">Nenhuma compra no cartão ainda.</p>
+          )}
+        </section>
+
+        <section className="cartao-de-grafico">
+          <header>
+            <h2>Despesas no cartão por categoria</h2>
+            <span className="subtitulo-do-grafico">{formatarMesPorExtenso(mesSelecionado)}</span>
+          </header>
+          {fatiasDeCategoriaDoCartao.length > 0 ? (
+            <GraficoDeRosca fatias={fatiasDeCategoriaDoCartao} />
+          ) : (
+            <p className="vazio">Sem despesas no cartão neste mês.</p>
           )}
         </section>
       </div>

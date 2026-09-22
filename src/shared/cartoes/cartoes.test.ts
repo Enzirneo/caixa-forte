@@ -3,6 +3,7 @@ import type { Lancamento } from '../lancamentos/tipos'
 import {
   agruparComprasPorGrupo,
   calcularComprometidoNoCartao,
+  filtrarLancamentosDeCartao,
   montarFaturas,
   montarRotulosDeCompra,
   resumirComprasParceladas
@@ -274,6 +275,10 @@ describe('faturas e compras', () => {
     expect(rotulos.get(1)).toBe('Nubank · 1/2 · compra em 10/09/2026')
     expect(rotulos.get(3)).toBe('Nubank · compra em 10/09/2026')
     expect(rotulos.get(4)).toBeUndefined()
+  })
+
+  it('filtra só os lançamentos que são compra de cartão, para os gráficos do painel', () => {
+    expect(filtrarLancamentosDeCartao(lancamentos, vinculos).map((l) => l.id)).toEqual([1, 2, 3])
   })
 })
 

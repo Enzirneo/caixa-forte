@@ -131,6 +131,8 @@ function App(): React.JSX.Element {
           {aba === 'painel' && (
             <PaginaPainel
               lancamentos={lancamentosDaContaCorrente}
+              todosOsLancamentos={lancamentos}
+              vinculosDeCartao={cartoes.vinculos}
               destinos={investimentos.destinos}
               movimentacoes={investimentos.movimentacoes}
               mesSelecionado={mesSelecionado}
