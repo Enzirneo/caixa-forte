@@ -177,7 +177,7 @@ function App(): React.JSX.Element {
           )}
           {aba === 'historico' && (
             <HistoricoMensal
-              resumos={resumirPorMes(lancamentos)}
+              resumos={resumirPorMes(lancamentos, obterMesDaData(obterDataIsoDeHoje()))}
               lancamentos={lancamentos}
               movimentacoes={investimentos.movimentacoes}
               fechamentos={fechamentos}

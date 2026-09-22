@@ -55,6 +55,25 @@ describe('resumirPorMes', () => {
   })
 })
 
+describe('resumirPorMes com mesLimite', () => {
+  const comMesFuturo = [...lancamentos, criarLancamento({ id: 4, data: '2026-10-01' })]
+
+  it('deixa de fora um mês depois do limite, como uma compra de cartão já lançada no futuro', () => {
+    expect(resumirPorMes(comMesFuturo, '2026-09').map((resumo) => resumo.mes)).toEqual([
+      '2026-09',
+      '2026-08'
+    ])
+  })
+
+  it('sem limite, mostra também o mês futuro', () => {
+    expect(resumirPorMes(comMesFuturo).map((resumo) => resumo.mes)).toEqual([
+      '2026-10',
+      '2026-09',
+      '2026-08'
+    ])
+  })
+})
+
 describe('reembolso', () => {
   const gastoEDevolucao: Lancamento[] = [
     { ...lancamentos[0], id: 90, tipo: 'despesa', valorCentavos: 10000, data: '2026-09-10' },

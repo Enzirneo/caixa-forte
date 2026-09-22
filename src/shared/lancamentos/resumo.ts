@@ -26,9 +26,12 @@ export function filtrarPorMes(lancamentos: Lancamento[], mes: string): Lancament
   return lancamentos.filter((lancamento) => obterMesDaData(lancamento.data) === mes)
 }
 
-export function resumirPorMes(lancamentos: Lancamento[]): ResumoMensal[] {
+// Histórico é o que já aconteceu na conta corrente: um mês futuro só tem parcela de cartão ou
+// recorrência já lançada adiantada, que é previsão e não histórico, então fica de fora até chegar.
+export function resumirPorMes(lancamentos: Lancamento[], mesLimite?: string): ResumoMensal[] {
   const meses = new Set(lancamentos.map((lancamento) => obterMesDaData(lancamento.data)))
   return [...meses]
+    .filter((mes) => mesLimite === undefined || mes <= mesLimite)
     .sort()
     .reverse()
     .map((mes) => ({ mes, ...calcularResumo(filtrarPorMes(lancamentos, mes)) }))
