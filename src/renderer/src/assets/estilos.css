@@ -753,7 +753,8 @@ label {
 
 .campo-largo,
 .erros,
-.dica-de-importacao {
+.dica-de-importacao,
+.formulario > .linha-de-caixas {
   grid-column: 1 / -1;
 }
 
