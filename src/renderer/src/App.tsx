@@ -31,6 +31,7 @@ import { PaginaLancamentos } from './lancamentos/PaginaLancamentos'
 import { useFechamentos } from './lancamentos/useFechamentos'
 import { useLancamentos } from './lancamentos/useLancamentos'
 import { BarraDeTitulo } from './compartilhado/BarraDeTitulo'
+import { VersaoDoApp } from './compartilhado/VersaoDoApp'
 import { BarraLateral, type OpcaoDeNavegacao } from './navegacao/BarraLateral'
 import { PaginaPainel } from './painel/PaginaPainel'
 import { PaginaRecorrencias } from './recorrencias/PaginaRecorrencias'
@@ -110,6 +111,7 @@ function App(): React.JSX.Element {
   return (
     <div className="janela">
       <BarraDeTitulo />
+      <VersaoDoApp />
       <div className={barraRecolhida ? 'aplicativo recolhido' : 'aplicativo'}>
         <BarraLateral
           opcoes={OPCOES_DE_NAVEGACAO}

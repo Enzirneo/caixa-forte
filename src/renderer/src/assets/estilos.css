@@ -213,6 +213,18 @@ code {
   -webkit-app-region: drag;
 }
 
+.versao-do-app {
+  position: fixed;
+  right: 18px;
+  bottom: 6px;
+  z-index: 10;
+  color: var(--texto-suave);
+  font-size: 10.5px;
+  font-weight: 600;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .aplicativo {
   display: grid;
   grid-template-columns: 264px minmax(0, 1fr);
