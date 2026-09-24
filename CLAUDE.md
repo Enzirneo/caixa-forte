@@ -35,3 +35,11 @@ App de desktop (Windows) para gerir finanças pessoais. Roda só no PC, sem serv
 - Regra de negócio nova nasce com teste.
 - Antes de dar algo por pronto: `npm run typecheck` e `npm run lint`.
 - Mensagens de commit no formato `tipo: descrição` (`feat`, `fix`, `refactor`, `chore`, `docs`, `test`).
+
+## Versão e publicação
+
+- O app instalado só se atualiza quando existe no GitHub uma versão com número **maior** que a dele.
+- **Toda vez que for comitar para dar push, suba a versão** em `package.json` (e `package-lock.json`) num commit `chore: sobe a versao para X.Y.Z`. Use `npm version X.Y.Z --no-git-tag-version`.
+- Correção pequena sobe o último número (1.0.3 → 1.0.4); funcionalidade nova sobe o do meio (1.0.3 → 1.1.0).
+- Publicar é com `npm run publicar:win`, depois do push e com `GH_TOKEN` definido no terminal do Enzo. Nunca colocar o token em arquivo nem em commit.
+- Se o publicar falhar com erro 422 "Published releases must have a valid tag", rode o comando de novo: a versão já foi criada e a segunda rodada só anexa o que faltou.
