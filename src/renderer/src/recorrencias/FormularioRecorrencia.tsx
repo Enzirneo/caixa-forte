@@ -2,7 +2,12 @@ import { useState, type FormEvent } from 'react'
 import { formatarDataIsoComoBrasileira, obterDataIsoDeHoje } from '../../../shared/datas/dataIso'
 import { converterTextoEmCentavos } from '../../../shared/dinheiro/converterTextoEmCentavos'
 import { formatarCentavosParaCampo } from '../../../shared/dinheiro/formatarCentavosParaCampo'
-import { TIPOS_DE_RECORRENCIA, type TipoDeRecorrencia } from '../../../shared/lancamentos/tipos'
+import {
+  TIPOS_DE_RECORRENCIA,
+  type Lancamento,
+  type TipoDeRecorrencia
+} from '../../../shared/lancamentos/tipos'
+import { montarSugestoesDeCategoria } from '../../../shared/categorias/categoriasPadrao'
 import type { Cartao } from '../../../shared/cartoes/tipos'
 import {
   calcularDataDaOcorrencia,
@@ -25,7 +30,7 @@ const DIA_PADRAO_DO_MES = '5'
 interface Props {
   recorrenciaEmEdicao: Recorrencia | null
   cartoes: Cartao[]
-  categoriasSugeridas: string[]
+  todosOsLancamentos: Lancamento[]
   aoSalvar: (novaRecorrencia: NovaRecorrencia) => Promise<void>
   aoCancelarEdicao: () => void
 }
@@ -33,7 +38,7 @@ interface Props {
 export function FormularioRecorrencia({
   recorrenciaEmEdicao,
   cartoes,
-  categoriasSugeridas,
+  todosOsLancamentos,
   aoSalvar,
   aoCancelarEdicao
 }: Props): React.JSX.Element {
@@ -133,7 +138,7 @@ export function FormularioRecorrencia({
           <CampoDeCategoria
             valor={categoria}
             aoMudar={setCategoria}
-            sugestoes={categoriasSugeridas}
+            sugestoes={montarSugestoesDeCategoria(tipo, todosOsLancamentos, false)}
           />
         </div>
         <label>

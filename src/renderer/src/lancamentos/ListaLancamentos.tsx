@@ -4,6 +4,7 @@ import { foiAlteradoAposFechamento } from '../../../shared/fechamentos/regrasDeF
 import type { FechamentoMes } from '../../../shared/fechamentos/tipos'
 import type { OrdenacaoDeLancamentos } from '../../../shared/lancamentos/filtrarLancamentos'
 import type { Lancamento } from '../../../shared/lancamentos/tipos'
+import { CATEGORIA_REEMBOLSO } from '../../../shared/categorias/categoriasPadrao'
 import { BotaoExcluirComConfirmacao } from '../compartilhado/BotaoExcluirComConfirmacao'
 
 interface Props {
@@ -117,7 +118,7 @@ export function ListaLancamentos({
                 <span className="rotulo-de-compra">{rotulosDeCompra.get(lancamento.id)}</span>
               )}
             </td>
-            <td>{lancamento.categoria}</td>
+            <td>{lancamento.tipo === 'reembolso' ? CATEGORIA_REEMBOLSO : lancamento.categoria}</td>
             <td className={`numero ${lancamento.tipo}`}>
               {formatarCentavosComoReal(lancamento.valorCentavos)}
             </td>

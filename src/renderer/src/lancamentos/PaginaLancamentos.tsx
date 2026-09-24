@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { listarCategoriasEmUso } from '../../../shared/categorias/nomeDaCategoria'
 import { filtrarLancamentosDaContaCorrente } from '../../../shared/cartoes/contaCorrente'
 import type {
   AjusteDeFechamento,
@@ -84,7 +83,6 @@ export function PaginaLancamentos({
   const [lancamentoEmEdicao, setLancamentoEmEdicao] = useState<Lancamento | null>(null)
   const [filtro, setFiltro] = useState<FiltroDeLancamentos>(FILTRO_PADRAO_DE_LANCAMENTOS)
 
-  const categoriasSugeridas = listarCategoriasEmUso(lancamentos)
   const lancamentosDoMes = filtrarPorMes(lancamentos, mesSelecionado)
   const lancamentosExibidos = aplicarFiltroDeLancamentos(lancamentosDoMes, filtro)
   // O resumo (Despesas, Saldo do mês) é só da conta corrente: despesa de cartão de outra pessoa
@@ -162,7 +160,6 @@ export function PaginaLancamentos({
           recorrenteInicial={recorrenteInicial}
           mesDeFimInicial={recorrenciaDoLancamento?.mesDeFim ?? ''}
           mesMinimoDeTermino={recorrenciaDoLancamento?.mesDeInicio ?? null}
-          categoriasSugeridas={categoriasSugeridas}
           cartoes={cartoes}
           ajustesDeFechamento={ajustesDeFechamento}
           aoSalvar={salvar}

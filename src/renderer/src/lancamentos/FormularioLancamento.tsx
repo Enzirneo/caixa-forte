@@ -8,11 +8,16 @@ import { converterTextoEmCentavos } from '../../../shared/dinheiro/converterText
 import { formatarCentavosComoReal } from '../../../shared/dinheiro/formatarCentavos'
 import { formatarCentavosParaCampo } from '../../../shared/dinheiro/formatarCentavosParaCampo'
 import {
-  TIPOS_LANCAMENTO,
+  TIPOS_DO_FORMULARIO,
   type Lancamento,
   type NovoLancamento,
-  type TipoLancamento
+  type TipoDoFormulario
 } from '../../../shared/lancamentos/tipos'
+import {
+  CATEGORIA_REEMBOLSO,
+  ehCategoriaDeReembolso,
+  montarSugestoesDeCategoria
+} from '../../../shared/categorias/categoriasPadrao'
 import { formatarMesPorExtenso } from '../../../shared/datas/mes'
 import { calcularMesDeInicioAPartirDoLancamento } from '../../../shared/recorrencias/regras'
 import type { DefinicaoDeRecorrencia } from '../../../shared/recorrencias/tipos'
@@ -43,10 +48,21 @@ function descreverEfeitoDaRecorrencia(recorrente: boolean, recorrenteInicial: bo
   return ''
 }
 
-const ROTULO_DO_TIPO: Record<TipoLancamento, string> = {
+const ROTULO_DO_TIPO: Record<TipoDoFormulario, string> = {
   receita: 'Receita',
-  despesa: 'Despesa',
-  reembolso: 'Reembolso'
+  despesa: 'Despesa'
+}
+
+const ERRO_REEMBOLSO_SO_NA_RECEITA = 'Reembolso é uma categoria só de receita.'
+
+function obterTipoDoFormulario(lancamento: Lancamento | null): TipoDoFormulario {
+  if (!lancamento) return 'despesa'
+  return lancamento.tipo === 'despesa' ? 'despesa' : 'receita'
+}
+
+function obterCategoriaDoFormulario(lancamento: Lancamento | null): string {
+  if (!lancamento) return ''
+  return lancamento.tipo === 'reembolso' ? CATEGORIA_REEMBOLSO : lancamento.categoria
 }
 
 interface Props {
@@ -56,7 +72,6 @@ interface Props {
   recorrenteInicial: boolean
   mesDeFimInicial: string
   mesMinimoDeTermino: string | null
-  categoriasSugeridas: string[]
   cartoes: Cartao[]
   ajustesDeFechamento: AjusteDeFechamento[]
   aoSalvar: (
@@ -77,7 +92,6 @@ export function FormularioLancamento({
   recorrenteInicial,
   mesDeFimInicial,
   mesMinimoDeTermino,
-  categoriasSugeridas,
   cartoes,
   ajustesDeFechamento,
   aoSalvar,
@@ -89,8 +103,8 @@ export function FormularioLancamento({
     lancamentoEmEdicao ? formatarCentavosParaCampo(lancamentoEmEdicao.valorCentavos) : ''
   )
   const [data, setData] = useState(lancamentoEmEdicao?.data ?? obterDataIsoDeHoje())
-  const [tipo, setTipo] = useState<TipoLancamento>(lancamentoEmEdicao?.tipo ?? 'despesa')
-  const [categoria, setCategoria] = useState(lancamentoEmEdicao?.categoria ?? '')
+  const [tipo, setTipo] = useState<TipoDoFormulario>(obterTipoDoFormulario(lancamentoEmEdicao))
+  const [categoria, setCategoria] = useState(obterCategoriaDoFormulario(lancamentoEmEdicao))
   const [despesaReembolsadaId, setDespesaReembolsadaId] = useState(
     lancamentoEmEdicao?.reembolsoDeId ? String(lancamentoEmEdicao.reembolsoDeId) : ''
   )
@@ -101,7 +115,12 @@ export function FormularioLancamento({
   const [parcelasTexto, setParcelasTexto] = useState(PARCELAS_PADRAO)
   const [erros, setErros] = useState<string[]>([])
 
-  const ehReembolso = tipo === 'reembolso'
+  const ehReembolso = tipo === 'receita' && ehCategoriaDeReembolso(categoria)
+  const categoriasSugeridas = montarSugestoesDeCategoria(
+    tipo,
+    todosOsLancamentos,
+    !recorrenteInicial
+  )
   const mostrarRecorrente = podeSerRecorrente && !ehReembolso
   const mesMinimo =
     mesMinimoDeTermino ?? calcularMesDeInicioAPartirDoLancamento(data, obterDataIsoDeHoje())
@@ -116,7 +135,6 @@ export function FormularioLancamento({
     setDespesaReembolsadaId(id)
     const escolhida = despesasReembolsaveis.find(({ despesa }) => String(despesa.id) === id)
     if (!escolhida) return
-    setCategoria(escolhida.despesa.categoria)
     if (!valorTexto) setValorTexto(aplicarMascaraDeValor(String(escolhida.reembolsavelCentavos)))
     if (!descricao) setDescricao(`Reembolso: ${escolhida.despesa.descricao}`)
   }
@@ -145,6 +163,11 @@ export function FormularioLancamento({
           indexarAjustesDoCartao(ajustesDeFechamento, cartao.id)
         )
       : []
+
+  const mudarTipo = (novoTipo: TipoDoFormulario): void => {
+    setTipo(novoTipo)
+    if (novoTipo === 'despesa' && ehCategoriaDeReembolso(categoria)) setCategoria('')
+  }
 
   const limparCamposDigitados = (): void => {
     setDescricao('')
@@ -191,16 +214,20 @@ export function FormularioLancamento({
       return
     }
 
+    // No banco o reembolso guarda a categoria da despesa devolvida, para abatê-la nos resumos.
     const novoLancamento: NovoLancamento = {
       descricao,
       valorCentavos: converterTextoEmCentavos(valorTexto) ?? 0,
       data,
-      tipo,
-      categoria,
+      tipo: ehReembolso ? 'reembolso' : tipo,
+      categoria: ehReembolso ? (despesaEscolhida?.despesa.categoria ?? categoria) : categoria,
       reembolsoDeId: ehReembolso && despesaReembolsadaId ? Number(despesaReembolsadaId) : null
     }
 
     const errosEncontrados = [
+      ...(tipo === 'despesa' && ehCategoriaDeReembolso(categoria)
+        ? [ERRO_REEMBOLSO_SO_NA_RECEITA]
+        : []),
       ...validarNovoLancamento(novoLancamento),
       ...validarTermino(),
       ...(ehReembolso && !despesaReembolsadaId
@@ -291,11 +318,11 @@ export function FormularioLancamento({
           <span className="rotulo-do-campo">Tipo</span>
           <Selecao
             valor={tipo}
-            opcoes={TIPOS_LANCAMENTO.map((opcao) => ({
+            opcoes={TIPOS_DO_FORMULARIO.map((opcao) => ({
               valor: opcao,
               rotulo: ROTULO_DO_TIPO[opcao]
             }))}
-            aoMudar={(valor) => setTipo(valor as TipoLancamento)}
+            aoMudar={(valor) => mudarTipo(valor as TipoDoFormulario)}
             rotuloDeAcessibilidade="Tipo"
           />
         </div>

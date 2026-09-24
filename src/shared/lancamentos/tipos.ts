@@ -4,6 +4,11 @@ export const TIPOS_LANCAMENTO = ['receita', 'despesa', 'reembolso'] as const
 
 export type TipoLancamento = (typeof TIPOS_LANCAMENTO)[number]
 
+// No formulário só existem receita e despesa: reembolso é uma categoria da receita.
+export const TIPOS_DO_FORMULARIO = ['receita', 'despesa'] as const
+
+export type TipoDoFormulario = (typeof TIPOS_DO_FORMULARIO)[number]
+
 // Recorrência é só receita ou despesa: reembolso é sempre avulso.
 export const TIPOS_DE_RECORRENCIA = ['receita', 'despesa'] as const
 

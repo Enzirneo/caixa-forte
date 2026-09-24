@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { listarCategoriasEmUso } from '../../../shared/categorias/nomeDaCategoria'
 import type { Cartao, VinculoDeCompra } from '../../../shared/cartoes/tipos'
 import type { Lancamento } from '../../../shared/lancamentos/tipos'
 import type { NovaRecorrencia, Recorrencia } from '../../../shared/recorrencias/tipos'
@@ -53,7 +52,7 @@ export function PaginaRecorrencias({
         key={recorrenciaEmEdicao?.id ?? 'nova'}
         recorrenciaEmEdicao={recorrenciaEmEdicao}
         cartoes={cartoes}
-        categoriasSugeridas={listarCategoriasEmUso(lancamentos)}
+        todosOsLancamentos={lancamentos}
         aoSalvar={salvar}
         aoCancelarEdicao={() => setRecorrenciaEmEdicao(null)}
       />
