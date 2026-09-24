@@ -108,13 +108,13 @@ export function PaginaDados({ lancamentos }: Props): React.JSX.Element {
           também um backup manual em um pendrive ou em uma pasta sincronizada com a nuvem.
         </p>
         <div className="acoes-de-dados">
-          <button onClick={fazerBackup}>Fazer backup agora…</button>
+          <button onClick={fazerBackup}>Fazer backup agora</button>
           <button className="secundario" onClick={() => window.api.backup.abrirPasta()}>
             Abrir a pasta das cópias automáticas
           </button>
           {!confirmandoRestauracao && (
             <button className="secundario" onClick={() => setConfirmandoRestauracao(true)}>
-              Restaurar de um backup…
+              Restaurar de um backup
             </button>
           )}
         </div>
@@ -154,7 +154,7 @@ export function PaginaDados({ lancamentos }: Props): React.JSX.Element {
             <div className="acoes-de-dados">
               <button onClick={copiarParaPastaExterna}>Copiar agora</button>
               <button className="secundario" onClick={escolherPastaExterna}>
-                Trocar a pasta…
+                Trocar a pasta
               </button>
               <button className="secundario" onClick={removerPastaExterna}>
                 Desativar
@@ -168,7 +168,7 @@ export function PaginaDados({ lancamentos }: Props): React.JSX.Element {
               pendrive, e as cópias automáticas passam a ser gravadas lá também.
             </p>
             <div className="acoes-de-dados">
-              <button onClick={escolherPastaExterna}>Escolher a pasta…</button>
+              <button onClick={escolherPastaExterna}>Escolher a pasta</button>
             </div>
           </>
         )}
@@ -182,7 +182,7 @@ export function PaginaDados({ lancamentos }: Props): React.JSX.Element {
         </p>
         <div className="acoes-de-dados">
           <button onClick={exportar} disabled={lancamentos.length === 0}>
-            Exportar lançamentos (CSV)…
+            Exportar lançamentos (CSV)
           </button>
         </div>
       </section>

@@ -18,6 +18,7 @@ import { extrairMensagemDeErro } from '../compartilhado/extrairMensagemDeErro'
 import { lerArquivoDeTexto } from '../compartilhado/lerArquivoDeTexto'
 import { lerPlanilhaXlsx } from '../compartilhado/lerPlanilhaXlsx'
 import { PreviaDaImportacao } from './PreviaDaImportacao'
+import { AreaParaSoltarArquivo } from '../componentes/AreaParaSoltarArquivo'
 import { CampoDeData } from '../componentes/CampoDeData'
 
 interface Props {
@@ -137,26 +138,26 @@ export function PaginaImportacao({ lancamentosExistentes, aoImportar }: Props): 
             rotuloDeAcessibilidade="Data das linhas sem data"
           />
         </div>
-        <label>
-          Ou escolha um arquivo (Excel .xlsx ou CSV)
-          <input
-            type="file"
-            accept=".xlsx,.csv,.txt"
-            onChange={(e) => escolherArquivo(e.target.files?.[0])}
+        <div className="campo campo-do-arquivo">
+          <span className="rotulo-do-campo">Ou use um arquivo</span>
+          <AreaParaSoltarArquivo
+            extensoesAceitas=".xlsx,.csv,.txt"
+            aoEscolher={escolherArquivo}
+            rotulo="Arraste um arquivo Excel (.xlsx) ou CSV aqui, ou clique para escolher"
           />
-        </label>
-        <button
-          type="button"
-          className="secundario"
-          onClick={() =>
-            window.api.arquivos.salvarTexto(NOME_DO_ARQUIVO_MODELO, montarCsvDoModelo())
-          }
-        >
-          Baixar modelo (CSV)
-        </button>
+        </div>
         <p className="dica-de-importacao">
           Uma despesa por linha: <code>Mercado 150,00</code>. Use <code>+</code> no começo para
-          receita, uma data no começo (<code>10/09</code>) e <code>#categoria</code> se quiser.
+          receita, uma data no começo (<code>10/09</code>) e <code>#categoria</code> se quiser.{' '}
+          <button
+            type="button"
+            className="botao-de-texto botao-de-texto-em-linha"
+            onClick={() =>
+              window.api.arquivos.salvarTexto(NOME_DO_ARQUIVO_MODELO, montarCsvDoModelo())
+            }
+          >
+            Baixar modelo (CSV)
+          </button>
         </p>
       </section>
 

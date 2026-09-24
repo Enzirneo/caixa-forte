@@ -142,14 +142,14 @@ export function FormularioCartao({
           aoMudar={setPagaPelaContaCorrente}
           texto="A fatura deste cartão é paga pela minha conta corrente"
         />
-      </div>
-      <div className="acoes-formulario">
-        <button type="submit">{cartaoEmEdicao ? 'Salvar' : 'Cadastrar cartão'}</button>
-        {cartaoEmEdicao && (
-          <button type="button" className="secundario" onClick={aoCancelarEdicao}>
-            Cancelar
-          </button>
-        )}
+        <div className="acoes-formulario">
+          <button type="submit">{cartaoEmEdicao ? 'Salvar' : 'Cadastrar cartão'}</button>
+          {cartaoEmEdicao && (
+            <button type="button" className="secundario" onClick={aoCancelarEdicao}>
+              Cancelar
+            </button>
+          )}
+        </div>
       </div>
       {erros.length > 0 && (
         <ul className="erros">

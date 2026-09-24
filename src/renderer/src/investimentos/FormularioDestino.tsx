@@ -94,7 +94,7 @@ export function FormularioDestino({ aoCriar }: Props): React.JSX.Element {
           rotuloDeAcessibilidade="Período da taxa"
         />
       </div>
-      <button type="submit">Cadastrar destino</button>
+      <button type="submit">Cadastrar</button>
       {erros.length > 0 && (
         <ul className="erros">
           {erros.map((erro) => (
